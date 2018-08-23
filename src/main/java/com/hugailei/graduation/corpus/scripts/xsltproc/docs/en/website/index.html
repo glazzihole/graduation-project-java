@@ -1,0 +1,499 @@
+<!DOCTYPE public "-//w3c//dtd html 4.01 transitional//en" 
+		"http://www.w3.org/TR/html4/loose.dtd">
+<!-- Author Keith Isdale <k_isdale@tpg.com.au>
+     Date : Sometime after 8th Dec 2001
+     Last updated : See bottom of page
+-->
+<html>
+<head>
+<title>xsldbg a XSL debugger/inspector</title>
+</head>
+<body link="#0000ff" vlink="#800080">
+
+<h1>Table of Contents&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <A href="http://sourceforge.net"> <IMG src="http://sourceforge.net/sflogo.php?group_id=35673" width="88" height="31" border="0" alt="SourceForge Logo"></A></h1>
+
+<ul>
+<li><a href="#Introduction">Introduction</a> </li>
+
+<ul>
+<li><a href="#Todo">Todo</a> </li>
+<li><a href="#Requirements">Requirements</a> </li>
+<li><a href="#Limitations">Limitations</a> </li>
+<li><a href="#Author">Author</a> </li>
+<li><a href="#Licence">Licence</a> </li>
+<li><a href="#Documentation">Documention</a> </li>
+<li><a href="#Screen%20shots">Screen shots</a></li>
+<li><a href="#Web%20site">Web site</a> </li>
+<li><a href="#Email%20lists">Email lists</a> </li>
+</ul>
+
+<li><a href="#Installation">Installation</a> </li>
+<li><a href="#Testing">Testing / running example</a></li>
+<ul>
+<li><a href="#xsldbg%20example%20session">Example xsldbg session</a></li>
+<li><a href="#Quantaplus%20example">Example Quanta+ plugin session</a></li>
+<li><a href="#XEmacs%20example">Example XEmacs session using xsldbg-mode</a></li>
+</ul>
+<li><a href="#Help%20system">Help system</a> </li>
+<li><a href="#Version%20notes">Version notes</a> </li>
+<li><a href="#FAQ">FAQ</a></li>
+<li><a href="#Feedback">Feedback</a> </li>
+<li><a href="#Download">Download</a> </li>
+<li><a href="#Completed%20TODO%27s">Completed TODO'S</a> </li>
+
+</ul>
+<br />
+<br />
+<!--  - - - - - - - - - -  Introduction - - - - - - - - - -->
+<h1><a name="Introduction">Introduction</a> </h1>
+<p>xsldbg is a text based tool to debug stylesheets and it is similar to the Unix/Linux debugger gdb. It uses using the libxslt library by <a href="http://www.xmlsoft.org/XSLT">http://www.xmlsoft.org/XSLT</a> </p>
+
+<ul>
+<li>It is in the second beta stage of development with functionality now frozen until the start of the next beta cycle. Comments about feature set provided are welcome. </li>
+</ul>
+
+
+<!--  - - - - - - - - - -  Todo - - - - - - - - - -->
+<h2><a name="Todo">Todo</a> </h2>
+<ul>
+<li>add the ability to list documents created by xsl:document instruction (maybe?)</li>
+<li>complete support all XSL commands : Done? Needs more testing</li>
+<li>perform testing, add more test case descriptions&nbsp; </li>
+<li>improve the appearance of documentation and ensure it is up to date </li>
+<li>Create script to autogenerate def file (needed to create a win32 dll) using
+    sgml files created by GNOME documentation tool. (maybe?)</li>
+<li>Look at replacing execution of shell command "more" with a function call</li>
+<li>Look at allowing xsldbg to extract comments from XSL files to provided similar functionality
+    as XSLTDoc tool by Fabrice Desré. At the moment the libxslt preprocessor strips most comments (maybe?)</li>
+</ul>
+
+<p><a href="#Completed%20TODO%27s"><b>See also completed TODO'S</b></a><b> </p>
+</b><p>&nbsp;</p>
+
+<!--  - - - - - - - - - -  Requirements - - - - - - - - - -->
+<h2><a name="Requirements">Requirements</a> </h2>
+&nbsp;&nbsp; <a href="http://www.xmlsoft.org/#Downloads">libxml2-2.4.23 <font color="red">from GNOME cvs</font> </a> &nbsp; or greater <br />
+&nbsp;&nbsp; <a href="http://xmlsoft.org/XSLT/#Downloads">libxslt-1.0.20 <font color="red">from GNOME cvs</font> </a> &nbsp; or greater <br />
+
+<p><font color="red">Warning!</font>&nbsp; libxslt may not compile with shared library enabled as it is has been configured
+for compilation tools that support prelinking. Configure libxslt with the at least following option<br />
+<b>&nbsp;&nbsp;&nbsp;&nbsp;--with-debugger=yes</b>
+<p>      I recommend you get the latest available for your distribution. Try <br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://rpmfind.net/linux/rpm2html/search.php?query=libxslt&amp;submit=Search+..">libxslt rpmfind search.</a> <br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://rpmfind.net/linux/rpm2html/search.php?query=libxml&amp;submit=Search+..">libxml rpmfind search.</a><br />
+
+
+<p>  A system with&nbsp;&nbsp;GNU&nbsp;compatible make and build tools</p>
+<p>&nbsp; The &quot;more&quot; system command is available (need by internal help system) </p>
+<p><b>OR</b></p>
+<p> A WIN32 system with MSVC 5.0 or later, using project files by
+<a href="http://www.zlatkovic.com/projects/libxml/index.html"><i>Igor Zlatkovic</i></a>
+</p>
+<br />
+<!--  - - - - - - - - - -  Limitations - - - - - - - - - -->
+<h2><a name="Limitations">Limitations</a> </h2>
+
+<ul>
+        <li>The format of search results needs to be fixed</li>
+        <li>The <b>stepup</b> command is not accurate</li>
+        <li>Searching can take a while with large documents ie when debugging docbook.xsl</li>
+        <li>Both the stylesheet and xml data file will be reloaded each time xsldbg starts a &quot;run&quot;.
+        It is too complex to complex considering keeping track of which files are out of date</li>
+        <li>Libxslt and consequently xsldbg can't handle NON_ASCII template matches</li>
+        <li>If an environment variable is used to indicate where you've installed
+            xsldbg's documentation the vaiable value MUST end in a path separator<br />
+                ie for win32 this is a '\'<br />
+                &nbsp;&nbsp;&nbsp;for *nix  this is a '/'<br />
+        </li>
+        <li>The SGML/XML catalogs provided are to be included as a &quot;nextCatalog&quot; in your
+                catalog file. Otherwise you'll get warnings about unable to find
+                xsldbg's DTDs</li>
+        <li>The new search DTD allows for each element to have a comment to be extracted from
+             the XSL source libxslt currently does not support this function</li>
+        <li>Under win32 the more command does not process a &quot;.\&lt;FILE_NAME&gt;&quot; properly</li>
+        <li>When a non ASCII character are used stylesheets the printing of search results does not print
+            in the orginal encoding (instead uses UTF-8 ). This will be resolved if/when a replacement for
+            the more command is made</li>
+</ul>
+
+<p>&nbsp; </p>
+
+
+<!--  - - - - - - - - - -  Author - - - - - - - - - -->
+<h2><a name="Author">Author</a> </h2>
+<p>The primary author is <a href="mailto:k_isdale@tpg.com.au">Keith Isdale</a> </p>
+<p>The author for the riscos specific code is <a href="mailto:justin.fletcher@ntlworld.com">Justin Fletcher</a> </p>
+<p>The author for the MSVC project files and some of the WIN32 code is <a href="http://www.fh-frankfurt.de/%7Eigor/projects/libxml/"><i>Igor Zlatkovic</i></a> </p>
+<p>&nbsp;</p>
+
+
+<!--  - - - - - - - - - -  Licence- - - - - - -->
+<h2><a name="Licence">Licence</a> </h2>
+<p>This tool is available under the <a href="http://www.gnu.org/licenses/licenses.html#GPL">GPL licence</a> </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </p>
+
+
+<!--  - - - - - - - - - -  Documentation - - - - - - - - - -->
+<h2><a name="Documentation">Documentation</a> </h2>
+<p>&nbsp;&nbsp;&nbsp; <a href="http://xsldbg.sourceforge.net/docs/index.html">Program usage and commands</a> </p>
+<p>&nbsp;&nbsp;&nbsp; <a href="threadUsage.html">xsldbg thread usage</a> </p>
+
+
+<!--  - - - - - - - - - -  Screen shots - - - - - - - - - -->
+<h2><a name="Screen%20shots">Screen shots</a></h2>
+
+<p>
+<a href="screenshot1.png">Running xsldbg-mode under XEmacs in Linux and WIN32</a>
+</p>
+<p>
+<a href="screenshot3.png">Running the qxsldbg under KDE, it will look similar under 
+under windows or cygwin .</a>
+</p>
+<p>
+<a href="screenshot2.png">Running the xsldbg plugin in Quanta+.</a>
+</p>
+
+
+
+
+
+
+
+<!--  - - - - - - - - - -  Website - - - - - - - - - -->
+<h2><a name="Web%20site">Related web sites</a></h2>
+<p>&nbsp;&nbsp;&nbsp; <a href="http://sourceforge.net/projects/xsldbg">http://xsldbg.sourceforge.net/</a> </p>
+<p>&nbsp;&nbsp;&nbsp; <a href="http://sourceforge.net/projects/xsldbg">http://sourceforge.net/projects/xsldbg</a> </p>
+<p>&nbsp;&nbsp;&nbsp; <a href="http://xsldbg.sourceforge.net/docs/qxsldbg/manual/">http://xsldbg.sourceforge.net/docs/qxsldbg/manual/, the qxsldbg manual</a> </p>
+
+<p>&nbsp;&nbsp;&nbsp; <a href="http://homepage.ntlworld.com/justin.fletcher/XML/">
+  http://homepage.ntlworld.com/justin.fletcher/XML/ (Homepage for author or risc os port of xsldbg)
+                     </a>
+ </p>
+
+ <p> &nbsp;&nbsp;&nbsp; <a href="http://grillade.griotte.com/xml/">XSL documentation tool by Fabrice Desré</a>
+ </p>
+
+
+<!--  - - - - - - - - - -  Email lists  - - - - - - - - - -->
+<h2><a name="Email%20lists">Email lists</a> </h2>
+<p>&nbsp;&nbsp;  <a href="http://lists.sourceforge.net/lists/listinfo/xsldbg-announce">http://lists.sourceforge.net/lists/listinfo/xsldbg-announce</a> </p>
+<p>&nbsp;&nbsp;  <a href="http://lists.sourceforge.net/lists/listinfo/xsldbg-users">http://lists.sourceforge.net/lists/listinfo/xsldbg-users</a> </p>
+<p>&nbsp;&nbsp;  <a href="http://lists.sourceforge.net/lists/listinfo/xsldbg-devel">http://lists.sourceforge.net/lists/listinfo/xsldbg-devel</a> </p>
+
+<br />
+<br />
+<br />
+
+<!--  - - - - - - - - - -  Installation  - - - - - - - - - -->
+<h1><a name="Installation">Installation</a> </h1>
+Extract the latest stable version of xsldbg from <a href="http://sourceforge.net/project/showfiles.php?group_id=35673">http://sourceforge.net/project/showfiles.php?group_id=35673</a>
+In cvs , for example, the 3.1.0 release is tagged &quot;rel-3-1-0&quot; in cvs. See website for details of the latest stable release.<br />
+<p>
+Below is the installation instructions for a default *nix system <br />
+<ul>
+<li>For win32 systems see <a href="win32_install.html">WIN32 installation</a></li>
+<li>For risc os see <a href="risc_os_install.html">risc os installation</a></li>
+</ul>
+</p>
+<p>
+<b>
+&nbsp;&nbsp;&nbsp;&nbsp;make -f&nbsp; Makefile.cvs <br />
+&nbsp;&nbsp;&nbsp; ./configure<br />
+&nbsp;&nbsp; make <br />
+&nbsp;&nbsp; make install <br /></b>
+<br />
+<br /> Do a<br />
+&nbsp;&nbsp; <b>./configure --help </b><br />
+for details of other options to configuring xsldbg
+<br />
+<br />
+<br />
+<font color="red">Warning!</font>
+<p> It is expected that
+<ol>
+<li>xsldbg has been added to your PATH of system commands. </li>
+<li>libxml AND libxslt have been fully installed and are available to xsldbg.</li>
+<li>xsldbg's DTD's (search.dtd, xmldoc.dtd, config.dtd) have been added to your SGML/XML catalog file. </li>
+</ol>
+The default *nix installation will do these things for you (for the the assumed default *nix configuration) but other operating systems
+have thier own installation requirements.
+</p>
+
+<!--  - - - - - - - - - -  Testing  - - - - - - - - - -->
+<h1><a name="Testing">Testing / running example </a> </h1>
+<h2><a name="xsldbg%20example%20session">Example xsldbg session</a></h2>
+<pre>     To test / try out xsldbg<br />
+<br />
+         <b>cd xsldbg/docs/en
+
+         xsldbg --shell xsldoc.xsl xsldoc.xml</b>
+
+
+      And you should get the xsldbg prompt like
+
+
+<b>
+XSLDBG </b>&lt;VERSION&gt;
+<b>
+Starting stylesheet
+
+
+Breakpoint at file xsldoc.xsl : line 18
+xsldbg) xsl:param >
+</b>
+
+You can now start entering commands at the "(xsldbg) .* >" prompt. In the example text in
+<b><font color="green">green</font></b> has been typed by the user <br />
+
+<b>
+      Breakpoint at file xsldoc.xsl : line 18
+(xsldbg) xsl:param > <font color="green">templates</font>
+ template :"/" in file xsldoc.xsl : line 23
+ template :"helpOnCommand" in file xsldoc.xsl : line 49
+ template :"header" in file xsldoc.xsl : line 67
+ template :"text()" in file xsldoc.xsl : line 79
+ template :"para" in file xsldoc.xsl : line 83
+ template :"list | usage" in file xsldoc.xsl : line 89
+ template :"comment" in file xsldoc.xsl : line 99
+ template :"cmd-summary" in file xsldoc.xsl : line 103
+ template :"cmd" in file xsldoc.xsl : line 109
+
+         Total of 9 templates found
+         Total of 9 templates printed
+(xsldbg) xsl:param > <font color="green">break /</font>
+Size of line list was 0 adding 24 entries
+(xsldbg) xsl:param > <font color="green">break header</font>
+Size of line list was 24 adding 44 entries
+(xsldbg) xsl:param > <font color="green">showbreak</font>
+
+ Breakpoint 1 enabled for template :"/" in file xsldoc.xsl : line 23
+ Breakpoint 2 enabled for template :"header" in file xsldoc.xsl : line 67
+
+         Total of 2 breakPoints present
+(xsldbg) xsl:param > <font color="green">break -l xsldoc.xsl 44</font>
+(xsldbg) xsl:param > <font color="green">showbreak</font>
+
+ Breakpoint 1 enabled for template :"/" in file xsldoc.xsl : line 23
+ Breakpoint 3 enabled in file xsldoc.xsl : line 44
+ Breakpoint 2 enabled for template :"header" in file xsldoc.xsl : line 67
+
+         Total of 3 breakPoints present
+(xsldbg) xsl:param > <font color="green">continue</font>
+
+Reached template :"/"
+Breakpoint 1 Breakpoint in file xsldoc.xsl : line 23
+(xsldbg) xsl:template > <font color="green">continue</font>
+
+Reached template :"/"
+Breakpoint 1 Breakpoint in file xsldoc.xsl : line 23
+(xsldbg) text > <font color="green">continue</font>
+
+Reached template :"header"
+Breakpoint 2 Breakpoint in file xsldoc.xsl : line 67
+(xsldbg) xsl:template ><font color="green">exit</font>
+</b>
+<br />
+<br />
+To print help just type &quot;help&quot; <br />
+To exit xsldbg just type &quot;exit&quot; <br />
+
+
+<h2><a name="Quantaplus%20example">Example Quanta+ plugin session</a></h2>
+
+Start Quanta as normal. On the toolbar select the "XslDebug" tab. Click the
+"configure" button on the Xsldbg toolbar tab.The Xsldbg inpector/configure dialog
+will then display. Choose the XSL source, XMLData  and Output files using the ".."
+buttons. Click the "Apply" button, then click the "Run" button on the Xsldbg
+toolbar tab. You are now able to use the other button on the Xsldbg toolbar
+tab to set/delete/enable breakpoints.
+<p>
+To set a break point move the cursor to where you want a breakpoint then click the
+"Add a breakpoint" button Xsldbg toolbar tab. Alternatively you can enter the
+details of where you want the breakpoint into the "Breakpoints inspector"
+</p>
+
+
+<h2><a name="XEmacs%20example">Example XEmacs session using xsldbg-mode</a></h2>
+Open an XML file into a buffer, then press &lt;META&gt;-x followed by entering
+&quot;xsldbg-buffer&quot; into the dialog xemacs provides. At the first prompt enter the file name of
+stylesheet to use. At the prompt for "Parameters" enter any extra parameters that
+you would normaly provide to xsldbg via the command line
+<p>
+After xsldbg-mode initializes you will have cursor highlighting the first line
+that xsldbg can debug. Use the right mouse button, the toolbar icon's or enter commands
+direclty into xsldbg's command prompt. The right mouse button menu can be called up on
+text that is &quot;highlighted&quot;
+</p>
+<p>
+To set a breakpoint you can print the  list of templates and then right mouse click
+on the template name listed that you want to stop at. Or move the cursor to where
+you want a breakpoint (The start of a node in the XSLT source or XML DATA) then click
+the "Stop at selected postion" icon.<br />
+
+The "Stop at selected function" button at the moment operates exactly the same as
+the "Stop at selected postion" icon.
+</p>
+
+<!--  - - - - - - - - - -  Help system  - - - - - - - - - -->
+<h1><a name="Help%20system">Help system</a> </h1>
+<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xsldbg is has built using xml/xslt. To help an overview of commands type
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b><i>help
+</b></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; You can use "help" to get a more detailed information about a command eg
+<b><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; help help
+&nbsp;</pre>
+</b></i><p>&nbsp; </p>
+<br />
+<br />
+<br />
+
+
+<!--  - - - - - - - - - -  Version Notes - - - - - - - - - -->
+<h1><a name="Version%20notes">Version&nbsp; notes</a> </h1>
+<p>&nbsp;See release notes associated with package.&nbsp; </p>
+<h4>These issues are still current</h4>
+<blockquote>1) Several of the File related commands are disabled for the moment.</blockquote>
+<blockquote>2) When you do a cat on the style source the output is white space stripped so it will look different to
+your original source files. This is NOT a "bug"! This is the default behaviour of the stylesheet processor of libxslt. This
+tool is intended to be used by other programs which can handle formatting the output. </blockquote>
+<br />
+<br />
+<br />
+
+
+<!--  - - - - - - - - - -  FAQ - - - - - - - - - -->
+<h1><a name="FAQ">FAQ</a> </h1>
+<h2>Libxslt doesn't compile</h2>
+<ul>
+<li>Check http://xmlsoft.org/XSLT/ and mail.gnome.org/archives/xslt/ for current issues</li>
+<li>Ensure that libxslt was configured with at least <br />
+   <b>&nbsp;&nbsp;--with-debugger=yes</b>
+</li>
+</ul>
+<h2>Where can I find a binary distribution for xsldbg</h2>
+Sorry I am not able to do that at this time, as I'm not sure how to make a generic
+binary that would not come back and haunt me. :-) A submission by someone who can do this would be
+most welcome.
+
+
+<h2>Where's the documentation</h2>
+Plain html documenation is built by default and is found in the &lt;XSLDBG_COMPILE_DIRECTORY&gt;/docs/en/plain
+directory. You can generate either KDE or GNOME style during a compile of xsldbg. Use<br />
+        <b>&nbsp;&nbsp;&nbsp;&nbsp;./configure --help </b><br />
+ To find out how to do that.
+
+<h2>xsldbg compiles ok but doesn't run when used from command line/ does not start debugging</h2>
+<ul>
+<li>Make sure that you set and exported the correct LD_LIBRARY_PATH</li>
+<li>Make sure that you've configure the correct libxml and libxslt prefix in libxslt, and xsldbg. Check the values supplied to <br />
+<li>Make sure that you have a version of libxslt that has debugging support enabled
+    this is done by default un *nix but it handled manualy under other platforms </li>
+<b>
+&nbsp;&nbsp; --with-libxslt-prefix <br />
+&nbsp;&nbsp; --with-libxml-prefix <br />
+</b>
+</li>
+</ul>
+
+<h2>Why do I get a message about Breakpoint @ text node</h2>
+xsldbg tries to find a line number near the current node. But sometimes it is
+unable to find a "parent" for the current node. This normally means the node is part of
+the document preamble, a comment node or text node.
+
+
+<h2>In the Quanta+ plugin why to I get messages about text being too big to display</h2>
+The plugin for Quanta+ is in its first beta. It is expected that future development will
+re-organise the "inspector" windows.
+
+
+<h2>Why does xsldbg restart when I reload the configuration</h2>
+This is unavoidable because of the way xsldbg interupts libxslt execution.
+
+
+<h2>Why is the text/html output when searching not better formmated</h2>
+It is left up to the user to provide a stylsheet to replace
+docs/en/searchhtml.xsl and docs/en/search.xsl. Contributions of better XSL for
+search database formatting would be appreciated
+
+
+<h2>How big is this program</h2>
+At last count there was over twenty thousand lines of text in xsldbg, some of this is
+automaticaly generated. This is about the same size as the libxslt directory in the
+libxslt distribution.
+
+
+<h2> Why do I get a strange prompt </h2>
+If the prompt looks like: <br /><br />
+&nbsp;&nbsp;&nbsp;&nbsp;<b>(xsldbg) xsldbg_default_node &gt;<br /><br />
+&nbsp;&nbsp;&nbsp;&nbsp;For some reason xsldbg could not load or use the specified stylesheet or xml data file.</b>
+<br /><br />
+Try using the &quot;source&quot; or &quot;data&quot; commands and then &quot;run&quot;.
+
+
+<h2>What's the deal with all those USE_KDE_DOCS, USE_GNOME_DOCS, BUILD_DOCS</h2>
+They are a mechanism used by docs/en/KDE/Makefile.am and docs/en/GNOME/Makefile.am
+to generate API documenation in the style of KDE and GNOME respectively.
+<br />
+<br />
+
+
+<!--  - - - - - - - - - -  Feedback - - - - - - - - - -->
+<h1><a name="Feedback">Feedback</a> </h1>
+<p>For problems with this project or web site please use the bug tracking system provided by <a href="http://sourceforge.net/tracker/?group_id=35673&amp;atid=415039">Source Forge</a>
+<br />
+<br />
+<br />
+</p>
+
+<!--  - - - - - - - - - -  Download  - - - - - - - - - -->
+<h1><a name="Download">Download</a> </h1>
+<p>See <a href="https://sourceforge.net/project/showfiles.php?group_id=35673">sourceforge file downloads</a> <br />
+&nbsp; 
+<br />
+See <a href="http://www.zlatkovic.com/projects/libxml/index.html"><i>Win32 binaries WIN32 provided by Igor Zlatkovic</i></a>
+</p>
+<p>&nbsp;</p>
+<br />
+<br />
+
+<!--  - - - - - - - - - -  Completed Todo's  - - - - - - - - - -->
+<h1><a name="Completed%20TODO%27s">Completed Todo's</a> </h1>
+<ul>
+<li>create project files to build as MSVC project. Being looked at by&nbsp; <a href="http://www.fh-frankfurt.de/%7Eigor/projects/libxml/"><i>Igor Zlatkovic</i></a> Done !</li>
+<li>Create a patch for kDbg to support xsldbg. Done! Prototype available on web site</li>
+<li>validate the breakpoint API is complete :Done!</li>
+<li>Update xsldbg when debugger support is built into libxslt. Done! libxslt only contains the code needed to call xsldbg. No further review by libxslt@gnome.org needed but may be done :-)</li>
+<li>add the ability to validate file and line number</li>
+<li>Redo configure and build scripts : Done! </li>
+<li>Track down all sources of the crashes :-( : Done! </li>
+<li>Complete line break points : Done! </li>
+<li>Update documentation : Done! </li>
+<li>Work on a patch for the xemacs module xslt-process to support debugging from within xemacs : Done! (modified gdb.el) </li>
+<li>Create new functions to handle lists that are implemented as arrays. Done! </li>
+<li>Break points to a specific line in the stylesheet are yet made stable : Done! </li>
+<li>The debugger suffers from crashes "segmentation faults" which is being looked into : Fixed </li>
+<li>The configure/build scripts need to be redone because they expect KDE to be installed : Done! </li>
+<li>Confirmed that only the basic XSL/XSLT commands work. Which means that it may not stop where expected. Done!</li>
+<li>Can only handle a fixed number of breakpoints. Fixed!</li>
+<li>Does not handle a large number of variables/templates well. Fixed! </li>
+<li>Does not allow libxslt parameters to be passed at xsldbg command prompt. Done! </li>
+<li>Redo implemention of src/dbgbreakpoint.c to use hash tables not a fixed array of breakpoints&nbsp; Done!</li>
+<li>Add new search functions&nbsp; Done!</li>
+<li>Add ability to change variables&nbsp; Done!</li>
+<li>Only simple simple XSL commands are supported as yet.: Fixed!. But yet to verify that all commands work as expected </li>
+<li>Allow xsldbg's configuration to be loaded/saved . Done!</li>
+</ul>
+
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+
+<p><a href="http://sourceforge.net/projects/xsldbg">http://xsldbg.sourceforge.net/</a> &nbsp; :&nbsp; Helping understand stylesheets</p>
+<br />
+<p>Last updated 16th Feb 2003</p>
+</body>
+</html>

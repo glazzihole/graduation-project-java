@@ -1,0 +1,26 @@
+-- 
+   Catalog file for xsldbg 2.0.1
+ 
+  See http://xsldbg.sourceforge.net for general information about xsldbg --
+
+
+-- search dataBase definition--
+
+PUBLIC "-//xsldbg//DTD search XML V1.0//EN" 
+	"search.dtd"
+
+PUBLIC "-//xsldbg//DTD search XML V1.1//EN" 
+	"search_v1_1.dtd"
+
+-- documentation dataBase definition --
+
+PUBLIC "-//xsldbg//DTD xsldoc XML V1.0//EN" 
+	"xsldoc.dtd"
+
+-- configuration definition  --
+
+PUBLIC "-//xsldbg//DTD config XML V1.0//EN" 
+	"config.dtd"
+
+
+-- End of catalog data for xsldbg 2.0.1 --

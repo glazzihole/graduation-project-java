@@ -1,0 +1,24 @@
+
+         xsldbg version 0.5.9
+         ====================
+
+    
+Command : Break
+Summary : Break at a template, at a location in a stylesheet or xml file loaded by xsldbg, or at the current node. 
+
+Shortcut name: b
+xsldbg will try to guess the complete URL given a
+     file name without a path specified.
+     a file name in the same directory as the "top" stylesheet loaded
+     a file name relative to the current working directory of xsldbg
+Ie if you have loaded a stylesheet file of ../en/xsldoc.xsl you can do this
+break -l xsldoc.xsl 26
+Usage:
+
+     break -l <FILENAME> <LINENO>
+     break <TEMPLATENAME>   (To break at named template.)
+     break *   (To break at any template found.)
+     break   (To break point at current node. Yes that includes xml data nodes!)
+
+
+  Help document version 0.6

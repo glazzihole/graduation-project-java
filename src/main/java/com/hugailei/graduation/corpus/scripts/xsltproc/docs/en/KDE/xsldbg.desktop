@@ -1,0 +1,21 @@
+[Desktop Entry]
+BinaryPattern=
+Comment=Has a similar usage to gdb
+Comment[en_US]=Has a similar usage to gdb
+DocPath=xsldbg/index.html
+Encoding=UTF-8
+Exec=xsldbg %U
+GenericName=Command line XSLT debugging
+GenericName[en_US]=Command line XSLT debugging
+Icon=gear
+MimeType=text/html;text/sgml;text/x-xslt;text/xml
+Name=xsldbg
+Name[en_US]=xsldbg
+ServiceTypes=
+SwallowExec=
+SwallowTitle=
+Terminal=true
+TerminalOptions=
+Type=Application
+X-KDE-SubstituteUID=false
+X-KDE-Username=

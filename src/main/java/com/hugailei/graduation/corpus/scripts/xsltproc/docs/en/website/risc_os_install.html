@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<html>
+<head>
+  <title>xsldbg Installation for RISC OS</title>
+</head>
+<body>
+
+<h1>xsldbg Installation for RISC OS</h1>
+
+<p>
+You will require :
+<ul>
+<li>LibXML2 2.4.12 or greater
+<li>LibXSLT 1.0.9 or greater
+<li>xsldbg 0.9.5 or greater
+<li>Norcroft C compiler (LCC, or GCC may suffice but has not been tested)
+<li>A file system that supports long file names, for example RISC OS 4 E+
+    formatted discs, or a third party system such as raFS.
+</ul>
+</p>
+
+<p>
+The LibXML2, LibXSLT and xsldbg source can be obtained from
+<a href="http://homepage.ntlworld.com/justin.fletcher/XML/">http://homepage.ntlworld.com/justin.fletcher/XML/</a>. For ease, your directory structure
+should appear thus :
+</p>
+
+<table border="1" align="center">
+<tr>
+ <td colspan="6" align="center">XMLTools</td>
+</tr>
+
+<tr>
+ <td colspan="2" align="center">libxml2-2/4/12</td>
+ <td colspan="2" align="center">libxslt-1/0/9</td>
+ <td colspan="2" align="center">xsldbg-0/9/5</td>
+</tr>
+
+<tr>
+ <td align="center">Original</td>
+ <td align="center">RISCOS</td>
+ <td align="center">Original</td>
+ <td align="center">RISCOS</td>
+ <td align="center">Original</td>
+ <td align="center">RISCOS</td>
+</tr>
+
+</table>
+
+<p>The 'RISCOS' directories should contain the source for each relevant
+library. Where the version of the source differs, the directory names should
+also be modified. Whilst the original source is not required, the structure
+allows the source to be held alongside the RISC OS specific version.
+</p>
+
+<h2>Building LibXML2</h2>
+<p>To build LibXML2, you should :
+<ul>
+<li>Build the executables and libraries by invoking amu on the command line
+    (<tt>*amu</tt> will suffice).
+<li>Copy the xmllint and xmlcatalog executables into your library. Under
+    RISC OS Select, these will live in the XML sub-group. You will need to
+    create the XML group yourself as it is not present in the standard
+    distribution.
+</ul>
+</p>
+
+<h2>Building LibXSLT</h2>
+<p>To build LibXSLT, you should :
+<ul>
+<li>Update the Makefile to contain the correct verion of LibXML that you
+    will compile and link against. The variable <tt>LIBXML2_VERSION</tt>
+    should be set to the correct value.
+<li>Build the executables and libraries by invoking amu on the command line
+    (<tt>*amu</tt> will suffice).
+<li>Copy the xsltproc executable into your library. Under RISC OS Select,
+    this will live in the XML sub-group. You will need to
+    create the XML group yourself as it is not present in the standard
+    distribution.
+</ul>
+</p>
+
+<h2>Building XSLDebug</h2>
+<p>To build xsldebug, you should :
+<ul>
+<li>Update the Makefile to contain the correct verion of LibXML and LibXSLT
+    that you will compile and link against. The variables
+    <tt>LIBXML2_VERSION</tt> and <tt>LIBXSLT_VERSION</tt> should be set to
+    the correct value.
+<li>Build the executables and libraries by invoking amu on the command line
+    (<tt>*amu</tt> will suffice).
+<li>Copy the xsldebug executable into your library. Under RISC OS Select,
+    this will live in the XML sub-group. You will need to
+    create the XML group yourself as it is not present in the standard
+    distribution.
+</ul>
+</p>
+
+<h1>Using XSLDebug</h1>
+<p>Like the other XML tools, XSLDebug expects its filename parameters to be
+passed as unix-like filenames relative to the current directory, or as file:
+URIs. With this exception, the tool should fundamentally work in exactly the
+same manner to the unix version.
+
+<hr>
+This document was written by Justin Fletcher, therefore all faults are his.
+</body>
+</html>

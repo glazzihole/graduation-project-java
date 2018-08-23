@@ -1,0 +1,266 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//KDE//DTD DocBook XML V4.1.2-Based Variant V1.1//EN" "dtd/kdex.dtd">
+<book><bookinfo><title>Xsldbg 3.1.7</title><subtitle>Command and usage documentation</subtitle><authorgroup><author><firstname>Keith</firstname><surname>Isdale</surname><affiliation><address><email>k_isdale@tpg.com.au</email></address></affiliation></author></authorgroup><copyright><year>2003</year><holder>Keith Isdale</holder></copyright><legalnotice>&FDLNotice;</legalnotice><date>24/05/2003</date><releaseinfo>3.1.7</releaseinfo><abstract><para>
+xsldbg is a tool intended to help understand stylesheets. 
+What makes it different to other stylesheet debuggers is the ability 
+to search for items of interest and trace stylesheet execution. You can
+use the test framework in the tests directory to describe automatic tests
+to be done on the output of stylesheet execution/debugging. This will be 
+useful for quality assurance purposes. 
+	</para><para>
+A good deal of effort has been put into, creating a <ulink url="http://www.xemacs.org/">XEmacs</ulink> front end 
+called <ulink url="http://sourceforge.net/project/showfiles.php?group_id=35673&amp;release_id=109542">xsldbg-mode</ulink>, and
+adding support for xsldbg to <ulink url="http://members.nextra.at/johsixt/kdbg.html">KDbg</ulink>.
+      </para></abstract></bookinfo><chapter id="overview_chapter"><title>Overview</title><section id="overview1">
+<para> xsldbg is a text based tool to debug stylesheets (the eXtensible Stylesheet Language) and has 
+commands similar to the Unix/Linux debugger gdb. It has three major modes of execution of stylesheets.
+<informaltable><tgroup cols="1"><tbody><row><entry>Run the whole stylesheet</entry></row><row><entry>Step to next xsl instruction</entry></row><row><entry>Continue until next break point is found, or stylesheet has restarted</entry></row></tbody></tgroup></informaltable></para>
+<section><title>xsldbg command line</title>
+On systems with readline library available you can use the back/forward
+keys to navigate the history of entered commands.
+On all systems the last entered command can be repeated by just pressing
+the &lt;ENTER&gt; key. 
+</section>
+<para>
+If your operating system supports it file names will be expanded. 
+</para>
+<para>Several commands take more that one argument. Some arguments can be 
+ sourrounded by quotes to complex argument to be proceesed as one 
+  argument. eg break quot;* | @quot; would allow you to se a breakpoint on the 
+  template with the name quot;* | @quot;</para>
+<section><title>Legend :</title><informaltable><tgroup cols="1"><tbody><row><entry>TEMPLATE_NAME : A valid template name contains only ASCI character codes 0x00 to 0x7F. And can be a fully qualified name ie "xsl:templateName". </entry></row><row><entry>FILENAME : A valid file name local to the system of the user. It can have a "~" prefix on *nix and CYGWIN platforms. Or environment variables under RISC OS</entry></row><row><entry>URI : A Uniform Resource Identifiers as defined by RFC 2396</entry></row><row><entry>MODE_NAME The mode of template which can be fully qualified name ie "xsl:modeName".</entry></row><row><entry>QNAME : A fully qualified name ie "xsl:localPart"</entry></row><row><entry>LINENO : A valid line number in associated &lt;FILENAME&gt;</entry></row><row><entry>NUMBER_OF_FRAMES : A valid line number frames to change position by</entry></row><row><entry>BREAKPOINT_ID : A valid break point number</entry></row><row><entry>WATCH_ID : A valid watch expression number as indicated by showwatch command</entry></row><row><entry>SPEED: speed to walk through code at, between 0 to 9</entry></row><row><entry><markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Comment)</emphasis></markup>: a comment about command meaning or usage</entry></row><row><entry>{ opt1 | opt2 | opt2 .. etc} : Choose one of the opt's</entry></row><row><entry>XPATH : a xpath selection of node(s)</entry></row><row><entry>PARAM_ID : a valid parameter number as indicated by showparam command</entry></row><row><entry>PATH : A path to change working directory to On some operating systems a "~" prefix will be replaced by your home directory path</entry></row><row><entry>TEXT : Free form text <markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(no restrictions)</emphasis></markup></entry></row><row><entry>COMMAND : A valid command for the xsdbg</entry></row><row><entry>QNAME : A valid variable/parameter name</entry></row><row><entry>SOURCE : The stylesheet being/to be executed. See &lt;FILENAME&gt; and &lt;URI&gt;</entry></row><row><entry>DATA : The xml data(document) being/to be processed by the stylesheet. See &lt;FILENAME&gt; and &lt;URI&gt;</entry></row><row><entry>DEVICE_PATH : Is a valid terminal on the operating system</entry></row><row><entry>TTY_LEVEL : Is a valid level of input/output to use</entry></row></tbody></tgroup></informaltable></section>
+
+
+<section><title>Within xsldbg these commands are available:</title><informaltable><tgroup cols="1"><tbody><row><entry>Help related :<link linkend="help_cmd" endterm="help_cmd.title">help</link></entry></row><row><entry>Running related : {<link linkend="bye_cmd" endterm="bye_cmd.title">bye</link>|<link linkend="exit_cmd" endterm="exit_cmd.title">exit</link>|
+<link linkend="quit_cmd" endterm="quit_cmd.title">quit</link>}, <link linkend="step_cmd" endterm="step_cmd.title">step</link>, 
+<link linkend="stepup_cmd" endterm="stepup_cmd.title">stepup</link>, <link linkend="stepdown_cmd" endterm="stepdown_cmd.title">stepdown</link>,
+<link linkend="next_cmd" endterm="next_cmd.title">next</link>,
+<link linkend="continue_cmd" endterm="continue_cmd.title">continue</link>, <link linkend="run_cmd" endterm="run_cmd.title">run</link>,
+<link linkend="trace_cmd" endterm="trace_cmd.title">trace</link>, <link linkend="setoption_cmd" endterm="setoption_cmd.title">setoption</link>,
+<link linkend="options_cmd" endterm="options_cmd.title">options</link></entry></row><row><entry>Libxslt parameter related : <link linkend="addparam_cmd" endterm="addparam_cmd.title">addparam</link>,
+<link linkend="delparam_cmd" endterm="delparam_cmd.title">delparam</link>,<link linkend="showparam_cmd" endterm="showparam_cmd.title">showparam</link>,
+<link linkend="output_cmd" endterm="output_cmd.title">output</link>, <link linkend="setoption_cmd" endterm="setoption_cmd.title">setoption</link>, 
+<link linkend="options_cmd" endterm="options_cmd.title">options</link></entry></row><row><entry>Template related : <link linkend="templates_cmd" endterm="templates_cmd.title">templates</link>,
+<link linkend="where_cmd" endterm="where_cmd.title">where</link>, <link linkend="frame_cmd" endterm="frame_cmd.title">frame</link></entry></row><row><entry>Break point related : <link linkend="break_cmd" endterm="break_cmd.title">break</link>, 
+<link linkend="showbreak_cmd" endterm="showbreak_cmd.title">showbreak</link>,<link linkend="delete_cmd" endterm="delete_cmd.title">delete</link>, 
+<link linkend="enable_cmd" endterm="enable_cmd.title">enable</link></entry></row><row><entry>Expression viewing(xpath) : <link linkend="cat_cmd" endterm="cat_cmd.title">cat</link></entry></row><row><entry>Node viewing : <link linkend="ls_cmd" endterm="ls_cmd.title">ls</link>, <link linkend="dir_cmd" endterm="dir_cmd.title">dir</link>, 
+<link linkend="du_cmd" endterm="du_cmd.title">du</link>, <link linkend="cat_cmd" endterm="cat_cmd.title">cat</link>, <link linkend="pwd_cmd" endterm="pwd_cmd.title">pwd</link></entry></row><row><entry>Variable viewing : <link linkend="globals_cmd" endterm="globals_cmd.title">globals</link>, 
+<link linkend="locals_cmd" endterm="locals_cmd.title">locals</link>, 
+<link linkend="cat_cmd" endterm="cat_cmd.title">cat</link></entry></row><row><entry>Variable setting: <link linkend="set_cmd" endterm="set_cmd.title">set</link></entry></row><row><entry>Node selection : <link linkend="source_cmd" endterm="source_cmd.title">source</link>, 
+<link linkend="data_cmd" endterm="data_cmd.title">data</link>, <link linkend="cd_cmd" endterm="cd_cmd.title">cd</link></entry></row><row><entry>Searching :<link linkend="search_cmd" endterm="search_cmd.title">search</link></entry></row><row><entry>Operating system related :<link linkend="chdir_cmd" endterm="chdir_cmd.title">chdir</link>,
+<link linkend="shell_cmd" endterm="shell_cmd.title">shell</link>,<link linkend="tty_cmd" endterm="tty_cmd.title">tty</link></entry></row><row><entry>File related : <link linkend="output_cmd" endterm="output_cmd.title">output</link>, 
+<link linkend="entities_cmd" endterm="entities_cmd.title">entities</link>, <link linkend="system_cmd" endterm="system_cmd.title">system</link>, 
+<link linkend="public_cmd" endterm="public_cmd.title">public</link></entry></row><row><entry>Disabled file commands: <link linkend="validate_cmd" endterm="validate_cmd.title">validate</link>, 
+<link linkend="load_cmd" endterm="load_cmd.title">load</link>, <link linkend="save_cmd" endterm="save_cmd.title">save</link>, 
+<link linkend="write_cmd" endterm="write_cmd.title">write</link>, <link linkend="free_cmd" endterm="free_cmd.title">free</link></entry></row></tbody></tgroup></informaltable></section>
+</section></chapter><chapter id="command_chapter"><title>Command summary</title><section id="addparam_cmd"><title id="addparam_cmd.title">Addparam</title>
+Add a libxslt parameter
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>addparam &lt;QNAME&gt; &lt;XPATH&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(The &lt;XPATH&gt; must not contain any spaces nor double quotation marks.No error checking done on the validity of &lt;QNAME&gt; nor &lt;XPATH&gt;. This is equivalent to providing --param &lt;QNAME&gt; &lt;XPATH&gt; via command line.)</emphasis></markup></entry></row><row><entry>add param &lt;QNAME&gt; "&lt;XPATH&gt;"<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Must not contain double quotation marks in &lt;XPATH&gt;)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="addwatch_cmd"><title id="addwatch_cmd.title">Addwatch</title>
+Add an expression to be watched. See showwatch for display watch values
+<para>Shortcut name: watch</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>addwatch &lt;XPATH&gt;</entry></row></tbody></tgroup></table>
+</section><section id="break_cmd"><title id="break_cmd.title">Break</title>
+Break at a template, at a location in a stylesheet or xml file loaded by xsldbg, or at the current node. 
+New for xsldbg 3.1.4: When in gdb compatabilty mode orpaned breakpoints can be set at a specific file and line number and be resolved to an active later on.
+<para>Shortcut name: b</para><para>xsldbg will try to guess the complete URL given a 
+<informaltable><tgroup cols="1"><tbody><row><entry>file name without a path specified.</entry></row><row><entry>a file name in the same directory as the "top" stylesheet loaded</entry></row><row><entry>a file name relative to the current working directory of xsldbg</entry></row></tbody></tgroup></informaltable>
+Ie if you have loaded a stylesheet file of ../en/xsldoc.xsl you can do this
+</para><para> break -l xsldoc.xsl 26
+</para><para>This command will match a partial or complete QNAME template and or mode name provided. Eg "template" will match any QNAME with a local part of "template"
+</para><para>Any name spaces in the provided QNAME will be expanded as specified 
+by the names spaces defined in the XSL SOURCE file. eg "xsl:test1"  will be expanded to "http://www.w3.org/199/XSL/Transform:test1"
+</para><para>A requested breakpoint may need to be resolved to its associated URL and line number. This is done automaticly after 
+the first template has been seen by xsldbg. Breakpoints are re-validated shortly after the start of each run. 
+</para><para>Automatic breakpoint validation is used when gdb mode is enabled - the default behaviour of xsldbg</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>break -l &lt;FILENAME&gt; &lt;LINENO&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To set breakpoint at specified file, line number)</emphasis></markup></entry></row><row><entry>break -l &lt;URI&gt; &lt;LINENO&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To set breakpoint at specified URI, line number)</emphasis></markup></entry></row><row><entry>break &lt;TEMPLATE_NAME&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To break at named or matched template.)</emphasis></markup></entry></row><row><entry>break &lt;TEMPLATE_NAME&gt; &lt;MODE_NAME&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To break at named template with given mode.)</emphasis></markup></entry></row><row><entry>break "" &lt;MODE_NAME&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To break at any template that has a given mode name)</emphasis></markup></entry></row><row><entry>break *<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To break at any template found.)</emphasis></markup></entry></row><row><entry>break \*<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To break at the "*" template. Other name that include '*' will not be treated specialy.)</emphasis></markup></entry></row><row><entry>break <markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To break point at current node. Yes that includes xml data nodes!)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="chdir_cmd"><title id="chdir_cmd.title">Chdir</title>
+Change the working directory
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>chdir &lt;PATH&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(A relative or absolute path for operating system)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="cd_cmd"><title id="cd_cmd.title">Cd</title>
+Change to the path specified by a xpath.
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>cd &lt;XPATH&gt;</entry></row><row><entry>cd -t&lt;TEMPLATE_NAME&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To changes current SOURCE node to a be xsl template with name &lt;NAME&gt;, but does execute source command)</emphasis></markup></entry></row><row><entry>cd -s&lt;XPATH&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(An absolute xPath to node within stylesheet)</emphasis></markup></entry></row><row><entry>cd   &lt;SHORTCUT&gt; &lt;XPATH&gt;</entry></row><row><entry>     Where SHORTCUT can be either</entry></row><row><entry><informaltable><tgroup cols="1"><tbody><row><entry>&lt;&lt;         = preceding-sibling::node()</entry></row><row><entry>&gt;&gt;         = following-sibling::node()</entry></row><row><entry>&lt;-         = ancestor::node()</entry></row><row><entry>-&gt;         = decendant::node()</entry></row></tbody></tgroup></informaltable></entry></row></tbody></tgroup></table>
+</section><section id="continue_cmd"><title id="continue_cmd.title">Continue</title>
+Continue running stylesheet, stopping at any break points found.
+<para>Shortcut name: c</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>continue</entry></row></tbody></tgroup></table>
+</section><section id="delparam_cmd"><title id="delparam_cmd.title">Delparam</title>
+Delete a libxslt parameter
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>delparam<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Delete all parameters present)</emphasis></markup></entry></row><row><entry>delparam &lt;PARAM_ID&gt;</entry></row></tbody></tgroup></table>
+</section><section id="delete_cmd"><title id="delete_cmd.title">Delete</title>
+Delete a template breakpoint
+<para>Shortcut name: d</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>delete<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To delete breakpoint at current node)</emphasis></markup></entry></row><row><entry>delete   &lt;BREAKPOINT_ID&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To delete breakpoint at specified break point number)</emphasis></markup></entry></row><row><entry>delete -l &lt;FILENAME&gt; &lt;LINENO&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Delete at specifed file, line number)</emphasis></markup></entry></row><row><entry>delete -l &lt;URI&gt; &lt;LINENO&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Delete at specifed URI, line number)</emphasis></markup></entry></row><row><entry>delete &lt;TEMMPLATENAME&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To delete break point at named template.)</emphasis></markup></entry></row><row><entry>delete *<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To delete all break points.)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="delwatch_cmd"><title id="delwatch_cmd.title">Delwatch</title>
+Delete a watch expression or remove all watch expressions as displayed by "showwatch." command
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>delwatch &lt;WATCHID&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Delete a watch expression with given ID)</emphasis></markup></entry></row><row><entry>delwatch *<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Delete all watch expressions)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="disable_cmd"><title id="disable_cmd.title">Disable</title>
+Disable a breakpoint
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>disable<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To disable breakpoint at current node)</emphasis></markup></entry></row><row><entry>disable   &lt;BREAKPOINT_ID&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To disable breakpoint at specified break point number</emphasis></markup></entry></row><row><entry>disable -l &lt;FILENAME&gt; &lt;LINENO&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Disable breakpoint at specifed file, line number)</emphasis></markup></entry></row><row><entry>disable -l &lt;URI&gt; &lt;LINENO&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Disable breakpoint at specifed URI, line number)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="help_cmd"><title id="help_cmd.title">Help</title>
+Display help on command or overiew
+<para>Shortcut name: h</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>help   <markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Show overview of product)</emphasis></markup></entry></row><row><entry>help &lt;COMMAND&gt; <markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Show help about a command)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="dump_cmd"><title id="dump_cmd.title">Dump</title>
+Dump the gory details of this node
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>dump</entry></row></tbody></tgroup></table>
+</section><section id="enable_cmd"><title id="enable_cmd.title">Enable</title>
+Enable or disable a breakpoint (Toggle enable/disable/)
+<para>Shortcut name: e</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>enable<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To enable/disable breakpoint at current node)</emphasis></markup></entry></row><row><entry>enable   &lt;BREAKPOINT_ID&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To enable/disable breakpoint at specified break point number</emphasis></markup></entry></row><row><entry>enable -l &lt;FILENAME&gt; &lt;LINENO&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Enable/disable breakpoint at specifed file, line number)</emphasis></markup></entry></row><row><entry>enable -l &lt;URI&gt; &lt;LINENO&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Enable/disable breakpoint at specifed URI, line number)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="shell_cmd"><title id="shell_cmd.title">Shell</title>
+Execute shell command
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>shell &lt;TEXT&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(&lt;TEXT&gt; is the text to be passed to operating system for execution)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="quit_cmd"><title id="quit_cmd.title">Quit</title>
+Exit processing stylesheet as soon as possible.
+<para>Shortcut name: q</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>quit</entry></row></tbody></tgroup></table>
+</section><section id="bye_cmd"><title id="bye_cmd.title">Bye</title>
+Exit processing stylesheet as soon as possible.
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>bye</entry></row></tbody></tgroup></table>
+</section><section id="exit_cmd"><title id="exit_cmd.title">Exit</title>
+Exit processing stylesheet as soon as possible.
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>exit</entry></row></tbody></tgroup></table>
+</section><section id="free_cmd"><title id="free_cmd.title">Free</title>
+Free stylesheet and data        (Disabled see run)
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>free</entry></row></tbody></tgroup></table>
+</section><section id="ls_cmd"><title id="ls_cmd.title">Ls</title>
+List nodes in a brief format
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>ls</entry></row></tbody></tgroup></table>
+</section><section id="load_cmd"><title id="load_cmd.title">Load</title>
+Load the xsldbg's options and user preferences from disk
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>load</entry></row></tbody></tgroup></table>
+</section><section id="tty_cmd"><title id="tty_cmd.title">Tty</title>
+Open a terminal. Set the level of tty redirection.
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>tty &lt;DEVICE_PATH&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Where  &lt;DEVICE_PATH&gt; is a valid terminal on the operating system. Just tries to open the terminal</emphasis></markup></entry></row><row><entry>tty &lt;TTY_LEVEL&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Set the level of tty redirection, where &lt;TTY_LEVEL&gt; is a valid level of input/output to use)</emphasis></markup><informaltable><tgroup cols="1"><tbody><row><entry>Where level is </entry></row><row><entry>0 = Default input/output </entry></row><row><entry>1 = Terminal output of results of transformation, tracing and walking <markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Default state when tty device has been opened. Not fully implemented yet.)</emphasis></markup></entry></row><row><entry>2 = Full redirection to terminal<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Not implemented yet.)</emphasis></markup></entry></row><row><entry>All other integer values are assumed to mean level 0
+</entry></row></tbody></tgroup></informaltable></entry></row></tbody></tgroup></table>
+</section><section id="templates_cmd"><title id="templates_cmd.title">Templates</title>
+Print a list of available templates. Search for a template
+<para>Shortcut name: t</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>templates</entry></row><row><entry>templates &lt;TEMPLATE&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Print details of template named &lt;TEMPLATE&gt; if it can be found)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="globals_cmd"><title id="globals_cmd.title">Globals</title>
+Print a list of global stylesheet variables or parameters. Print the value of a global variable
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>globals<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Print list of all globaly available variables)</emphasis></markup></entry></row><row><entry>globals -f<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Print list of all globaly available variables and thier values)</emphasis></markup></entry></row><row><entry>globals &lt;QNAME&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Print the value of variable specified)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="locals_cmd"><title id="locals_cmd.title">Locals</title>
+Print a list of local stylesheet variables or parameters. Print the value of a local variable
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>locals<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Print list of all locally available variables)</emphasis></markup></entry></row><row><entry>locals -f<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Print list of all locally available variables and thier values)</emphasis></markup></entry></row><row><entry>locals &lt;QNAME&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Print the value of variable specified)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="du_cmd"><title id="du_cmd.title">Du</title>
+Print a summary of child nodes in a tree format.
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>du</entry></row></tbody></tgroup></table>
+</section><section id="where_cmd"><title id="where_cmd.title">Where</title>
+Print a trace of templates calls (frame stack) and print the working directory.
+<para>Shortcut name: w</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>where</entry></row></tbody></tgroup></table>
+</section><section id="entities_cmd"><title id="entities_cmd.title">Entities</title>
+Print list of external General Parsed entities used data file (document)
+<para>Shortcut name : ent</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>entities</entry></row></tbody></tgroup></table>
+</section><section id="dir_cmd"><title id="dir_cmd.title">Dir</title>
+Print list of nodes in a similary way to the dir shell command.
+<para/>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>dir</entry></row></tbody></tgroup></table>
+</section><section id="stylesheets_cmd"><title id="stylesheets_cmd.title">Stylesheets</title>
+Print out a list of stylesheets loaded
+<para>Shortcut name: style</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>stylesheets</entry></row></tbody></tgroup></table>
+</section><section id="base_cmd"><title id="base_cmd.title">Base</title>
+Print the base for this node
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>base</entry></row></tbody></tgroup></table>
+</section><section id="pwd_cmd"><title id="pwd_cmd.title">Pwd</title>
+Print the current working directory.
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>pwd</entry></row></tbody></tgroup></table>
+</section><section id="showparam_cmd"><title id="showparam_cmd.title">Showparam</title>
+Print the libxslt parameters present
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>showparam</entry></row></tbody></tgroup></table>
+</section><section id="cat_cmd"><title id="cat_cmd.title">Cat</title>
+Print the result of a xpath expression on relative current node.
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>Usage : cat &lt;XPATH&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To view a variable or parameter)</emphasis></markup></entry></row><row><entry>Usage : cat $&lt;QNAME&gt;</entry></row></tbody></tgroup></table>
+</section><section id="frame_cmd"><title id="frame_cmd.title">Frame</title>
+Print the stack frame at a given depth
+<para>Shortcut name: f</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>frame &lt;FRAME_DEPTH&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Depth is a number from 0 to the current depth of call stack)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="public_cmd"><title id="public_cmd.title">Public</title>
+Print the value that a public ID maps via the current catalog
+<para>Shortcut name : pub</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>public "&lt;PublicID&gt;"</entry></row></tbody></tgroup></table>
+</section><section id="system_cmd"><title id="system_cmd.title">System</title>
+Print the value that a system file maps via the current catalog
+<para>Shortcut name : sys</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>system "&lt;SystemID&gt;"</entry></row></tbody></tgroup></table>
+</section><section id="options_cmd"><title id="options_cmd.title">Options</title>
+Print the values for xsldbg's option
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>options</entry></row></tbody></tgroup></table>
+</section><section id="run_cmd"><title id="run_cmd.title">Run</title>
+Restart the stylesheet.
+<para>Shortcut name: r</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>run</entry></row></tbody></tgroup></table>
+</section><section id="save_cmd"><title id="save_cmd.title">Save</title>
+Save the xsldbg's options and user preferences to disk
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>save</entry></row></tbody></tgroup></table>
+</section><section id="search_cmd"><title id="search_cmd.title">Search</title>
+Search a dataBase of all information gathered from stylesheets loaded
+<para>All output files are stored in, value of the "searchresultspath" option if set, or the same directory as the provided stylesheet. searchresults.xml is normally transformed by  search.xsl, but will be transformed using searchhtml.xsl if the "prefrehtml" option is set.
+</para><para>When the search command is issued a xml file (searchresults.xml) will be created. You can then process this file with your own stylesheet to present data in a other ways. If "preferhtml" option is not set
+then searchresult.txt is printed to display. 
+</para><para>Depending on the amount of data collected it might take a while to complete this command.
+</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>search &lt;XPATH&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(See what xpath can be used see search.dtd. The deafault &lt;XPATH&gt; is '//search/*' )</emphasis></markup></entry></row><row><entry>search -sort &lt;XPATH&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Tell search.xsl to sort the result before outputing it)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="setoption_cmd"><title id="setoption_cmd.title">Setoption</title>
+Set an option for execution of stylesheet
+<para>You will need to use run command to active changes</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>setoption &lt;OPTION_NAME&gt;  &lt;INTEGER_VALUE&gt;</entry></row><row><entry>  Where &lt;OPTION_NAME&gt; can be either</entry></row><row><entry><informaltable><tgroup cols="1"><tbody><row><entry>debug<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(If &lt;INTEGER_VALUE&gt; is true dump the tree of the result instead)</emphasis></markup></entry></row><row><entry>catalogs<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(If &lt;INTEGER_VALUE&gt; is true use the catalogs from $SGML_CATALOG_FILES or SGML$CatalogFiles for risc operating system</emphasis></markup></entry></row><row><entry>html<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(If &lt;INTEGER_VALUE&gt; is true the input document is an HTML file)</emphasis></markup></entry></row><row><entry>docbook<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(If &lt;INTEGER_VALUE&gt; is true the input document is SGML docbook)</emphasis></markup></entry></row><row><entry>xinclude<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(If &lt;INTEGER_VALUE&gt; is true do XInclude processing on document intput)</emphasis></markup></entry></row><row><entry>preferhtml<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(If &lt;INTEGER_VALUE&gt; is true the prefer html output for search results. : See search command)</emphasis></markup></entry></row><row><entry>autoencode<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Try to use the encoding from the stylesheet)</emphasis></markup></entry></row><row><entry>utf8input<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(All input from user is in UTF-8.This is normaly used when xsldbg is running as a thread)</emphasis></markup></entry></row><row><entry>gdb<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Run in gdb compatability mode)</emphasis></markup><informaltable><tgroup cols="1"><tbody><row><entry>For a value of 1 this means
+<informaltable><tgroup cols="1"><tbody><row><entry>Print lots more messages. Increase the frequency of printing "Breapoint at ..."</entry></row><row><entry>At most GDB_LINES_TO_PRINT lines will be printed when evalating expressions, followed by a "...". See options.h to change this value, the default is three lines of text</entry></row><row><entry>Both local and globals will be printed when the "locals" command is issued </entry></row><row><entry>When printing expresssions with cat/print. The evaluated value will be prefixed by "= "  &lt; EXPRESSION &gt;</entry></row></tbody></tgroup></informaltable></entry></row><row><entry/></row><row><entry>For a value of 2 this means
+<informaltable><tgroup cols="1"><tbody><row><entry>Print messages needed by KDbg as well as the output state above (when value is 1) </entry></row></tbody></tgroup></informaltable></entry></row></tbody></tgroup></informaltable></entry></row><row><entry>nonet<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(If &lt;INTEGER_VALUE&gt; is true refuse to fetch DTDs or entities over network)</emphasis></markup></entry></row><row><entry>novalid<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(If &lt;INTEGER_VALUE&gt; is true skip the DTD loading phase)</emphasis></markup></entry></row><row><entry>repeat<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(If &lt;INTEGER_VALUE&gt; is true run the transformation 20 times)</emphasis></markup></entry></row><row><entry>profile<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(If &lt;INTEGER_VALUE&gt; is true  dump profiling informations)</emphasis></markup></entry></row><row><entry>timing<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(If &lt;INTEGER_VALUE&gt; is true display the time used)</emphasis></markup></entry></row><row><entry>noout<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(If &lt;INTEGER_VALUE&gt; is true do not dump the result)</emphasis></markup></entry></row></tbody></tgroup></informaltable></entry></row><row><entry> And where value is true if it is NOT equal to zero</entry></row><row><entry> And where value is false if it IS equal to zero</entry></row><row><entry>stdout<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>Print all error messages to stdout. Normally error messages go to stderr.</emphasis></markup></entry></row><row><entry>setoption &lt;OPTION_NAME&gt; "&lt;STRING_VALUE&gt;"<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Must not contain double quotation marks in &lt;STRING_VALUE&gt;)</emphasis></markup></entry></row><row><entry>setoption &lt;OPTION_NAME&gt; &lt;STRING_VALUE&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Must not contain any spaces, nor double quotation marks in &lt;STRING_VALUE&gt;)</emphasis></markup></entry></row><row><entry>  Where &lt;OPTION_NAME&gt; can be either</entry></row><row><entry><informaltable><tgroup cols="1"><tbody><row><entry>data<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Data file's URI)</emphasis></markup></entry></row><row><entry>source<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Source file's URI)</emphasis></markup></entry></row><row><entry>output<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Output file's SystemID )</emphasis></markup></entry></row><row><entry>docspath<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Path to use when looking for documentation)</emphasis></markup></entry></row><row><entry>catalognames<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(The names of the catalogs to use when the catalogs option is set. Value will be lost if set before setting catalogs option)</emphasis></markup></entry></row><row><entry>encoding<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(What encoding to use for standard output)</emphasis></markup></entry></row><row><entry>searchresultspath<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>What path is to be used when storing the results of searching. If this is not set then xsldbg will use the path of the stylesheet</emphasis></markup></entry></row></tbody></tgroup></informaltable></entry></row></tbody></tgroup></table>
+</section><section id="set_cmd"><title id="set_cmd.title">Set</title>
+Set the value of a variable
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>set &lt;VARIABLE_NAME&gt; &lt;XPATH&gt;</entry></row></tbody></tgroup></table>
+</section><section id="showwatch_cmd"><title id="showwatch_cmd.title">Showwatch</title>
+Show the current expression being watched
+<para>Shortcut name: watches</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>showwatch<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Show the currently selected watches and thier values)</emphasis></markup></entry></row><row><entry>showwatch 1<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Enable the automatic printing of watch expressions. This is used by default.)</emphasis></markup></entry></row><row><entry>showwatch 0<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Disable the automatic printing of watch expressions.)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="next_cmd"><title id="next_cmd.title">Next</title>
+Skip over an xsl:call-template or xsl:apply-templates.
+This command has the same effect of entering the commands "step" and then "up"
+<para>Shortcut name: n</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>next<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(proceed to next sibling instruction)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="output_cmd"><title id="output_cmd.title">Output</title>
+Specify the output file name
+<para>Shortcut name : o</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>output &lt;FILENAME&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(A local file name. Which can have a "~" prefix on *nix and CYGWIN platforms. Or environment variables under RISC OS)</emphasis></markup></entry></row><row><entry>output &lt;URI&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(The &lt;URI&gt; must only use the "file://" protocol. This is then converted to a file name suitable for the operating system)</emphasis></markup></entry></row><row><entry>output -<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>( Send to standard output. Must only be used when using xsldbg's command line prompt )</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="stepdown_cmd"><title id="stepdown_cmd.title">Stepdown</title>
+Step down to a newer "call frame".  
+<para>Shortcut name: down</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>stepdown <markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(step down one frame)</emphasis></markup></entry></row><row><entry>stepdown &lt;NUMBER_OF_FRAMES&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(step down specified number of frames)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="step_cmd"><title id="step_cmd.title">Step</title>
+Step until next stylesheet instruction.
+<para>Shortcut name: s</para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>step</entry></row></tbody></tgroup></table>
+</section><section id="stepup_cmd"><title id="stepup_cmd.title">Stepup</title>
+Step up to a older "call frame".  
+<para>Shortcut name: up</para><para>This is not an accurate command, xsldbg will stop as close as it can. </para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>stepup <markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(step up one frame)</emphasis></markup></entry></row><row><entry>stepup &lt;NUMBER_OF_FRAMES&gt; <markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(step up specified number of frames)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="source_cmd"><title id="source_cmd.title">Source</title>
+Switch to displaying the current node in stylesheet. Or change stylesheet used
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>source<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Switch to the current node in stylesheet.)</emphasis></markup></entry></row><row><entry>source &lt;SOURCE&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To change to a new source file.  A leading "~" is replaced by the $HOME environment variable value. Will need to use "run" command to execute it)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="data_cmd"><title id="data_cmd.title">Data</title>
+Switch to displaying the current node in xml data. Or change xml data used
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>data<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Switch to the current document node.)</emphasis></markup></entry></row><row><entry>data &lt;DATA&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(To change to a new xml data file.  A leading "~" is replaced by the $HOME environment variable value. Will need to use "run" command to process it)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section><section id="write_cmd"><title id="write_cmd.title">Write</title>
+To be completed
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>write</entry></row></tbody></tgroup></table>
+</section><section id="showbreak_cmd"><title id="showbreak_cmd.title">Showbreak</title>
+To display list of template break points.
+<para>Shortcut name: show</para><para>If a mode exists on a template breakpoint then it will
+      be appended to the end of template name for breakpoint. An example of the output is :
+<informaltable><tgroup cols="1"><tbody><row><entry> Breakpoint 3 enabled for template :"*" in file test1.xsl : line 105</entry></row><row><entry> Breakpoint 2 enabled for template :"* testMode" in file test1.xsl : line 109</entry></row><row><entry> Breakpoint 1 enabled for template :"* http://www.w3.org/1999/XSL/Transform:testMode" in file test1.xsl : line 113</entry></row><row><entry/></row><row><entry>  Total of 3 breakpoints present</entry></row></tbody></tgroup></informaltable></para>
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>showbreak</entry></row></tbody></tgroup></table>
+</section><section id="trace_cmd"><title id="trace_cmd.title">Trace</title>
+Trace one execution of the stylesheet
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>trace</entry></row></tbody></tgroup></table>
+</section><section id="validate_cmd"><title id="validate_cmd.title">Validate</title>
+Validate the output file generated by stylesheet    (Disabled)
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>validate</entry></row></tbody></tgroup></table>
+</section><section id="walk_cmd"><title id="walk_cmd.title">Walk</title>
+Walk through code using a range of speeds
+<table label="of usage"><tgroup cols="1"><tbody><row><entry>walk &lt;SPEED&gt;<markup>&nbsp;&nbsp;&nbsp;&nbsp;<emphasis>(Use Ctrl-c to stop execution, &lt;SPEED&gt; is a value between 0 and 9. Where 0 means stop, 1 is very fast, 9 is very slow)</emphasis></markup></entry></row></tbody></tgroup></table>
+</section></chapter><chapter id="credits_chapter"><title>Credits and Licence</title><section><title>Licence</title>&underFDL;&underGPL;</section><section id="thanks"><title>Thanks to </title><para> The writers the libxml and libxsl.</para><para><ulink url="http://members.nextra.at/johsixt/">Johannes Sixt</ulink> for helping with adding xsldbg support to KDbg</para></section></chapter></book>

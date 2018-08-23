@@ -1,0 +1,34 @@
+<!-- 
+     File : config.dtd     
+     Author: Keith Isdale <k_isdale@tpg.com.au>
+     Date : Tue 29th Jan 2002  
+     Description: Xsldbg configuration file documentation type 
+     Copyright Reserved Under GPL     
+
+Refer to this DTD via
+
+<!DOCTYPE config PUBLIC "-//xsldbg//DTD config XML V1.0//EN" "config.dtd">
+
+-->
+
+<!-- At the moment only a sequence of integer or string options is 
+    supported by xsldbg's configuration file-->
+<!ELEMENT config ((intoption | stringoption))*>
+
+<!-- All configuration elements are to have a name and value attribute -->
+<!ENTITY % configbase 
+  "name  CDATA #IMPLIED
+   value CDATA #IMPLIED"
+>
+
+<!-- This will be either a boolean option or an integer xsldbg option-->
+<!ELEMENT intoption EMPTY>
+<!ATTLIST intoption 
+  %configbase;
+>
+
+<!-- This will be a string xsldbg option -->
+<!ELEMENT stringoption EMPTY>
+<!ATTLIST stringoption 
+  %configbase;
+>
