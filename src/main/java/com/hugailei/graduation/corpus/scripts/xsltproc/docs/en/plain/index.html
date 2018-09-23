@@ -1,0 +1,1044 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<style type="text/css"><!--
+TD {font-size: 10pt; font-family: Verdana,Arial,Helvetica}
+BODY {
+    font-size: 10pt;
+    font-family: Verdana,Arial,Helvetica;
+    margin-top: 5pt;
+    margin-left: 0pt;
+    margin-right: 0pt;}
+
+H1 {font-size: 16pt; font-family: Verdana,Arial,Helvetica}
+H2 {font-size: 14pt; font-family: Verdana,Arial,Helvetica}
+H3 {font-size: 12pt; font-family: Verdana,Arial,Helvetica}
+A:link, A:visited, A:active { text-decoration: underline }
+
+.cmd { background-color  :#8b7765}
+.cmdth {background-color :#fffacd}
+.cmdtd {background-color :#FFFFFF}
+.cmdtr {background-color :#FFFFFF}
+.cmdsummary {
+    font-weight : bold;
+    font-size : larger;
+    background-color :#FFFFFF
+    }
+.listbody {
+    font-weight : normal;
+    font-size : medium;
+    background-color :#FFFFFF
+}
+
+.comment {
+    space-treatment : preserve
+}
+
+--></style>
+<title>
+           xsldbg 3.1.7 documentation
+         </title>
+</head>
+<body bgcolor="#8b7765" text="#000000" link="#000000" vlink="#000000"><table class="listbody"><tr><td>
+<h1 class="cmdth">xsldbg 3.1.7</h1>
+<h2 class="cmdth">Overview</h2>
+<h3>xsldbg help</h3>
+
+<p> xsldbg is a text based tool to debug stylesheets (the eXtensible Stylesheet Language) and has 
+commands similar to the Unix/Linux debugger gdb. It has three major modes of execution of stylesheets.
+<table class="list"><tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>Run the whole stylesheet    </td></tr>
+<tr><td>Step to next xsl instruction    </td></tr>
+<tr><td>Continue until next break point is found, or stylesheet has restarted    </td></tr>
+</table></td>
+</tr></table>
+</p>
+<h3>xsldbg command line</h3>
+On systems with readline library available you can use the back/forward
+keys to navigate the history of entered commands.
+On all systems the last entered command can be repeated by just pressing
+the &lt;ENTER&gt; key. 
+
+<p>
+If your operating system supports it file names will be expanded. 
+</p>
+<p>Several commands take more that one argument. Some arguments can be 
+ sourrounded by quotes to complex argument to be proceesed as one 
+  argument. eg break quot;* | @quot; would allow you to se a breakpoint on the 
+  template with the name quot;* | @quot;</p>
+<h3>Legend :</h3>
+<table class="list"><tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>TEMPLATE_NAME : A valid template name contains only ASCI character codes 0x00 to 0x7F. And can be a fully qualified name ie "xsl:templateName".     </td></tr>
+<tr><td>FILENAME : A valid file name local to the system of the user. It can have a "~" prefix on *nix and CYGWIN platforms. Or environment variables under RISC OS    </td></tr>
+<tr><td>URI : A Uniform Resource Identifiers as defined by RFC 2396    </td></tr>
+<tr><td>MODE_NAME The mode of template which can be fully qualified name ie "xsl:modeName".    </td></tr>
+<tr><td>QNAME : A fully qualified name ie "xsl:localPart"    </td></tr>
+<tr><td>LINENO : A valid line number in associated &lt;FILENAME&gt;    </td></tr>
+<tr><td>NUMBER_OF_FRAMES : A valid line number frames to change position by    </td></tr>
+<tr><td>BREAKPOINT_ID : A valid break point number    </td></tr>
+<tr><td>WATCH_ID : A valid watch expression number as indicated by showwatch command    </td></tr>
+<tr><td>SPEED: speed to walk through code at, between 0 to 9    </td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;<i>(Comment)</i>: a comment about command meaning or usage    </td></tr>
+<tr><td>{ opt1 | opt2 | opt2 .. etc} : Choose one of the opt's    </td></tr>
+<tr><td>XPATH : a xpath selection of node(s)    </td></tr>
+<tr><td>PARAM_ID : a valid parameter number as indicated by showparam command    </td></tr>
+<tr><td>PATH : A path to change working directory to On some operating systems a "~" prefix will be replaced by your home directory path    </td></tr>
+<tr><td>TEXT : Free form text &nbsp;&nbsp;&nbsp;&nbsp;<i>(no restrictions)</i>    </td></tr>
+<tr><td>COMMAND : A valid command for the xsdbg    </td></tr>
+<tr><td>QNAME : A valid variable/parameter name    </td></tr>
+<tr><td>SOURCE : The stylesheet being/to be executed. See &lt;FILENAME&gt; and &lt;URI&gt;    </td></tr>
+<tr><td>DATA : The xml data(document) being/to be processed by the stylesheet. See &lt;FILENAME&gt; and &lt;URI&gt;    </td></tr>
+<tr><td>DEVICE_PATH : Is a valid terminal on the operating system    </td></tr>
+<tr><td>TTY_LEVEL : Is a valid level of input/output to use    </td></tr>
+</table></td>
+</tr></table>
+
+
+
+<h3>Within xsldbg these commands are available:</h3>
+<table class="list"><tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>Help related :<a href="#help">help</a>    </td></tr>
+<tr><td>Running related : {<a href="#bye">bye</a>|<a href="#exit">exit</a>|
+<a href="#quit">quit</a>}, <a href="#step">step</a>, 
+<a href="#stepup">stepup</a>, <a href="#stepdown">stepdown</a>,
+<a href="#next">next</a>,
+<a href="#continue">continue</a>, <a href="#run">run</a>,
+<a href="#trace">trace</a>, <a href="#setoption">setoption</a>,
+<a href="#options">options</a>    </td></tr>
+<tr><td>Libxslt parameter related : <a href="#addparam">addparam</a>,
+<a href="#delparam">delparam</a>,<a href="#showparam">showparam</a>,
+<a href="#output">output</a>, <a href="#setoption">setoption</a>, 
+<a href="#options">options</a>    </td></tr>
+<tr><td>Template related : <a href="#templates">templates</a>,
+<a href="#where">where</a>, <a href="#frame">frame</a>    </td></tr>
+<tr><td>Break point related : <a href="#break">break</a>, 
+<a href="#showbreak">showbreak</a>,<a href="#delete">delete</a>, 
+<a href="#enable">enable</a>    </td></tr>
+<tr><td>Expression viewing(xpath) : <a href="#cat">cat</a>    </td></tr>
+<tr><td>Node viewing : <a href="#ls">ls</a>, <a href="#dir">dir</a>, 
+<a href="#du">du</a>, <a href="#cat">cat</a>, <a href="#pwd">pwd</a>    </td></tr>
+<tr><td>Variable viewing : <a href="#globals">globals</a>, 
+<a href="#locals">locals</a>, 
+<a href="#cat">cat</a>    </td></tr>
+<tr><td>Variable setting: <a href="#set">set</a>    </td></tr>
+<tr><td>Node selection : <a href="#source">source</a>, 
+<a href="#data">data</a>, <a href="#cd">cd</a>    </td></tr>
+<tr><td>Searching :<a href="#search">search</a>    </td></tr>
+<tr><td>Operating system related :<a href="#chdir">chdir</a>,
+<a href="#shell">shell</a>,<a href="#tty">tty</a>    </td></tr>
+<tr><td>File related : <a href="#output">output</a>, 
+<a href="#entities">entities</a>, <a href="#system">system</a>, 
+<a href="#public">public</a>    </td></tr>
+<tr><td>Disabled file commands: <a href="#validate">validate</a>, 
+<a href="#load">load</a>, <a href="#save">save</a>, 
+<a href="#write">write</a>, <a href="#free">free</a>    </td></tr>
+</table></td>
+</tr></table>
+
+
+
+
+<h2 class="cmdth">Commands</h2>
+<table width="100%" class="cmd"><tr><td>
+<a name="addparam"></a><table width="100%" class="cmd">
+<th class="cmdth">Addparam</th>
+<tr class="cmdsummary"><td>Add a libxslt parameter</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>addparam &lt;QNAME&gt; &lt;XPATH&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(The &lt;XPATH&gt; must not contain any spaces nor double quotation marks.No error checking done on the validity of &lt;QNAME&gt; nor &lt;XPATH&gt;. This is equivalent to providing --param &lt;QNAME&gt; &lt;XPATH&gt; via command line.)</i>    </td></tr>
+<tr><td>add param &lt;QNAME&gt; "&lt;XPATH&gt;"&nbsp;&nbsp;&nbsp;&nbsp;<i>(Must not contain double quotation marks in &lt;XPATH&gt;)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="addwatch"></a><table width="100%" class="cmd">
+<th class="cmdth">Addwatch</th>
+<tr class="cmdsummary"><td>Add an expression to be watched. See showwatch for display watch values</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: watch</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>addwatch &lt;XPATH&gt;    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="base"></a><table width="100%" class="cmd">
+<th class="cmdth">Base</th>
+<tr class="cmdsummary"><td>Print the base for this node</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>base    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="break"></a><table width="100%" class="cmd">
+<th class="cmdth">Break</th>
+<tr class="cmdsummary"><td>Break at a template, at a location in a stylesheet or xml file loaded by xsldbg, or at the current node. 
+New for xsldbg 3.1.4: When in gdb compatabilty mode orpaned breakpoints can be set at a specific file and line number and be resolved to an active later on.</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: b</p>
+<p>xsldbg will try to guess the complete URL given a 
+<table class="list"><tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>file name without a path specified.    </td></tr>
+<tr><td>a file name in the same directory as the "top" stylesheet loaded    </td></tr>
+<tr><td>a file name relative to the current working directory of xsldbg    </td></tr>
+</table></td>
+</tr></table>
+Ie if you have loaded a stylesheet file of ../en/xsldoc.xsl you can do this
+</p>
+<p> break -l xsldoc.xsl 26
+</p>
+<p>This command will match a partial or complete QNAME template and or mode name provided. Eg "template" will match any QNAME with a local part of "template"
+</p>
+<p>Any name spaces in the provided QNAME will be expanded as specified 
+by the names spaces defined in the XSL SOURCE file. eg "xsl:test1"  will be expanded to "http://www.w3.org/199/XSL/Transform:test1"
+</p>
+<p>A requested breakpoint may need to be resolved to its associated URL and line number. This is done automaticly after 
+the first template has been seen by xsldbg. Breakpoints are re-validated shortly after the start of each run. 
+</p>
+<p>Automatic breakpoint validation is used when gdb mode is enabled - the default behaviour of xsldbg</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>break -l &lt;FILENAME&gt; &lt;LINENO&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(To set breakpoint at specified file, line number)</i>    </td></tr>
+<tr><td>break -l &lt;URI&gt; &lt;LINENO&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(To set breakpoint at specified URI, line number)</i>    </td></tr>
+<tr><td>break &lt;TEMPLATE_NAME&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(To break at named or matched template.)</i>    </td></tr>
+<tr><td>break &lt;TEMPLATE_NAME&gt; &lt;MODE_NAME&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(To break at named template with given mode.)</i>    </td></tr>
+<tr><td>break "" &lt;MODE_NAME&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(To break at any template that has a given mode name)</i>    </td></tr>
+<tr><td>break *&nbsp;&nbsp;&nbsp;&nbsp;<i>(To break at any template found.)</i>    </td></tr>
+<tr><td>break \*&nbsp;&nbsp;&nbsp;&nbsp;<i>(To break at the "*" template. Other name that include '*' will not be treated specialy.)</i>    </td></tr>
+<tr><td>break &nbsp;&nbsp;&nbsp;&nbsp;<i>(To break point at current node. Yes that includes xml data nodes!)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="bye"></a><table width="100%" class="cmd">
+<th class="cmdth">Bye</th>
+<tr class="cmdsummary"><td>Exit processing stylesheet as soon as possible.</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>bye    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="cat"></a><table width="100%" class="cmd">
+<th class="cmdth">Cat</th>
+<tr class="cmdsummary"><td>Print the result of a xpath expression on relative current node.</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>Usage : cat &lt;XPATH&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(To view a variable or parameter)</i>    </td></tr>
+<tr><td>Usage : cat $&lt;QNAME&gt;    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="cd"></a><table width="100%" class="cmd">
+<th class="cmdth">Cd</th>
+<tr class="cmdsummary"><td>Change to the path specified by a xpath.</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>cd &lt;XPATH&gt;    </td></tr>
+<tr><td>cd -t&lt;TEMPLATE_NAME&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(To changes current SOURCE node to a be xsl template with name &lt;NAME&gt;, but does execute source command)</i>    </td></tr>
+<tr><td>cd -s&lt;XPATH&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(An absolute xPath to node within stylesheet)</i>    </td></tr>
+<tr><td>cd   &lt;SHORTCUT&gt; &lt;XPATH&gt;    </td></tr>
+<tr><td>     Where SHORTCUT can be either    </td></tr>
+<tr><td>
+<table class="list"><tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>&lt;&lt;         = preceding-sibling::node()    </td></tr>
+<tr><td>&gt;&gt;         = following-sibling::node()    </td></tr>
+<tr><td>&lt;-         = ancestor::node()    </td></tr>
+<tr><td>-&gt;         = decendant::node()    </td></tr>
+</table></td>
+</tr></table>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="chdir"></a><table width="100%" class="cmd">
+<th class="cmdth">Chdir</th>
+<tr class="cmdsummary"><td>Change the working directory</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>chdir &lt;PATH&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(A relative or absolute path for operating system)</i>    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="continue"></a><table width="100%" class="cmd">
+<th class="cmdth">Continue</th>
+<tr class="cmdsummary"><td>Continue running stylesheet, stopping at any break points found.</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: c</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>continue    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="data"></a><table width="100%" class="cmd">
+<th class="cmdth">Data</th>
+<tr class="cmdsummary"><td>Switch to displaying the current node in xml data. Or change xml data used</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>data&nbsp;&nbsp;&nbsp;&nbsp;<i>(Switch to the current document node.)</i>    </td></tr>
+<tr><td>data &lt;DATA&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(To change to a new xml data file.  A leading "~" is replaced by the $HOME environment variable value. Will need to use "run" command to process it)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="delete"></a><table width="100%" class="cmd">
+<th class="cmdth">Delete</th>
+<tr class="cmdsummary"><td>Delete a template breakpoint</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: d</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>delete&nbsp;&nbsp;&nbsp;&nbsp;<i>(To delete breakpoint at current node)</i>    </td></tr>
+<tr><td>delete   &lt;BREAKPOINT_ID&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(To delete breakpoint at specified break point number)</i>    </td></tr>
+<tr><td>delete -l &lt;FILENAME&gt; &lt;LINENO&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Delete at specifed file, line number)</i>    </td></tr>
+<tr><td>delete -l &lt;URI&gt; &lt;LINENO&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Delete at specifed URI, line number)</i>    </td></tr>
+<tr><td>delete &lt;TEMMPLATENAME&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(To delete break point at named template.)</i>    </td></tr>
+<tr><td>delete *&nbsp;&nbsp;&nbsp;&nbsp;<i>(To delete all break points.)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="delparam"></a><table width="100%" class="cmd">
+<th class="cmdth">Delparam</th>
+<tr class="cmdsummary"><td>Delete a libxslt parameter</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>delparam&nbsp;&nbsp;&nbsp;&nbsp;<i>(Delete all parameters present)</i>    </td></tr>
+<tr><td>delparam &lt;PARAM_ID&gt;    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="delwatch"></a><table width="100%" class="cmd">
+<th class="cmdth">Delwatch</th>
+<tr class="cmdsummary"><td>Delete a watch expression or remove all watch expressions as displayed by "showwatch." command</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>delwatch &lt;WATCHID&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Delete a watch expression with given ID)</i>    </td></tr>
+<tr><td>delwatch *&nbsp;&nbsp;&nbsp;&nbsp;<i>(Delete all watch expressions)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="dir"></a><table width="100%" class="cmd">
+<th class="cmdth">Dir</th>
+<tr class="cmdsummary"><td>Print list of nodes in a similary way to the dir shell command.</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p></p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>dir    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="disable"></a><table width="100%" class="cmd">
+<th class="cmdth">Disable</th>
+<tr class="cmdsummary"><td>Disable a breakpoint</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>disable&nbsp;&nbsp;&nbsp;&nbsp;<i>(To disable breakpoint at current node)</i>    </td></tr>
+<tr><td>disable   &lt;BREAKPOINT_ID&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(To disable breakpoint at specified break point number</i>    </td></tr>
+<tr><td>disable -l &lt;FILENAME&gt; &lt;LINENO&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Disable breakpoint at specifed file, line number)</i>    </td></tr>
+<tr><td>disable -l &lt;URI&gt; &lt;LINENO&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Disable breakpoint at specifed URI, line number)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="du"></a><table width="100%" class="cmd">
+<th class="cmdth">Du</th>
+<tr class="cmdsummary"><td>Print a summary of child nodes in a tree format.</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>du    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="dump"></a><table width="100%" class="cmd">
+<th class="cmdth">Dump</th>
+<tr class="cmdsummary"><td>Dump the gory details of this node</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>dump    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="enable"></a><table width="100%" class="cmd">
+<th class="cmdth">Enable</th>
+<tr class="cmdsummary"><td>Enable or disable a breakpoint (Toggle enable/disable/)</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: e</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>enable&nbsp;&nbsp;&nbsp;&nbsp;<i>(To enable/disable breakpoint at current node)</i>    </td></tr>
+<tr><td>enable   &lt;BREAKPOINT_ID&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(To enable/disable breakpoint at specified break point number</i>    </td></tr>
+<tr><td>enable -l &lt;FILENAME&gt; &lt;LINENO&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Enable/disable breakpoint at specifed file, line number)</i>    </td></tr>
+<tr><td>enable -l &lt;URI&gt; &lt;LINENO&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Enable/disable breakpoint at specifed URI, line number)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="entities"></a><table width="100%" class="cmd">
+<th class="cmdth">Entities</th>
+<tr class="cmdsummary"><td>Print list of external General Parsed entities used data file (document)</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name : ent</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>entities    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="exit"></a><table width="100%" class="cmd">
+<th class="cmdth">Exit</th>
+<tr class="cmdsummary"><td>Exit processing stylesheet as soon as possible.</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>exit    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="frame"></a><table width="100%" class="cmd">
+<th class="cmdth">Frame</th>
+<tr class="cmdsummary"><td>Print the stack frame at a given depth</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: f</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>frame &lt;FRAME_DEPTH&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Depth is a number from 0 to the current depth of call stack)</i>    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="free"></a><table width="100%" class="cmd">
+<th class="cmdth">Free</th>
+<tr class="cmdsummary"><td>Free stylesheet and data        (Disabled see run)</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>free    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="globals"></a><table width="100%" class="cmd">
+<th class="cmdth">Globals</th>
+<tr class="cmdsummary"><td>Print a list of global stylesheet variables or parameters. Print the value of a global variable</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>globals&nbsp;&nbsp;&nbsp;&nbsp;<i>(Print list of all globaly available variables)</i>    </td></tr>
+<tr><td>globals -f&nbsp;&nbsp;&nbsp;&nbsp;<i>(Print list of all globaly available variables and thier values)</i>    </td></tr>
+<tr><td>globals &lt;QNAME&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Print the value of variable specified)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="help"></a><table width="100%" class="cmd">
+<th class="cmdth">Help</th>
+<tr class="cmdsummary"><td>Display help on command or overiew</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: h</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>help   &nbsp;&nbsp;&nbsp;&nbsp;<i>(Show overview of product)</i>    </td></tr>
+<tr><td>help &lt;COMMAND&gt; &nbsp;&nbsp;&nbsp;&nbsp;<i>(Show help about a command)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="load"></a><table width="100%" class="cmd">
+<th class="cmdth">Load</th>
+<tr class="cmdsummary"><td>Load the xsldbg's options and user preferences from disk</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>load    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="locals"></a><table width="100%" class="cmd">
+<th class="cmdth">Locals</th>
+<tr class="cmdsummary"><td>Print a list of local stylesheet variables or parameters. Print the value of a local variable</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>locals&nbsp;&nbsp;&nbsp;&nbsp;<i>(Print list of all locally available variables)</i>    </td></tr>
+<tr><td>locals -f&nbsp;&nbsp;&nbsp;&nbsp;<i>(Print list of all locally available variables and thier values)</i>    </td></tr>
+<tr><td>locals &lt;QNAME&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Print the value of variable specified)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="ls"></a><table width="100%" class="cmd">
+<th class="cmdth">Ls</th>
+<tr class="cmdsummary"><td>List nodes in a brief format</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>ls    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="next"></a><table width="100%" class="cmd">
+<th class="cmdth">Next</th>
+<tr class="cmdsummary"><td>Skip over an xsl:call-template or xsl:apply-templates.
+This command has the same effect of entering the commands "step" and then "up"</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: n</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>next&nbsp;&nbsp;&nbsp;&nbsp;<i>(proceed to next sibling instruction)</i>    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="options"></a><table width="100%" class="cmd">
+<th class="cmdth">Options</th>
+<tr class="cmdsummary"><td>Print the values for xsldbg's option</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>options    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="output"></a><table width="100%" class="cmd">
+<th class="cmdth">Output</th>
+<tr class="cmdsummary"><td>Specify the output file name</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name : o</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>output &lt;FILENAME&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(A local file name. Which can have a "~" prefix on *nix and CYGWIN platforms. Or environment variables under RISC OS)</i>    </td></tr>
+<tr><td>output &lt;URI&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(The &lt;URI&gt; must only use the "file://" protocol. This is then converted to a file name suitable for the operating system)</i>    </td></tr>
+<tr><td>output -&nbsp;&nbsp;&nbsp;&nbsp;<i>( Send to standard output. Must only be used when using xsldbg's command line prompt )</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="public"></a><table width="100%" class="cmd">
+<th class="cmdth">Public</th>
+<tr class="cmdsummary"><td>Print the value that a public ID maps via the current catalog</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name : pub</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>public "&lt;PublicID&gt;"    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="pwd"></a><table width="100%" class="cmd">
+<th class="cmdth">Pwd</th>
+<tr class="cmdsummary"><td>Print the current working directory.</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>pwd    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="quit"></a><table width="100%" class="cmd">
+<th class="cmdth">Quit</th>
+<tr class="cmdsummary"><td>Exit processing stylesheet as soon as possible.</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: q</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>quit    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="run"></a><table width="100%" class="cmd">
+<th class="cmdth">Run</th>
+<tr class="cmdsummary"><td>Restart the stylesheet.</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: r</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>run    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="save"></a><table width="100%" class="cmd">
+<th class="cmdth">Save</th>
+<tr class="cmdsummary"><td>Save the xsldbg's options and user preferences to disk</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>save    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="search"></a><table width="100%" class="cmd">
+<th class="cmdth">Search</th>
+<tr class="cmdsummary"><td>Search a dataBase of all information gathered from stylesheets loaded</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>All output files are stored in, value of the "searchresultspath" option if set, or the same directory as the provided stylesheet. searchresults.xml is normally transformed by  search.xsl, but will be transformed using searchhtml.xsl if the "prefrehtml" option is set.
+</p>
+<p>When the search command is issued a xml file (searchresults.xml) will be created. You can then process this file with your own stylesheet to present data in a other ways. If "preferhtml" option is not set
+then searchresult.txt is printed to display. 
+</p>
+<p>Depending on the amount of data collected it might take a while to complete this command.
+</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>search &lt;XPATH&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(See what xpath can be used see search.dtd. The deafault &lt;XPATH&gt; is '//search/*' )</i>    </td></tr>
+<tr><td>search -sort &lt;XPATH&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Tell search.xsl to sort the result before outputing it)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="set"></a><table width="100%" class="cmd">
+<th class="cmdth">Set</th>
+<tr class="cmdsummary"><td>Set the value of a variable</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>set &lt;VARIABLE_NAME&gt; &lt;XPATH&gt;    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="setoption"></a><table width="100%" class="cmd">
+<th class="cmdth">Setoption</th>
+<tr class="cmdsummary"><td>Set an option for execution of stylesheet</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>You will need to use run command to active changes</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>setoption &lt;OPTION_NAME&gt;  &lt;INTEGER_VALUE&gt;    </td></tr>
+<tr><td>  Where &lt;OPTION_NAME&gt; can be either    </td></tr>
+<tr><td>
+<table class="list"><tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>debug&nbsp;&nbsp;&nbsp;&nbsp;<i>(If &lt;INTEGER_VALUE&gt; is true dump the tree of the result instead)</i>    </td></tr>
+<tr><td>catalogs&nbsp;&nbsp;&nbsp;&nbsp;<i>(If &lt;INTEGER_VALUE&gt; is true use the catalogs from $SGML_CATALOG_FILES or SGML$CatalogFiles for risc operating system</i>    </td></tr>
+<tr><td>html&nbsp;&nbsp;&nbsp;&nbsp;<i>(If &lt;INTEGER_VALUE&gt; is true the input document is an HTML file)</i>    </td></tr>
+<tr><td>docbook&nbsp;&nbsp;&nbsp;&nbsp;<i>(If &lt;INTEGER_VALUE&gt; is true the input document is SGML docbook)</i>    </td></tr>
+<tr><td>xinclude&nbsp;&nbsp;&nbsp;&nbsp;<i>(If &lt;INTEGER_VALUE&gt; is true do XInclude processing on document intput)</i>    </td></tr>
+<tr><td>preferhtml&nbsp;&nbsp;&nbsp;&nbsp;<i>(If &lt;INTEGER_VALUE&gt; is true the prefer html output for search results. : See search command)</i>    </td></tr>
+<tr><td>autoencode&nbsp;&nbsp;&nbsp;&nbsp;<i>(Try to use the encoding from the stylesheet)</i>    </td></tr>
+<tr><td>utf8input&nbsp;&nbsp;&nbsp;&nbsp;<i>(All input from user is in UTF-8.This is normaly used when xsldbg is running as a thread)</i>    </td></tr>
+<tr><td>gdb&nbsp;&nbsp;&nbsp;&nbsp;<i>(Run in gdb compatability mode)</i><table class="list"><tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>For a value of 1 this means
+<table class="list"><tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>Print lots more messages. Increase the frequency of printing "Breapoint at ..."    </td></tr>
+<tr><td>At most GDB_LINES_TO_PRINT lines will be printed when evalating expressions, followed by a "...". See options.h to change this value, the default is three lines of text    </td></tr>
+<tr><td>Both local and globals will be printed when the "locals" command is issued     </td></tr>
+<tr><td>When printing expresssions with cat/print. The evaluated value will be prefixed by "= "  &lt; EXPRESSION &gt;    </td></tr>
+</table></td>
+</tr></table>    </td></tr>
+<tr><td>    </td></tr>
+<tr><td>For a value of 2 this means
+<table class="list"><tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>Print messages needed by KDbg as well as the output state above (when value is 1)     </td></tr></table></td>
+</tr></table>    </td></tr>
+</table></td>
+</tr></table>    </td></tr>
+<tr><td>nonet&nbsp;&nbsp;&nbsp;&nbsp;<i>(If &lt;INTEGER_VALUE&gt; is true refuse to fetch DTDs or entities over network)</i>    </td></tr>
+<tr><td>novalid&nbsp;&nbsp;&nbsp;&nbsp;<i>(If &lt;INTEGER_VALUE&gt; is true skip the DTD loading phase)</i>    </td></tr>
+<tr><td>repeat&nbsp;&nbsp;&nbsp;&nbsp;<i>(If &lt;INTEGER_VALUE&gt; is true run the transformation 20 times)</i>    </td></tr>
+<tr><td>profile&nbsp;&nbsp;&nbsp;&nbsp;<i>(If &lt;INTEGER_VALUE&gt; is true  dump profiling informations)</i>    </td></tr>
+<tr><td>timing&nbsp;&nbsp;&nbsp;&nbsp;<i>(If &lt;INTEGER_VALUE&gt; is true display the time used)</i>    </td></tr>
+<tr><td>noout&nbsp;&nbsp;&nbsp;&nbsp;<i>(If &lt;INTEGER_VALUE&gt; is true do not dump the result)</i>    </td></tr>
+</table></td>
+</tr></table>    </td></tr>
+<tr><td> And where value is true if it is NOT equal to zero    </td></tr>
+<tr><td> And where value is false if it IS equal to zero    </td></tr>
+<tr><td>stdout&nbsp;&nbsp;&nbsp;&nbsp;<i>Print all error messages to stdout. Normally error messages go to stderr.</i>    </td></tr>
+<tr><td>setoption &lt;OPTION_NAME&gt; "&lt;STRING_VALUE&gt;"&nbsp;&nbsp;&nbsp;&nbsp;<i>(Must not contain double quotation marks in &lt;STRING_VALUE&gt;)</i>    </td></tr>
+<tr><td>setoption &lt;OPTION_NAME&gt; &lt;STRING_VALUE&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Must not contain any spaces, nor double quotation marks in &lt;STRING_VALUE&gt;)</i>    </td></tr>
+<tr><td>  Where &lt;OPTION_NAME&gt; can be either    </td></tr>
+<tr><td>
+<table class="list"><tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>data&nbsp;&nbsp;&nbsp;&nbsp;<i>(Data file's URI)</i>    </td></tr>
+<tr><td>source&nbsp;&nbsp;&nbsp;&nbsp;<i>(Source file's URI)</i>    </td></tr>
+<tr><td>output&nbsp;&nbsp;&nbsp;&nbsp;<i>(Output file's SystemID )</i>    </td></tr>
+<tr><td>docspath&nbsp;&nbsp;&nbsp;&nbsp;<i>(Path to use when looking for documentation)</i>    </td></tr>
+<tr><td>catalognames&nbsp;&nbsp;&nbsp;&nbsp;<i>(The names of the catalogs to use when the catalogs option is set. Value will be lost if set before setting catalogs option)</i>    </td></tr>
+<tr><td>encoding&nbsp;&nbsp;&nbsp;&nbsp;<i>(What encoding to use for standard output)</i>    </td></tr>
+<tr><td>searchresultspath&nbsp;&nbsp;&nbsp;&nbsp;<i>What path is to be used when storing the results of searching. If this is not set then xsldbg will use the path of the stylesheet</i>    </td></tr>
+</table></td>
+</tr></table>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="shell"></a><table width="100%" class="cmd">
+<th class="cmdth">Shell</th>
+<tr class="cmdsummary"><td>Execute shell command</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>shell &lt;TEXT&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(&lt;TEXT&gt; is the text to be passed to operating system for execution)</i>    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="showbreak"></a><table width="100%" class="cmd">
+<th class="cmdth">Showbreak</th>
+<tr class="cmdsummary"><td>To display list of template break points.</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: show</p>
+<p>If a mode exists on a template breakpoint then it will
+      be appended to the end of template name for breakpoint. An example of the output is :
+<table class="list"><tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td> Breakpoint 3 enabled for template :"*" in file test1.xsl : line 105    </td></tr>
+<tr><td> Breakpoint 2 enabled for template :"* testMode" in file test1.xsl : line 109    </td></tr>
+<tr><td> Breakpoint 1 enabled for template :"* http://www.w3.org/1999/XSL/Transform:testMode" in file test1.xsl : line 113    </td></tr>
+<tr><td>    </td></tr>
+<tr><td>  Total of 3 breakpoints present    </td></tr>
+</table></td>
+</tr></table>
+</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>showbreak    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="showparam"></a><table width="100%" class="cmd">
+<th class="cmdth">Showparam</th>
+<tr class="cmdsummary"><td>Print the libxslt parameters present</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>showparam    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="showwatch"></a><table width="100%" class="cmd">
+<th class="cmdth">Showwatch</th>
+<tr class="cmdsummary"><td>Show the current expression being watched</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: watches</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>showwatch&nbsp;&nbsp;&nbsp;&nbsp;<i>(Show the currently selected watches and thier values)</i>    </td></tr>
+<tr><td>showwatch 1&nbsp;&nbsp;&nbsp;&nbsp;<i>(Enable the automatic printing of watch expressions. This is used by default.)</i>    </td></tr>
+<tr><td>showwatch 0&nbsp;&nbsp;&nbsp;&nbsp;<i>(Disable the automatic printing of watch expressions.)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="source"></a><table width="100%" class="cmd">
+<th class="cmdth">Source</th>
+<tr class="cmdsummary"><td>Switch to displaying the current node in stylesheet. Or change stylesheet used</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>source&nbsp;&nbsp;&nbsp;&nbsp;<i>(Switch to the current node in stylesheet.)</i>    </td></tr>
+<tr><td>source &lt;SOURCE&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(To change to a new source file.  A leading "~" is replaced by the $HOME environment variable value. Will need to use "run" command to execute it)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="step"></a><table width="100%" class="cmd">
+<th class="cmdth">Step</th>
+<tr class="cmdsummary"><td>Step until next stylesheet instruction.</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: s</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>step    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="stepdown"></a><table width="100%" class="cmd">
+<th class="cmdth">Stepdown</th>
+<tr class="cmdsummary"><td>Step down to a newer "call frame".  </td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: down</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>stepdown &nbsp;&nbsp;&nbsp;&nbsp;<i>(step down one frame)</i>    </td></tr>
+<tr><td>stepdown &lt;NUMBER_OF_FRAMES&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(step down specified number of frames)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="stepup"></a><table width="100%" class="cmd">
+<th class="cmdth">Stepup</th>
+<tr class="cmdsummary"><td>Step up to a older "call frame".  </td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: up</p>
+<p>This is not an accurate command, xsldbg will stop as close as it can. </p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>stepup &nbsp;&nbsp;&nbsp;&nbsp;<i>(step up one frame)</i>    </td></tr>
+<tr><td>stepup &lt;NUMBER_OF_FRAMES&gt; &nbsp;&nbsp;&nbsp;&nbsp;<i>(step up specified number of frames)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="stylesheets"></a><table width="100%" class="cmd">
+<th class="cmdth">Stylesheets</th>
+<tr class="cmdsummary"><td>Print out a list of stylesheets loaded</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: style</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>stylesheets    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="system"></a><table width="100%" class="cmd">
+<th class="cmdth">System</th>
+<tr class="cmdsummary"><td>Print the value that a system file maps via the current catalog</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name : sys</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>system "&lt;SystemID&gt;"    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="templates"></a><table width="100%" class="cmd">
+<th class="cmdth">Templates</th>
+<tr class="cmdsummary"><td>Print a list of available templates. Search for a template</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: t</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>templates    </td></tr>
+<tr><td>templates &lt;TEMPLATE&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Print details of template named &lt;TEMPLATE&gt; if it can be found)</i>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="trace"></a><table width="100%" class="cmd">
+<th class="cmdth">Trace</th>
+<tr class="cmdsummary"><td>Trace one execution of the stylesheet</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>trace    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="tty"></a><table width="100%" class="cmd">
+<th class="cmdth">Tty</th>
+<tr class="cmdsummary"><td>Open a terminal. Set the level of tty redirection.</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>tty &lt;DEVICE_PATH&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Where  &lt;DEVICE_PATH&gt; is a valid terminal on the operating system. Just tries to open the terminal</i>    </td></tr>
+<tr><td>tty &lt;TTY_LEVEL&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Set the level of tty redirection, where &lt;TTY_LEVEL&gt; is a valid level of input/output to use)</i><table class="list"><tr>
+<td width="10"></td>
+<td><table class="listbody">
+<tr><td>Where level is     </td></tr>
+<tr><td>0 = Default input/output     </td></tr>
+<tr><td>1 = Terminal output of results of transformation, tracing and walking &nbsp;&nbsp;&nbsp;&nbsp;<i>(Default state when tty device has been opened. Not fully implemented yet.)</i>    </td></tr>
+<tr><td>2 = Full redirection to terminal&nbsp;&nbsp;&nbsp;&nbsp;<i>(Not implemented yet.)</i>    </td></tr>
+<tr><td>All other integer values are assumed to mean level 0
+    </td></tr>
+</table></td>
+</tr></table>    </td></tr>
+</table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="validate"></a><table width="100%" class="cmd">
+<th class="cmdth">Validate</th>
+<tr class="cmdsummary"><td>Validate the output file generated by stylesheet    (Disabled)</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>validate    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="walk"></a><table width="100%" class="cmd">
+<th class="cmdth">Walk</th>
+<tr class="cmdsummary"><td>Walk through code using a range of speeds</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>walk &lt;SPEED&gt;&nbsp;&nbsp;&nbsp;&nbsp;<i>(Use Ctrl-c to stop execution, &lt;SPEED&gt; is a value between 0 and 9. Where 0 means stop, 1 is very fast, 9 is very slow)</i>    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="where"></a><table width="100%" class="cmd">
+<th class="cmdth">Where</th>
+<tr class="cmdsummary"><td>Print a trace of templates calls (frame stack) and print the working directory.</td></tr>
+<tr class="cmdtr"><td class="cmdtd">
+<p>Shortcut name: w</p>
+</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>where    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br><a name="write"></a><table width="100%" class="cmd">
+<th class="cmdth">Write</th>
+<tr class="cmdsummary"><td>To be completed</td></tr>
+<tr class="cmdtr"><table class="usage" width="100%">
+<th class="cmdth">Usage</th>
+<tr>
+<td width="10"></td>
+<td><table class="listbody"><tr><td>write    </td></tr></table></td>
+</tr>
+</table></tr>
+</table>
+<br><br>
+</td></tr></table>
+</td></tr></table></body>
+</html>

@@ -1,0 +1,97 @@
+<html>
+<head><title>Thread usage</title></head>
+<body>
+<h1>Thread usage</h1>
+<pre>
+A quick summary of how to use xsldbg as a thread..
+Please not this is alpha quality code so you should ensure that you don't override any existing xsldbg installation
+
+Requirements
+   libraries  "-lpthread" and "-lqt" are available
+
+download xsldbg's cvs release taged xsldbg-rel-0-9-7 or later (<a href="http://sourceforge.net/cvs/?group_id=35673">http://sourceforge.net/cvs/?group_id=35673</a>)
+  configure xsldbg with at least
+	--enable-shared=no --enable-xsldbgthread=yes --enable-debug=yes --prefix=&lt;SOME/SAFE/PLACE&gt;
+  install as normal
+
+download xsldbgkpart
+(<a href="http://sourceforge.net/cvs/?group_id=35673">http://sourceforge.net/cvs/?group_id=35673</a>)
+  configure as normal but may need to specify where you install xsldbg
+      --with-xsldbg-prefix=&lt;SOME/SAFE/PLACE&gt; --enable-debug=yes
+  install as normal as the configure script should find the xsldbg installation :-)
+
+
+Header files to be used
+  src/libxsldbg/xsldbgthread.h
+  src/libxsldbg/xsldbgmsg.h
+  src/libxsldbg/cmds.h
+  src/libqtnotifier/qtnotifier.h
+
+
+
+Pseudo code for typical usage
+-----------------------------
+
+function myApplicationInit(){
+	application specific intialization ...
+
+  if (xslgbgThreadInit() =  0 )
+    report error and quit
+
+}
+
+
+function myApplicationQuit(){
+
+	 application specific clean up...
+
+		xsldbgThreadFree();
+
+}
+
+
+
+function myApplicationXsldbgCmd(){
+	::fakeInput(<TEXT TO SEND TO XSLDBG's STDIN>)
+}
+
+
+
+Typical event stream
+-------------------------------------------
+
+application's                               			xsldbg's thread activities
+outgoing messages
+
+
+   	                        notifyXsldbgApp(XSLDBG_MSG_LINE_CHANGED, NULL); // notifiy that we got to a new line
+    										setInputStatus(XSLDBG_MSG_AWAITING_INPUT);
+    										notifyXsldbgApp(XSLDBG_MSG_AWAITING_INPUT, NULL); // tell the application that we are waiting
+
+			some time later	(asked execute command).  . . . . . . .
+
+fakeInput(&lt;COMMAND TEXT&gt;)
+
+									         setInputStatus(XSLDBG_MSG_READ_INPUT);
+										 inputReadBuff =  getFakeInput();
+    										 if(inputReadBuff){
+      											notifyXsldbgApp(XSLDBG_MSG_READ_INPUT, inputReadBuff);
+                              a little while later ...
+										 notifyXsldbgApp(XSLDBG_MSG_PROCESSING_INPUT, NULL);
+										      a little while later ...
+										if something when wrong executing &lt;COMMAND TEXT&gt;
+											notifyStateXsldbgApp(XSLDBG_MSG_PROCESSING_RESULT, commandId , 0 , NULL);
+                             get more commands and processes them ...
+
+
+
+Application event application processing
+----------------------------
+
+The application will need to connect to the xsldbg's thread by using
+   QTNotifier::connectNotifier(&lt;MY_QT_OBJECT&gt;)
+
+xsldbg will send it's messages to &lt;MY_QT_OBJECT&gt;
+</pre>
+</body>
+<html>

@@ -1,0 +1,47 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<html>
+<head>
+  <title>xsldbg Installation for win32</title>
+</head>
+<body>
+
+<h1>xsldbg Installation for win32 from cvs</h1>
+
+<pre>
+
+Configure, build gnome-xml.
+
+Configure, build libxslt.
+
+<font color="red">Warning!</font>
+ Make sure that there is a /D "WITH_DEBUGGER" in your compile options for libxslt
+ otherwise xsldbg will NOT work.
+
+Configure, build xsldbg from &lt; XSLDBG &gt;win32\dsp\xsldbg.dsw.
+See <a href="index.html">index.html</a> for a quick tutorial on xsldbg
+
+It is required that xsldbg, be in your system PATH.An example would be
+  set PATH=&lt; XSLDBG &gt; ; %PATH%;
+
+
+Assuming you checkouted xsldbg to C:\Program Files\xsldbg
+
+Set the XSLDBG_DOCS_DIR environment variable to point to xsldbg's documentation. An example
+  set XSLDBG_DOCS_DIR="C:\Program Files\xsldbg\docs\en\"
+
+
+
+Setup the XML_CATALOG_FILES environment variable to point to your SGML/XML catalog.
+An example when use a XML catalog would be
+        set XML_CATALOG_FILES="file:///c%%3A/etc/xml/catalog"
+
+
+Setup your SGML/XML catalogs using xmlcatalog otherwise you will get warnings when running searches, or
+use help commmand <br />
+See <a href="createcatalog.bat">example XML catalog creation script </a>
+See <a href="catalog.xml"> default xsldbg XML catalog </a>
+See <a href="CATALOG"> default xsldbg SGML catalog </a>
+</pre>
+
+</body>
+</html>
