@@ -20,7 +20,7 @@ import java.io.Serializable;
 @Entity
 @Table(name = "tb_keyword")
 public class Keyword implements Serializable {
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
 

@@ -23,15 +23,12 @@ import java.util.Set;
 @Table(name = "tb_text")
 public class Text implements Serializable {
 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
 
     @Column(name = "text", nullable = false)
     private String text;
-
-    @Column(name = "corpus", nullable = false)
-    private String corpus;
 
     @Column(name = "title")
     private String title;
@@ -50,4 +47,6 @@ public class Text implements Serializable {
     @Column(name = "sentence_count")
     private Integer sentenceCount;
 
+    @Column(name = "corpus", nullable = false)
+    private String corpus;
 }

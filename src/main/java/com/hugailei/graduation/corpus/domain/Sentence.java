@@ -21,7 +21,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class Sentence implements Serializable {
 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
 

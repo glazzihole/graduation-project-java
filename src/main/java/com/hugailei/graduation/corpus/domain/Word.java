@@ -36,8 +36,11 @@ public class Word implements Serializable {
     @Column(name = "freq")
     private Integer freq;
 
-    @Column(name = "sentence_id")
-    private Long sentenceId;
+    /**
+     * 句子的id, 每个id之间用空格隔开
+     */
+    @Column(name = "sentence_ids")
+    private String sentenceId;
 
     @Column(name = "corpus")
     private String corpus;

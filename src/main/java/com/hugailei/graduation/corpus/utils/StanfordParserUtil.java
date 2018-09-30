@@ -7,6 +7,8 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -23,8 +25,8 @@ public class StanfordParserUtil {
      * @param text
      * @return
      */
-    public static String parse( String text ) {
-        StringBuilder stringBuilder = new StringBuilder();
+    public static List<CoreMap> parse( String text ) {
+        List<CoreMap> result = new ArrayList<>();
         if( !StringUtils.isEmpty( text.trim() ) ) {
             Properties props = new Properties();
 
@@ -34,28 +36,30 @@ public class StanfordParserUtil {
             Annotation document = new Annotation( text );
             pipeline.annotate( document );
 
-            // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
-            for( CoreMap sentence: document.get( CoreAnnotations.SentencesAnnotation.class ) ) {
-                for ( CoreLabel token: sentence.get( CoreAnnotations.TokensAnnotation.class ) ) {
-                    // 获取单词
-                    String word = token.get(CoreAnnotations.TextAnnotation.class);
-                    stringBuilder.append("word = " + word + " | ");
-                    // 获取词性标注
-                    String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
-                    stringBuilder.append("pos = " + pos + " | ");
-                    //获取原型标注结果
-                    String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
-                    stringBuilder.append("lemma = " + lemma + " " + "\r\n");
-                }
-            }
+            result = document.get(CoreAnnotations.SentencesAnnotation.class);
         }
-        return stringBuilder.toString();
+        return result;
     }
 
     public static void main(String[] args) {
-        String text = "she was a beautiful girl";
-        String result = parse(text);
-        System.out.println(result);
+        String text = "she was a beautiful girl.";
+        List<CoreMap> result = parse(text);
+        StringBuilder stringBuilder = new StringBuilder();
+        // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
+        for(CoreMap sentence : result) {
+            for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
+                // 获取单词
+                String word = token.get(CoreAnnotations.TextAnnotation.class);
+                stringBuilder.append("word = " + word + " | ");
+                // 获取词性标注
+                String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+                stringBuilder.append("pos = " + pos + " | ");
+                //获取原型标注结果
+                String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
+                stringBuilder.append("lemma = " + lemma + " " + "\r\n");
+            }
+        }
+        System.out.println(stringBuilder.toString());
     }
 
 }
