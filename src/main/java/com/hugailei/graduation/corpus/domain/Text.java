@@ -28,6 +28,7 @@ public class Text implements Serializable {
     private Long id;
 
     @Column(name = "text", nullable = false)
+    @Lob
     private String text;
 
     @Column(name = "title")

@@ -26,6 +26,7 @@ public class Sentence implements Serializable {
     private Long id;
 
     @Column(name = "sentence")
+    @Lob
     private String sentence;
 
     @Column(name = "text_id")

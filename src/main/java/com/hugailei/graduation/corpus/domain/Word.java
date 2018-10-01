@@ -40,7 +40,8 @@ public class Word implements Serializable {
      * 句子的id, 每个id之间用空格隔开
      */
     @Column(name = "sentence_ids")
-    private String sentenceId;
+    @Lob
+    private String sentenceIds;
 
     @Column(name = "corpus")
     private String corpus;
