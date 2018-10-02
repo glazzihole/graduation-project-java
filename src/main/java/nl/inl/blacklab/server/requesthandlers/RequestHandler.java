@@ -1,6 +1,24 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import nl.inl.blacklab.core.perdocument.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.lucene.document.Document;
+
+import nl.inl.blacklab.core.perdocument.DocCount;
+import nl.inl.blacklab.core.perdocument.DocCounts;
+import nl.inl.blacklab.core.perdocument.DocGroupProperty;
+import nl.inl.blacklab.core.perdocument.DocResult;
+import nl.inl.blacklab.core.perdocument.DocResults;
 import nl.inl.blacklab.core.search.Hits;
 import nl.inl.blacklab.core.search.HitsSample;
 import nl.inl.blacklab.core.search.ResultsWindow;
@@ -20,22 +38,9 @@ import nl.inl.blacklab.server.search.SearchManager;
 import nl.inl.blacklab.server.util.BlsUtils;
 import nl.inl.blacklab.server.util.ParseUtil;
 import nl.inl.blacklab.server.util.ServletUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.lucene.document.Document;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 
 /**
- * Base class for request handlers, to handle the different types of
- * requests. The static handle() method will dispatch the request to the
- * appropriate subclass.
+ * Base class for request handlers, to handle the different types of requests. The static handle() method will dispatch the request to the appropriate subclass.
  */
 public abstract class RequestHandler {
 	static final Logger logger = LogManager.getLogger(RequestHandler.class);
@@ -48,7 +53,7 @@ public abstract class RequestHandler {
 	// Fill the map with all the handler classes
 	static {
 		availableHandlers = new HashMap<>();
-		//availableHandlers.put("cache-info", RequestHandlerCacheInfo.class);
+		// availableHandlers.put("cache-info", RequestHandlerCacheInfo.class);
 		availableHandlers.put("debug", RequestHandlerDebug.class);
 		availableHandlers.put("docs", RequestHandlerDocs.class);
 		availableHandlers.put("docs-grouped", RequestHandlerDocsGrouped.class);
@@ -56,7 +61,7 @@ public abstract class RequestHandler {
 		availableHandlers.put("doc-snippet", RequestHandlerDocSnippet.class);
 		availableHandlers.put("doc-info", RequestHandlerDocInfo.class);
 		availableHandlers.put("fields", RequestHandlerFieldInfo.class);
-		//availableHandlers.put("help", RequestHandlerBlsHelp.class);
+		// availableHandlers.put("help", RequestHandlerBlsHelp.class);
 		availableHandlers.put("hits", RequestHandlerHits.class);
 		availableHandlers.put("hits-grouped", RequestHandlerHitsGrouped.class);
 		availableHandlers.put("status", RequestHandlerIndexStatus.class);
@@ -68,35 +73,37 @@ public abstract class RequestHandler {
 	/**
 	 * Handle a request by dispatching it to the corresponding subclass.
 	 *
-	 * @param servlet the servlet object
-	 * @param request the request object
-	 * @param debugMode debug mode request? Allows extra parameters to be used
+	 * @param servlet
+	 *            the servlet object
+	 * @param request
+	 *            the request object
+	 * @param debugMode
+	 *            debug mode request? Allows extra parameters to be used
 	 * @return the response data
 	 */
-	public static RequestHandler create(BlackLabServer servlet, HttpServletRequest request, boolean debugMode) {
+	public static RequestHandler create(User user, BlackLabServer servlet, HttpServletRequest request, boolean debugMode) {
 
 		// See if a user is logged in
 		SearchManager searchManager = servlet.getSearchManager();
-		User user = searchManager.getAuthSystem().determineCurrentUser(servlet, request);
-
+		// User user = searchManager.getAuthSystem().determineCurrentUser(servlet, request);
 		// Parse the URL
 		String servletPath = request.getServletPath();
 		if (servletPath == null) {
-            servletPath = "";
-        }
+			servletPath = "";
+		}
 		if (servletPath.startsWith("/")) {
-            servletPath = servletPath.substring(1);
-        }
+			servletPath = servletPath.substring(1);
+		}
 		if (servletPath.endsWith("/")) {
-            servletPath = servletPath.substring(0, servletPath.length() - 1);
-        }
+			servletPath = servletPath.substring(0, servletPath.length() - 1);
+		}
 		String[] parts = servletPath.split("/", 3);
 		String indexName = parts.length >= 1 ? parts[0] : "";
 		RequestHandlerStaticResponse errorObj = new RequestHandlerStaticResponse(servlet, request, user, indexName, null, null);
 		if (indexName.startsWith(":")) {
 			if (!user.isLoggedIn()) {
-                return errorObj.unauthorized("Log in to access your private indices.");
-            }
+				return errorObj.unauthorized("Log in to access your private indices.");
+			}
 			// Private index. Prefix with user id.
 			indexName = user.getUserId() + indexName;
 		}
@@ -106,22 +113,22 @@ public abstract class RequestHandler {
 
 		// If we're doing something with a private index, it must be our own.
 		boolean isPrivateIndex = false;
-		//logger.debug("Got indexName = \"" + indexName + "\" (len=" + indexName.length() + ")");
+		// logger.debug("Got indexName = \"" + indexName + "\" (len=" + indexName.length() + ")");
 		String shortName = indexName;
 		if (indexName.contains(":")) {
 			isPrivateIndex = true;
 			String[] userAndIndexName = indexName.split(":");
 			if (userAndIndexName.length > 1) {
-                shortName = userAndIndexName[1];
-            } else {
-                return errorObj.illegalIndexName("");
-            }
+				shortName = userAndIndexName[1];
+			} else {
+				return errorObj.illegalIndexName("");
+			}
 			if (!user.isLoggedIn()) {
-                return errorObj.unauthorized("Log in to access your private indices.");
-            }
+				return errorObj.unauthorized("Log in to access your private indices.");
+			}
 			if (!user.getUserId().equals(userAndIndexName[0])) {
-                return errorObj.unauthorized("You cannot access another user's private indices.");
-            }
+				return errorObj.unauthorized("You cannot access another user's private indices.");
+			}
 		}
 
 		// Choose the RequestHandler subclass
@@ -134,8 +141,8 @@ public abstract class RequestHandler {
 				return errorObj.methodNotAllowed("DELETE", null);
 			}
 			if (!isPrivateIndex) {
-                return errorObj.forbidden("You can only delete your own private indices.");
-            }
+				return errorObj.forbidden("You can only delete your own private indices.");
+			}
 			requestHandler = new RequestHandlerDeleteIndex(servlet, request, user, indexName, null, null);
 		} else if (method.equals("PUT")) {
 			return errorObj.methodNotAllowed("PUT", "Create new index with POST to /blacklab-server");
@@ -154,15 +161,15 @@ public abstract class RequestHandler {
 						return errorObj.unauthorized("You are not authorized to do this.");
 					}
 					requestHandler = new RequestHandlerClearCache(servlet, request, user, indexName, urlResource, urlPathInfo);
-				} else if (request.getParameter("data") != null) {
+				} else if (/* request.getParameter("data") != null */ServletFileUpload.isMultipartContent(request)) {
 					// Add document to index
 					if (!isPrivateIndex) {
-                        return errorObj.forbidden("Can only POST to private indices.");
-                    }
+						return errorObj.forbidden("Can only POST to private indices.");
+					}
 					if (urlResource.equals("docs") && urlPathInfo.length() == 0) {
 						if (!BlsUtils.isValidIndexName(indexName)) {
-                            return errorObj.illegalIndexName(shortName);
-                        }
+							return errorObj.illegalIndexName(shortName);
+						}
 
 						// POST to /blacklab-server/indexName/docs/ : add data to index
 						requestHandler = new RequestHandlerAddToIndex(servlet, request, user, indexName, urlResource, urlPathInfo);
@@ -195,11 +202,13 @@ public abstract class RequestHandler {
 						String handlerName = urlResource;
 
 						IndexStatus status = searchManager.getIndexManager().getIndexStatus(indexName);
-						if (status != IndexStatus.AVAILABLE && handlerName.length() > 0 && !handlerName.equals("debug") && !handlerName.equals("fields") && !handlerName.equals("status")) {
+						if (status != IndexStatus.AVAILABLE && handlerName.length() > 0 && !handlerName.equals("debug") && !handlerName.equals("fields")
+								&& !handlerName.equals("status")) {
 							return errorObj.unavailable(indexName, status.toString());
 						}
 
-						if (debugMode && handlerName.length() > 0 && !handlerName.equals("hits") && !handlerName.equals("docs") && !handlerName.equals("fields") && !handlerName.equals("termfreq") && !handlerName.equals("status")) {
+						if (debugMode && handlerName.length() > 0 && !handlerName.equals("hits") && !handlerName.equals("docs") && !handlerName.equals("fields")
+								&& !handlerName.equals("termfreq") && !handlerName.equals("status")) {
 							handlerName = "debug";
 						}
 						// HACK to avoid having a different url resource for
@@ -209,8 +218,8 @@ public abstract class RequestHandler {
 							handlerName = "doc-info";
 							String p = urlPathInfo;
 							if (p.endsWith("/")) {
-                                p = p.substring(0, p.length() - 1);
-                            }
+								p = p.substring(0, p.length() - 1);
+							}
 							if (urlPathInfo.endsWith("/contents")) {
 								handlerName = "doc-contents";
 							} else if (urlPathInfo.endsWith("/snippet")) {
@@ -220,25 +229,26 @@ public abstract class RequestHandler {
 							} else {
 								return errorObj.unknownOperation(urlPathInfo);
 							}
-						}
-						else if (handlerName.equals("hits") || handlerName.equals("docs")) {
+						} else if (handlerName.equals("hits") || handlerName.equals("docs")) {
 							if (request.getParameter("group") != null) {
 								String viewgroup = request.getParameter("viewgroup");
 								if (viewgroup == null || viewgroup.length() == 0) {
-                                    handlerName += "-grouped"; // list of groups instead of contents
-                                }
+									handlerName += "-grouped"; // list of groups instead of contents
+								}
 							} else if (request.getParameter("viewgroup") != null) {
 								// "viewgroup" parameter without "group" parameter; error.
-								return errorObj.badRequest("ERROR_IN_GROUP_VALUE", "Parameter 'viewgroup' specified, but required 'group' parameter is missing.");
+								return errorObj.badRequest("ERROR_IN_GROUP_VALUE",
+										"Parameter 'viewgroup' specified, but required 'group' parameter is missing.");
 							}
 						}
 
 						if (!availableHandlers.containsKey(handlerName)) {
-                            return errorObj.unknownOperation(handlerName);
-                        }
+							return errorObj.unknownOperation(handlerName);
+						}
 						Class<? extends RequestHandler> handlerClass = availableHandlers.get(handlerName);
-						Constructor<? extends RequestHandler> ctor = handlerClass.getConstructor(BlackLabServer.class, HttpServletRequest.class, User.class, String.class, String.class, String.class);
-						//servlet.getSearchManager().getSearcher(indexName); // make sure it's open
+						Constructor<? extends RequestHandler> ctor = handlerClass.getConstructor(BlackLabServer.class, HttpServletRequest.class, User.class,
+								String.class, String.class, String.class);
+						// servlet.getSearchManager().getSearcher(indexName); // make sure it's open
 						requestHandler = ctor.newInstance(servlet, request, user, indexName, urlResource, urlPathInfo);
 					} catch (BlsException e) {
 						return errorObj.error(e.getBlsErrorCode(), e.getMessage(), e.getHttpStatusCode());
@@ -266,8 +276,8 @@ public abstract class RequestHandler {
 			}
 		}
 		if (debugMode) {
-            requestHandler.setDebug(debugMode);
-        }
+			requestHandler.setDebug(debugMode);
+		}
 		return requestHandler;
 	}
 
@@ -299,7 +309,7 @@ public abstract class RequestHandler {
 
 	protected IndexManager indexMan;
 
-	public RequestHandler(BlackLabServer servlet, HttpServletRequest request, User user, String indexName, String urlResource, String urlPathInfo) {
+	RequestHandler(BlackLabServer servlet, HttpServletRequest request, User user, String indexName, String urlResource, String urlPathInfo) {
 		this.servlet = servlet;
 		this.request = request;
 		searchMan = servlet.getSearchManager();
@@ -369,74 +379,70 @@ public abstract class RequestHandler {
 
 	/**
 	 * Child classes should override this to handle the request.
-	 * @param ds output stream
+	 *
+	 * @param ds
+	 *            output stream
 	 * @return the response object
 	 *
-	 * @throws BlsException if the query can't be executed
-	 * @throws InterruptedException if the thread was interrupted
+	 * @throws BlsException
+	 *             if the query can't be executed
+	 * @throws InterruptedException
+	 *             if the thread was interrupted
 	 */
 	public abstract int handle(DataStream ds) throws BlsException, InterruptedException;
 
 	/**
 	 * Stream document information (metadata, contents authorization)
 	 *
-	 * @param ds where to stream information
-	 * @param searcher our index
-	 * @param document Lucene document
+	 * @param ds
+	 *            where to stream information
+	 * @param searcher
+	 *            our index
+	 * @param document
+	 *            Lucene document
 	 */
 	public void dataStreamDocumentInfo(DataStream ds, Searcher searcher, Document document) {
 		ds.startMap();
 		IndexStructure struct = searcher.getIndexStructure();
-		for (String metadataFieldName: struct.getMetadataFields()) {
+		for (String metadataFieldName : struct.getMetadataFields()) {
 			String value = document.get(metadataFieldName);
 			if (value != null && !value.equals("lengthInTokens") && !value.equals("mayView")) {
-                ds.entry(metadataFieldName, value);
-            }
+				ds.entry(metadataFieldName, value);
+			}
 		}
 		int subtractFromLength = struct.alwaysHasClosingToken() ? 1 : 0;
 		String tokenLengthField = struct.getMainContentsField().getTokenLengthField();
 		if (tokenLengthField != null) {
-            ds.entry("lengthInTokens", Integer.parseInt(document.get(tokenLengthField)) - subtractFromLength);
-        }
-		ds	.entry("mayView", struct.contentViewable())
-		.endMap();
+			ds.entry("lengthInTokens", Integer.parseInt(document.get(tokenLengthField)) - subtractFromLength);
+		}
+		ds.entry("mayView", struct.contentViewable()).endMap();
 	}
 
 	protected void dataStreamFacets(DataStream ds, DocResults docsToFacet, JobDescription facetDesc) throws BlsException {
 
-		JobFacets facets = (JobFacets)searchMan.search(user, facetDesc, true);
+		JobFacets facets = (JobFacets) searchMan.search(user, facetDesc, true);
 		Map<String, DocCounts> counts = facets.getCounts();
 
 		ds.startMap();
-		for (Entry<String, DocCounts> e: counts.entrySet()) {
+		for (Entry<String, DocCounts> e : counts.entrySet()) {
 			String facetBy = e.getKey();
 			DocCounts facetCounts = e.getValue();
 			facetCounts.sort(DocGroupProperty.size());
-			ds.startAttrEntry("facet", "name", facetBy)
-				.startList();
+			ds.startAttrEntry("facet", "name", facetBy).startList();
 			int n = 0, maxFacetValues = 10;
 			int totalSize = 0;
-			for (DocCount count: facetCounts) {
-				ds.startItem("item").startMap()
-					.entry("value", count.getIdentity().toString())
-					.entry("size", count.size())
-				.endMap().endItem();
+			for (DocCount count : facetCounts) {
+				ds.startItem("item").startMap().entry("value", count.getIdentity().toString()).entry("size", count.size()).endMap().endItem();
 				totalSize += count.size();
 				n++;
 				if (n >= maxFacetValues) {
-                    break;
-                }
+					break;
+				}
 			}
 			if (totalSize < facetCounts.getTotalResults()) {
-				ds	.startItem("item")
-						.startMap()
-							.entry("value", "[REST]")
-							.entry("size", facetCounts.getTotalResults() - totalSize)
-						.endMap()
-					.endItem();
+				ds.startItem("item").startMap().entry("value", "[REST]").entry("size", facetCounts.getTotalResults() - totalSize).endMap().endItem();
 			}
-			ds	.endList()
-			.endAttrEntry();
+			ds.endList().endAttrEntry();
 		}
 		ds.endMap();
 	}
@@ -444,17 +450,17 @@ public abstract class RequestHandler {
 	public static void dataStreamDocFields(DataStream ds, IndexStructure struct) {
 		ds.startMap();
 		if (struct.pidField() != null) {
-            ds.entry("pidField", struct.pidField());
-        }
+			ds.entry("pidField", struct.pidField());
+		}
 		if (struct.titleField() != null) {
-            ds.entry("titleField", struct.titleField());
-        }
+			ds.entry("titleField", struct.titleField());
+		}
 		if (struct.authorField() != null) {
-            ds.entry("authorField", struct.authorField());
-        }
+			ds.entry("authorField", struct.authorField());
+		}
 		if (struct.dateField() != null) {
-            ds.entry("dateField", struct.dateField());
-        }
+			ds.entry("dateField", struct.dateField());
+		}
 		ds.endMap();
 	}
 
@@ -475,39 +481,47 @@ public abstract class RequestHandler {
 	/**
 	 * Get the pid for the specified document
 	 *
-	 * @param searcher where we got this document from
+	 * @param searcher
+	 *            where we got this document from
 	 * @param luceneDocId
 	 *            Lucene document id
 	 * @param document
 	 *            the document object
-	 * @return the pid string (or Lucene doc id in string form if index has no
-	 *         pid field)
+	 * @return the pid string (or Lucene doc id in string form if index has no pid field)
 	 */
-	public static String getDocumentPid(Searcher searcher, int luceneDocId,
-			Document document) {
-		String pidField = searcher.getIndexStructure().pidField(); //getIndexParam(indexName, user).getPidField();
+	public static String getDocumentPid(Searcher searcher, int luceneDocId, Document document) {
+		String pidField = searcher.getIndexStructure().pidField(); // getIndexParam(indexName, user).getPidField();
 		if (pidField == null || pidField.length() == 0) {
-            return "" + luceneDocId;
-        }
+			return "" + luceneDocId;
+		}
 		return document.get(pidField);
 	}
 
 	/**
 	 * Output most of the fields of the search summary.
 	 *
-	 * @param ds where to output XML/JSON
-	 * @param searchParam original search parameters
-	 * @param searchTime time the search took
-	 * @param countTime time the count took
-	 * @param hits hits found (may be null for certain searches)
-	 * @param isViewDocGroup are we viewing single document group?
-	 * @param docResults document results, if this is a document search
-	 * @param groups information about groups, if we were grouping
-	 * @param window our viewing window
+	 * @param ds
+	 *            where to output XML/JSON
+	 * @param searchParam
+	 *            original search parameters
+	 * @param searchTime
+	 *            time the search took
+	 * @param countTime
+	 *            time the count took
+	 * @param hits
+	 *            hits found (may be null for certain searches)
+	 * @param isViewDocGroup
+	 *            are we viewing single document group?
+	 * @param docResults
+	 *            document results, if this is a document search
+	 * @param groups
+	 *            information about groups, if we were grouping
+	 * @param window
+	 *            our viewing window
 	 * @throws BlsException
 	 */
-	protected void addSummaryCommonFields(DataStream ds, SearchParameters searchParam, double searchTime, double countTime,
-			Hits hits, boolean isViewDocGroup, DocResults docResults, DocOrHitGroups groups, ResultsWindow window) throws BlsException {
+	protected void addSummaryCommonFields(DataStream ds, SearchParameters searchParam, double searchTime, double countTime, Hits hits, boolean isViewDocGroup,
+										  DocResults docResults, DocOrHitGroups groups, ResultsWindow window) throws BlsException {
 
 		if (hits == null && docResults != null) {
 			hits = docResults.getOriginalHits();
@@ -524,69 +538,60 @@ public abstract class RequestHandler {
 		}
 
 		// Information about search progress
-		ds.entry("searchTime", (int)(searchTime * 1000));
+		ds.entry("searchTime", (int) (searchTime * 1000));
 		boolean countFailed = countTime < 0;
 		if (countTime != 0) {
-            ds.entry("countTime", (int)(countTime * 1000));
-        }
+			ds.entry("countTime", (int) (countTime * 1000));
+		}
 		ds.entry("stillCounting", hits == null ? false : !hits.doneFetchingHits());
 
 		// Information about the number of hits/docs, and whether there were too many to retrieve/count
 		if (hits != null) {
 			// We have a hits object we can query for this information
-			ds	.entry("numberOfHits", countFailed ? -1 : hits.countSoFarHitsCounted())
-				.entry("numberOfHitsRetrieved", hits.countSoFarHitsRetrieved())
-				.entry("stoppedCountingHits", hits.maxHitsCounted())
-				.entry("stoppedRetrievingHits", hits.maxHitsRetrieved());
-			ds	.entry("numberOfDocs", countFailed ? -1 : hits.countSoFarDocsCounted())
-				.entry("numberOfDocsRetrieved", hits.countSoFarDocsRetrieved());
+			ds.entry("numberOfHits", countFailed ? -1 : hits.countSoFarHitsCounted()).entry("numberOfHitsRetrieved", hits.countSoFarHitsRetrieved())
+					.entry("stoppedCountingHits", hits.maxHitsCounted()).entry("stoppedRetrievingHits", hits.maxHitsRetrieved());
+			ds.entry("numberOfDocs", countFailed ? -1 : hits.countSoFarDocsCounted()).entry("numberOfDocsRetrieved", hits.countSoFarDocsRetrieved());
 		} else if (isViewDocGroup) {
 			// Viewing single group of documents, possibly based on a hits search.
 			// group.getResults().getOriginalHits() returns null in this case,
 			// so we have to iterate over the DocResults and sum up the hits ourselves.
 			int numberOfHits = 0;
-			for (DocResult dr: docResults) {
+			for (DocResult dr : docResults) {
 				numberOfHits += dr.getNumberOfHits();
 			}
-			ds	.entry("numberOfHits", numberOfHits)
-				.entry("numberOfHitsRetrieved", numberOfHits);
+			ds.entry("numberOfHits", numberOfHits).entry("numberOfHitsRetrieved", numberOfHits);
 
 			int numberOfDocsCounted = docResults.size();
 			if (countFailed) {
-                numberOfDocsCounted = -1;
-            }
-			ds	.entry("numberOfDocs", numberOfDocsCounted)
-				.entry("numberOfDocsRetrieved", docResults.size());
+				numberOfDocsCounted = -1;
+			}
+			ds.entry("numberOfDocs", numberOfDocsCounted).entry("numberOfDocsRetrieved", docResults.size());
 		} else {
 			// Documents-only search (no hits). Get the info from the DocResults.
-			ds	.entry("numberOfDocs", docResults.countSoFarDocsCounted())
-				.entry("numberOfDocsRetrieved", docResults.countSoFarDocsRetrieved());
+			ds.entry("numberOfDocs", docResults.countSoFarDocsCounted()).entry("numberOfDocsRetrieved", docResults.countSoFarDocsRetrieved());
 		}
 
 		// Information about grouping operation
 		if (groups != null) {
-			ds	.entry("numberOfGroups", groups.numberOfGroups())
-				.entry("largestGroupSize", groups.getLargestGroupSize());
+			ds.entry("numberOfGroups", groups.numberOfGroups()).entry("largestGroupSize", groups.getLargestGroupSize());
 		}
 
 		// Information about our viewing window
 		if (window != null) {
-			ds	.entry("windowFirstResult", window.first())
-				.entry("requestedWindowSize", window.requestedWindowSize())
-				.entry("actualWindowSize", window.size())
-				.entry("windowHasPrevious", window.hasPrevious())
-				.entry("windowHasNext", window.hasNext());
+			ds.entry("windowFirstResult", window.first()).entry("requestedWindowSize", window.requestedWindowSize()).entry("actualWindowSize", window.size())
+					.entry("windowHasPrevious", window.hasPrevious()).entry("windowHasNext", window.hasNext());
 		}
 
 		// Information about hit sampling
 		if (hits instanceof HitsSample) {
-			HitsSample sample = ((HitsSample)hits);
+			HitsSample sample = ((HitsSample) hits);
 			ds.entry("sampleSeed", sample.seed());
 			if (sample.exactNumberGiven()) {
-                ds.entry("sampleSize", sample.numberOfHitsToSelect());
-            } else {
-                ds.entry("samplePercentage", Math.round(sample.ratio() * 100 * 100) / 100.0);
-            }
+				ds.entry("sampleSize", sample.numberOfHitsToSelect());
+			} else {
+				ds.entry("samplePercentage", Math.round(sample.ratio() * 100 * 100) / 100.0);
+			}
 		}
 	}
 }
+

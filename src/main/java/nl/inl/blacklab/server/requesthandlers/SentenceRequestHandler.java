@@ -28,8 +28,8 @@ import java.util.Map;
  */
 @Slf4j
 public class SentenceRequestHandler extends RequestHandler {
-    public SentenceRequestHandler(BlackLabServer servlet, HttpServletRequest request, User user, String indexName, String urlResource, String urlPathPart) {
-        super(servlet, request, user, indexName, urlResource, urlPathPart);
+    public SentenceRequestHandler(BlackLabServer blackLabServer, HttpServletRequest request, User user, String indexName, String urlResource, String urlPathPart) {
+        super(blackLabServer, request, user, indexName, urlResource, urlPathPart);
     }
 
     @Override

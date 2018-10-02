@@ -17,10 +17,7 @@ package nl.inl.blacklab.core.util;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -309,4 +306,39 @@ public class FileUtil {
 		glob = glob.replaceAll("\\?", ".");
 		return "^" + glob + "$";
 	}
+
+	public static File findFile(List dirsToSearch, String pathToFile, List extensions)
+	{
+		Iterator i$ = dirsToSearch.iterator();
+		File configFile;
+		label0:
+		do {
+			if (i$.hasNext()) {
+				File dir = (File) i$.next();
+				if (extensions == null) {
+					configFile = new File(dir, pathToFile);
+					boolean reallyInsideDir = configFile.getAbsolutePath().startsWith(dir.getAbsolutePath());
+					if (configFile.exists() && reallyInsideDir) {
+						return configFile;
+					}
+					continue;
+				}
+				i$ = extensions.iterator();
+				boolean reallyInsideDir;
+				do {
+					if (!i$.hasNext()) {
+						continue label0;
+					}
+					String ext = (String) i$.next();
+					configFile = new File(dir, (new StringBuilder()).append(pathToFile).append(".").append(ext).toString());
+					reallyInsideDir = configFile.getAbsolutePath().startsWith(dir.getAbsolutePath());
+				} while (!configFile.exists() || !reallyInsideDir);
+				break;
+			} else {
+				return null;
+			}
+		} while(true);
+		return configFile;
+	}
+
 }

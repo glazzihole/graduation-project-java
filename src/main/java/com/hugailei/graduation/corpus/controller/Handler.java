@@ -14,7 +14,7 @@ import nl.inl.blacklab.server.requesthandlers.Response;
 import nl.inl.blacklab.server.search.IndexManager;
 import nl.inl.blacklab.server.search.SearchManager;
 import nl.inl.blacklab.server.util.ServletUtil;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,7 +35,7 @@ public class Handler {
     /**
      * 处理request请求
      *
-     * @param pageRequest
+     * @param pageable
      * @param corpus
      * @param urlResource
      * @param urlPathPart
@@ -43,7 +43,7 @@ public class Handler {
      * @param response
      * @param requestHandler
      */
-    void checkAndHandler (PageRequest pageRequest,
+    void checkAndHandler (Pageable pageable,
                           String corpus,
                           String urlResource,
                           String urlPathPart,
