@@ -6,8 +6,14 @@ import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.util.CoreMap;
 
-import java.io.*;
-import java.sql.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -135,52 +141,52 @@ public class SaveParserResult {
                         }
 
                         // 存储词性，无则插入，有则更新
-                        preparedStatement = con.prepareStatement("SELECT * FROM " + POS_COLL_NAME
-                                + " WHERE pos=? and corpus=?");
-                        preparedStatement.setString(1, pos);
-                        preparedStatement.setString(2, CORPUS_NAME);
-                        resultSet = preparedStatement.executeQuery();
-                        if (resultSet.next()) {
-                            Long id = resultSet.getLong("id");
-                            int freq = resultSet.getInt("freq") + 1;
-                            // 更新频率
-                            preparedStatement = con.prepareStatement("UPDATE " + POS_COLL_NAME
-                                    + " SET freq=? WHERE id=?");
-                            preparedStatement.setInt(1, freq);
-                            preparedStatement.setLong(2, id);
-                            preparedStatement.execute();
-                        } else {
-                            preparedStatement = con.prepareStatement("INSERT INTO " + POS_COLL_NAME + "(pos, freq, corpus) " +
-                                    " VALUES (?, ?, ?)");
-                            preparedStatement.setString(1, pos);
-                            preparedStatement.setInt(2, 1);
-                            preparedStatement.setString(3, CORPUS_NAME);
-                            preparedStatement.execute();
-                        }
-
-                        // 存储原型，无则插入，有则更新
-                        preparedStatement = con.prepareStatement("SELECT * FROM " + LEMMA_COLL_NAME
-                                + " WHERE lemma=? and corpus=?");
-                        preparedStatement.setString(1, lemma.toLowerCase());
-                        preparedStatement.setString(2, CORPUS_NAME);
-                        resultSet = preparedStatement.executeQuery();
-                        if (resultSet.next()) {
-                            int freq = resultSet.getInt("freq") + 1;
-                            Long id = resultSet.getLong("id");
-                            // 更新频率
-                            preparedStatement = con.prepareStatement("UPDATE " + LEMMA_COLL_NAME
-                                    + " SET freq=? WHERE id=?");
-                            preparedStatement.setInt(1, freq);
-                            preparedStatement.setLong(2, id);
-                            preparedStatement.execute();
-                        } else {
-                            preparedStatement = con.prepareStatement("INSERT INTO " + LEMMA_COLL_NAME + "(lemma, freq, corpus) " +
-                                    " VALUES (?, ?, ?)");
-                            preparedStatement.setString(1, lemma.toLowerCase());
-                            preparedStatement.setInt(2, 1);
-                            preparedStatement.setString(3, CORPUS_NAME);
-                            preparedStatement.execute();
-                        }
+//                        preparedStatement = con.prepareStatement("SELECT * FROM " + POS_COLL_NAME
+//                                + " WHERE pos=? and corpus=?");
+//                        preparedStatement.setString(1, pos);
+//                        preparedStatement.setString(2, CORPUS_NAME);
+//                        resultSet = preparedStatement.executeQuery();
+//                        if (resultSet.next()) {
+//                            Long id = resultSet.getLong("id");
+//                            int freq = resultSet.getInt("freq") + 1;
+//                            // 更新频率
+//                            preparedStatement = con.prepareStatement("UPDATE " + POS_COLL_NAME
+//                                    + " SET freq=? WHERE id=?");
+//                            preparedStatement.setInt(1, freq);
+//                            preparedStatement.setLong(2, id);
+//                            preparedStatement.execute();
+//                        } else {
+//                            preparedStatement = con.prepareStatement("INSERT INTO " + POS_COLL_NAME + "(pos, freq, corpus) " +
+//                                    " VALUES (?, ?, ?)");
+//                            preparedStatement.setString(1, pos);
+//                            preparedStatement.setInt(2, 1);
+//                            preparedStatement.setString(3, CORPUS_NAME);
+//                            preparedStatement.execute();
+//                        }
+//
+//                        // 存储原型，无则插入，有则更新
+//                        preparedStatement = con.prepareStatement("SELECT * FROM " + LEMMA_COLL_NAME
+//                                + " WHERE lemma=? and corpus=?");
+//                        preparedStatement.setString(1, lemma.toLowerCase());
+//                        preparedStatement.setString(2, CORPUS_NAME);
+//                        resultSet = preparedStatement.executeQuery();
+//                        if (resultSet.next()) {
+//                            int freq = resultSet.getInt("freq") + 1;
+//                            Long id = resultSet.getLong("id");
+//                            // 更新频率
+//                            preparedStatement = con.prepareStatement("UPDATE " + LEMMA_COLL_NAME
+//                                    + " SET freq=? WHERE id=?");
+//                            preparedStatement.setInt(1, freq);
+//                            preparedStatement.setLong(2, id);
+//                            preparedStatement.execute();
+//                        } else {
+//                            preparedStatement = con.prepareStatement("INSERT INTO " + LEMMA_COLL_NAME + "(lemma, freq, corpus) " +
+//                                    " VALUES (?, ?, ?)");
+//                            preparedStatement.setString(1, lemma.toLowerCase());
+//                            preparedStatement.setInt(2, 1);
+//                            preparedStatement.setString(3, CORPUS_NAME);
+//                            preparedStatement.execute();
+//                        }
 
                         sentence.append(word).append(" ");
                     }

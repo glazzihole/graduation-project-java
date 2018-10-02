@@ -1,7 +1,6 @@
 package com.hugailei.graduation.corpus.utils;
 
 
-import java.util.Map;
 import java.util.Scanner;
 
 public class Main {

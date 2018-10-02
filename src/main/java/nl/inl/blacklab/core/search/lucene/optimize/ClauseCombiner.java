@@ -1,0 +1,33 @@
+package nl.inl.blacklab.core.search.lucene.optimize;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.lucene.index.IndexReader;
+
+import nl.inl.blacklab.core.search.lucene.BLSpanQuery;
+
+public abstract class ClauseCombiner {
+
+	public static final int CANNOT_COMBINE = Integer.MAX_VALUE;
+
+	public abstract int priority(BLSpanQuery left, BLSpanQuery right, IndexReader reader);
+
+	public abstract BLSpanQuery combine(BLSpanQuery left, BLSpanQuery right, IndexReader reader);
+
+	public boolean canCombine(BLSpanQuery left, BLSpanQuery right, IndexReader reader) {
+		return priority(left, right, reader) != CANNOT_COMBINE;
+	}
+
+	public static Set<ClauseCombiner> all(boolean nfa) {
+		HashSet<ClauseCombiner> all = new HashSet<>();
+		all.add(new ClauseCombinerRepetition());
+		all.add(new ClauseCombinerInternalisation());
+		all.add(new ClauseCombinerAnyExpansion());
+		all.add(new ClauseCombinerNot());
+		if (nfa) {
+            all.add(new ClauseCombinerNfa());
+        }
+		return all;
+	}
+}

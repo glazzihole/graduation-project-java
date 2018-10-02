@@ -89,7 +89,7 @@ public class SaveParserResult2 {
             StringBuilder text = new StringBuilder();
             StringBuilder sentence;
             int textSentenceCount = 0;
-            while ((line = bufferedReader.readLine()) != null ) {
+            while ((line = bufferedReader.readLine()) != null && line != "") {
                 System.out.println("line: " + line);
                 text.append(line.replace("\r", "").replace("\n", ""));
                 // 获取标注结果
@@ -103,6 +103,10 @@ public class SaveParserResult2 {
                         String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
                         // 原型
                         String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
+
+                        if (word.toLowerCase().matches("[\\p{P}0-9]")) {
+                            continue;
+                        }
 
                         //存储单词
                         String key = word.toLowerCase() + "_" + lemma.toLowerCase() + "_" + pos;
@@ -126,6 +130,7 @@ public class SaveParserResult2 {
                         }
                     } //for token
                 } // for sentence
+                sentenceId++;
             } //while line
         }//for file
 
