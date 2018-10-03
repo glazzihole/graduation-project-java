@@ -1,13 +1,14 @@
 package nl.inl.blacklab.server.jobs;
 
-import nl.inl.blacklab.core.search.Hits;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.Query;
+
+import nl.inl.blacklab.search.Hits;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.exceptions.Forbidden;
 import nl.inl.blacklab.server.requesthandlers.SearchParameters;
 import nl.inl.blacklab.server.search.SearchManager;
-import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.Query;
 
 /**
  * Represents a doc search operation.

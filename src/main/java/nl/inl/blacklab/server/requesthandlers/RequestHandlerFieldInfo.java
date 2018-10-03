@@ -1,29 +1,36 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import nl.inl.blacklab.core.index.complex.ComplexFieldUtil;
-import nl.inl.blacklab.core.search.Searcher;
-import nl.inl.blacklab.core.search.indexstructure.ComplexFieldDesc;
-import nl.inl.blacklab.core.search.indexstructure.IndexStructure;
-import nl.inl.blacklab.core.search.indexstructure.MetadataFieldDesc;
-import nl.inl.blacklab.core.search.indexstructure.PropertyDesc;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+
+import nl.inl.blacklab.index.complex.ComplexFieldUtil;
+import nl.inl.blacklab.search.Searcher;
+import nl.inl.blacklab.search.indexstructure.ComplexFieldDesc;
+import nl.inl.blacklab.search.indexstructure.IndexStructure;
+import nl.inl.blacklab.search.indexstructure.MetadataFieldDesc;
+import nl.inl.blacklab.search.indexstructure.PropertyDesc;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BadRequest;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.jobs.User;
-import nl.inl.blacklab.core.util.LuceneUtil;
-import nl.inl.blacklab.core.util.StringUtil;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import nl.inl.util.LuceneUtil;
+import nl.inl.util.StringUtil;
 
 /**
  * Get information about the structure of an index.
  */
 public class RequestHandlerFieldInfo extends RequestHandler {
+
+    private static final int MAX_FIELD_VALUES = 500;
 
 	public RequestHandlerFieldInfo(BlackLabServer servlet, HttpServletRequest request, User user, String indexName, String urlResource, String urlPathPart) {
 		super(servlet, request, user, indexName, urlResource, urlPathPart);
@@ -46,13 +53,15 @@ public class RequestHandlerFieldInfo extends RequestHandler {
 		Searcher searcher = getSearcher();
 		IndexStructure struct = searcher.getIndexStructure();
 
-		ds.startMap();
 		if (struct.getComplexFields().contains(fieldName)) {
-			describeComplexField(ds, fieldName, struct, searcher, searchParam.getString("subprops"));
+	        Set<String> setShowValuesFor = searchParam.listValuesFor();
+	        Set<String> setShowSubpropsFor = searchParam.listSubpropsFor();
+            ComplexFieldDesc fieldDesc = struct.getComplexFieldDesc(fieldName);
+            describeComplexField(ds, indexName, fieldName, fieldDesc, searcher, setShowValuesFor, setShowSubpropsFor);
 		} else {
-			describeMetadataField(ds, fieldName, struct);
+	        MetadataFieldDesc fieldDesc = struct.getMetadataFieldDesc(fieldName);
+			describeMetadataField(ds, indexName, fieldName, fieldDesc, true);
 		}
-		ds.endMap();
 
 		// Remove any empty settings
 		//response.removeEmptyMapValues();
@@ -60,34 +69,70 @@ public class RequestHandlerFieldInfo extends RequestHandler {
 		return HTTP_OK;
 	}
 
-	private void describeMetadataField(DataStream ds, String fieldName, IndexStructure struct) {
-		MetadataFieldDesc fd = struct.getMetadataFieldDesc(fieldName);
-		Map<String, Integer> values = fd.getValueDistribution();
+	public static void describeMetadataField(DataStream ds, String indexName, String fieldName, MetadataFieldDesc fd, boolean listValues) {
+        ds.startMap();
 		boolean valueListComplete = fd.isValueListComplete();
 
 		// Assemble response
-		ds	.entry("indexName", indexName)
-			.entry("fieldName", fieldName)
+		if (indexName != null) {
+            ds	.entry("indexName", indexName);
+        }
+		ds	.entry("fieldName", fieldName)
 			.entry("isComplexField", "false")
 			.entry("displayName", fd.getDisplayName())
 			.entry("description", fd.getDescription())
-			.entry("group", fd.getGroup())
+		    .entry("uiType", fd.getUiType());
+		String group = fd.getGroup();
+        if (group != null && group.length() > 0) {
+            ds.entry("group", group);
+        }
+		ds
 			.entry("type", fd.getType().toString())
 			.entry("analyzer", fd.getAnalyzerName())
 			.entry("unknownCondition", fd.getUnknownCondition().toString())
 			.entry("unknownValue", fd.getUnknownValue());
-		ds.startEntry("fieldValues").startMap();
-		for (Map.Entry<String, Integer> e: values.entrySet()) {
-			ds.attrEntry("value", "text", e.getKey(), e.getValue());
+		if (listValues) {
+	        final Map<String, String> displayValues = fd.getDisplayValues();
+		    ds.startEntry("displayValues").startMap();
+            for (Map.Entry<String, String> e: displayValues.entrySet()) {
+                ds.attrEntry("displayValue", "value", e.getKey(), e.getValue());
+            }
+		    ds.endMap().endEntry();
+
+		    // Show values in display order (if defined)
+		    // If not all values are mentioned in display order, show the rest at the end,
+		    // sorted by their displayValue (or regular value if no displayValue specified)
+            ds.startEntry("fieldValues").startMap();
+		    Map<String, Integer> values = fd.getValueDistribution();
+            Set<String> valuesLeft = new HashSet<>(values.keySet());
+            for (String value: fd.getDisplayOrder()) {
+                ds.attrEntry("value", "text", value, values.get(value));
+                valuesLeft.remove(value);
+            }
+            List<String> sortedLeft = new ArrayList<>(valuesLeft);
+            Collections.sort(sortedLeft, new Comparator<String>() {
+                @Override
+                public int compare(String o1, String o2) {
+                    String d1 = displayValues.containsKey(o1) ? displayValues.get(o1) : o1;
+                    String d2 = displayValues.containsKey(o2) ? displayValues.get(o2) : o2;
+                    return d1.compareTo(d2);
+                }
+            });
+    		for (String value: sortedLeft) {
+    			ds.attrEntry("value", "text", value, values.get(value));
+    		}
+    		ds.endMap().endEntry()
+    			.entry("valueListComplete", valueListComplete);
 		}
-		ds.endMap().endEntry()
-			.entry("valueListComplete", valueListComplete);
+        ds.endMap();
 	}
 
-	private void describeComplexField(DataStream ds, String fieldName, IndexStructure struct, Searcher searcher, String showSubPropsFor) {
-		ComplexFieldDesc fieldDesc = struct.getComplexFieldDesc(fieldName);
-		ds	.entry("indexName", indexName)
-			.entry("fieldName", fieldName)
+	public static void describeComplexField(DataStream ds, String indexName, String fieldName, ComplexFieldDesc fieldDesc, Searcher searcher, Set<String> showValuesFor, Set<String> showSubpropsFor) {
+        ds.startMap();
+        if (indexName != null) {
+            ds	.entry("indexName", indexName);
+        }
+		ds	.entry("fieldName", fieldName)
 			.entry("isComplexField", "true")
 			.entry("displayName", fieldDesc.getDisplayName())
 			.entry("description", fieldDesc.getDescription())
@@ -96,20 +141,35 @@ public class RequestHandlerFieldInfo extends RequestHandler {
 			.entry("hasLengthTokens", fieldDesc.hasLengthTokens())
 			.entry("mainProperty", fieldDesc.getMainProperty().getName());
 		ds.startEntry("properties").startMap();
-		Set<String> setShowSubprops = new HashSet<>();
-		if (showSubPropsFor != null && showSubPropsFor.length() > 0) {
-			setShowSubprops.addAll(Arrays.asList(showSubPropsFor.split(",")));
-		}
-		for (String propName: fieldDesc.getProperties()) {
+		List<String> properties = new ArrayList<>(fieldDesc.getProperties());
+        for (String propName: properties) {
 			PropertyDesc propDesc = fieldDesc.getPropertyDesc(propName);
 			ds.startAttrEntry("property", "name", propName)
 				.startMap()
+                    .entry("displayName", propDesc.getDisplayName())
 					.entry("hasForwardIndex", propDesc.hasForwardIndex())
 					.entry("sensitivity", propDesc.getSensitivity().toString())
 					.entry("offsetsAlternative", StringUtil.nullToEmpty(propDesc.offsetsAlternative()))
+                    .entry("isInternal", propDesc.isInternal())
 				.endMap();
-			if (setShowSubprops.contains(propName)) {
-				String luceneField = ComplexFieldUtil.propertyField(fieldName, propName, ComplexFieldUtil.INSENSITIVE_ALT_NAME);
+            String luceneField = ComplexFieldUtil.propertyField(fieldName, propName, ComplexFieldUtil.INSENSITIVE_ALT_NAME);
+			if (showValuesFor.contains(propName)) {
+                Collection<String> values = LuceneUtil.getFieldTerms(searcher.getIndexReader(), luceneField, MAX_FIELD_VALUES + 1);
+			    ds.startEntry("values").startList();
+			    int n = 0;
+			    for (String value: values) {
+			        if (!value.contains(ComplexFieldUtil.SUBPROPERTY_SEPARATOR)) {
+                        ds.item("value", value);
+                    }
+			        n++;
+			        if (n == MAX_FIELD_VALUES) {
+                        break;
+                    }
+			    }
+			    ds.endList().endEntry();
+		        ds.entry("valueListComplete", values.size() <= MAX_FIELD_VALUES);
+			}
+			if (showSubpropsFor.contains(propName)) {
 				Map<String, Set<String>> subprops = LuceneUtil.getSubprops(searcher.getIndexReader(), luceneField);
 				ds.startEntry("subproperties").startMap();
 				for (Map.Entry<String, Set<String>> subprop: subprops.entrySet()) {
@@ -126,6 +186,7 @@ public class RequestHandlerFieldInfo extends RequestHandler {
 			ds.endAttrEntry();
 		}
 		ds.endMap().endEntry();
+        ds.endMap();
 	}
 
 }

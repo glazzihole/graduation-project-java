@@ -1,18 +1,19 @@
 package nl.inl.blacklab.server.search;
 
-import nl.inl.blacklab.core.search.Searcher;
-import nl.inl.blacklab.server.datastream.DataFormat;
-import nl.inl.blacklab.server.util.JsonUtil;
-import nl.inl.blacklab.server.util.ServletUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import nl.inl.blacklab.search.Searcher;
+import nl.inl.blacklab.server.datastream.DataFormat;
+import nl.inl.blacklab.server.util.JsonUtil;
+import nl.inl.blacklab.server.util.ServletUtil;
 
 public class BlsConfig {
 
@@ -40,7 +41,7 @@ public class BlsConfig {
 	/** Default diacritics-sensitivity to use. [insensitive] */
 	private boolean defaultDiacriticsSensitive;
 
-	/** Default number of words around hit. [5] */
+	/** Default number of words around hit. [500] */
 	private int defaultContextSize;
 
 	/** IP addresses for which debug mode will be turned on. */
@@ -79,40 +80,39 @@ public class BlsConfig {
 	/** Log detailed debug messages about handling requests? */
 	public static boolean traceRequestHandling = false;
 
-	public BlsConfig(JSONObject properties) {
+	public BlsConfig(JsonNode properties) {
 		getDebugProperties(properties);
 		getRequestsProperties(properties);
 		getPerformanceProperties(properties);
 		getAuthProperties(properties);
 	}
 
-	private void getDebugProperties(JSONObject properties) {
+	private void getDebugProperties(JsonNode properties) {
 
 		// Old location of debugModeIps: top-level
 		// DEPRECATED
 		if (properties.has("debugModeIps")) {
 			logger.warn("DEPRECATED setting debugModeIps found at top-level. Use debug.addresses instead.");
-			JSONArray jsonDebugModeIps = properties
-					.getJSONArray("debugModeIps");
-			for (int i = 0; i < jsonDebugModeIps.length(); i++) {
-				debugModeIps.add(jsonDebugModeIps.getString(i));
+			JsonNode jsonDebugModeIps = properties.get("debugModeIps");
+			for (int i = 0; i < jsonDebugModeIps.size(); i++) {
+				debugModeIps.add(jsonDebugModeIps.get(i).textValue());
 			}
 		}
 
 		// Debugging settings
 		if (properties.has("debug")) {
-			JSONObject debugProp = properties.getJSONObject("debug");
+			JsonNode debugProp = properties.get("debug");
 
 			// New location of debugIps: inside debug block
 			if (debugProp.has("addresses")) {
-				JSONArray jsonDebugModeIps = debugProp.getJSONArray("addresses");
-				for (int i = 0; i < jsonDebugModeIps.length(); i++) {
-					debugModeIps.add(jsonDebugModeIps.getString(i));
+				JsonNode jsonDebugModeIps = debugProp.get("addresses");
+				for (int i = 0; i < jsonDebugModeIps.size(); i++) {
+					debugModeIps.add(jsonDebugModeIps.get(i).textValue());
 				}
 			}
 
 			if (debugProp.has("trace")) {
-				JSONObject traceProp = debugProp.getJSONObject("trace");
+				JsonNode traceProp = debugProp.get("trace");
 				Searcher.setTraceIndexOpening(JsonUtil.getBooleanProp(traceProp, "indexOpening", false));
 				Searcher.setTraceOptimization(JsonUtil.getBooleanProp(traceProp, "optimization", false));
 				Searcher.setTraceQueryExecution(JsonUtil.getBooleanProp(traceProp, "queryExecution", false));
@@ -122,22 +122,22 @@ public class BlsConfig {
 		}
 	}
 
-	private void getPerformanceProperties(JSONObject properties) {
-		JSONObject perfProp = null;
+	private void getPerformanceProperties(JsonNode properties) {
+		JsonNode perfProp = null;
 		if (properties.has("performance")) {
-            perfProp = properties.getJSONObject("performance");
+            perfProp = properties.get("performance");
         }
 		this.cacheConfig = new BlsConfigCacheAndPerformance(perfProp);
 	}
 
-	private void getRequestsProperties(JSONObject properties) {
+	private void getRequestsProperties(JsonNode properties) {
 		if (properties.has("requests")) {
-			JSONObject reqProp = properties.getJSONObject("requests");
+			JsonNode reqProp = properties.get("requests");
 			 // XML if nothing specified (because of browser's default Accept header)
 			defaultOutputType = DataFormat.XML;
 			if (reqProp.has("defaultOutputType")) {
                 defaultOutputType = ServletUtil.getOutputTypeFromString(
-                        reqProp.getString("defaultOutputType"), DataFormat.XML);
+                        reqProp.get("defaultOutputType").textValue(), DataFormat.XML);
             }
 			defaultPageSize = JsonUtil.getIntProp(reqProp, "defaultPageSize", 20);
 			maxPageSize = JsonUtil.getIntProp(reqProp, "maxPageSize", 1000);
@@ -160,8 +160,8 @@ public class BlsConfig {
 				break;
 			}
 			defaultContextSize = JsonUtil.getIntProp(reqProp,
-					"defaultContextSize", 5);
-			maxContextSize = JsonUtil.getIntProp(reqProp, "maxContextSize", 20);
+					"defaultContextSize", 500);
+			maxContextSize = JsonUtil.getIntProp(reqProp, "maxContextSize", 500);
 			maxSnippetSize = JsonUtil
 					.getIntProp(reqProp, "maxSnippetSize", 100);
 			defaultMaxHitsToRetrieve = JsonUtil.getIntProp(reqProp, "defaultMaxHitsToRetrieve", Searcher.DEFAULT_MAX_RETRIEVE);
@@ -170,11 +170,11 @@ public class BlsConfig {
 					"maxHitsToRetrieveAllowed", 10000000);
 			maxHitsToCountAllowed = JsonUtil.getIntProp(reqProp,
 					"maxHitsToCountAllowed", -1);
-			JSONArray jsonOverrideUserIdIps = reqProp
-					.getJSONArray("overrideUserIdIps");
+			JsonNode jsonOverrideUserIdIps = reqProp
+					.get("overrideUserIdIps");
 			overrideUserIdIps = new HashSet<>();
-			for (int i = 0; i < jsonOverrideUserIdIps.length(); i++) {
-				overrideUserIdIps.add(jsonOverrideUserIdIps.getString(i));
+			for (int i = 0; i < jsonOverrideUserIdIps.size(); i++) {
+				overrideUserIdIps.add(jsonOverrideUserIdIps.get(i).textValue());
 			}
 		} else {
 			defaultOutputType = DataFormat.XML;
@@ -182,7 +182,7 @@ public class BlsConfig {
 			maxPageSize = 1000;
 			defaultCaseSensitive = defaultDiacriticsSensitive = false;
 			defaultContextSize = 500;
-			maxContextSize = 20;
+			maxContextSize = 500;
 			maxSnippetSize = 100;
 			defaultMaxHitsToRetrieve = Searcher.DEFAULT_MAX_RETRIEVE;
 			defaultMaxHitsToCount = Searcher.DEFAULT_MAX_COUNT;
@@ -192,10 +192,10 @@ public class BlsConfig {
 		}
 	}
 
-	private void getAuthProperties(JSONObject properties) {
-		JSONObject authProp = null;
+	private void getAuthProperties(JsonNode properties) {
+		JsonNode authProp = null;
 		if (properties.has("authSystem")) {
-            authProp = properties.getJSONObject("authSystem");
+            authProp = properties.get("authSystem");
         }
 		authClass = "";
 		if (authProp != null) {

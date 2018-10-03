@@ -1,13 +1,5 @@
 package nl.inl.blacklab.server.util;
 
-import nl.inl.blacklab.server.datastream.DataFormat;
-import nl.inl.blacklab.server.exceptions.InternalServerError;
-import nl.inl.blacklab.core.util.ExUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.text.DateFormat;
@@ -16,6 +8,16 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import nl.inl.blacklab.server.datastream.DataFormat;
+import nl.inl.blacklab.server.exceptions.InternalServerError;
+import nl.inl.util.ExUtil;
 
 public class ServletUtil {
 	private static final Logger logger = LogManager.getLogger(ServletUtil.class);
@@ -68,11 +70,11 @@ public class ServletUtil {
 		String defStr = defaultValue ? "true" : "false";
 		String value = getParameter(request, name, defStr);
 		if (value.equalsIgnoreCase("true")) {
-			return true;
-		}
+            return true;
+        }
 		if (value.equalsIgnoreCase("false")) {
-			return false;
-		}
+            return false;
+        }
 
 		logger.warn("Illegal value '" + value + "' given for boolean parameter '" + name
 				+ "'. Using default (" + defStr + ")");
@@ -91,8 +93,8 @@ public class ServletUtil {
 	public static String getParameter(HttpServletRequest request, String name, String defaultValue) {
 		String value = getParameter(request, name);
 		if (value == null || value.length() == 0) {
-			value = defaultValue; // default action
-		}
+            value = defaultValue; // default action
+        }
 		return value;
 	}
 
@@ -124,14 +126,14 @@ public class ServletUtil {
 		//logger.debug("Accept: " + accept);
 		if (accept != null && accept.length() > 0) {
 			if (accept.contains("json")) {
-				return DataFormat.JSON;
-			}
+                return DataFormat.JSON;
+            }
 			if (accept.contains("xml")) {
-				return DataFormat.XML;
-			}
+                return DataFormat.XML;
+            }
 			if (accept.contains("javascript")) {
-				return DataFormat.JSON;
-			}
+                return DataFormat.JSON;
+            }
 		}
 
 		// Unspecified. Use the configured default format.
@@ -146,8 +148,8 @@ public class ServletUtil {
 	 */
 	public static String getContentType(DataFormat outputType) {
 		if (outputType == DataFormat.XML) {
-			return "application/xml";
-		}
+            return "application/xml";
+        }
 		return "application/json";
 	}
 
@@ -161,11 +163,11 @@ public class ServletUtil {
 	 */
 	public static DataFormat getOutputTypeFromString(String typeString, DataFormat defaultValue) {
 		if (typeString.equalsIgnoreCase("xml")) {
-			return DataFormat.XML;
-		}
+            return DataFormat.XML;
+        }
 		if (typeString.equalsIgnoreCase("json")) {
-			return DataFormat.JSON;
-		}
+            return DataFormat.JSON;
+        }
 		logger.warn("Onbekend outputtype gevraagd: " + typeString);
 		return defaultValue;
 	}
@@ -227,8 +229,8 @@ public class ServletUtil {
 	public static String internalErrorMessage(Exception e, boolean debugMode, int code) {
 		if (debugMode) {
 			if (e instanceof InternalServerError) {
-				return internalErrorMessage(e.getMessage(), debugMode, code);
-			}
+                return internalErrorMessage(e.getMessage(), debugMode, code);
+            }
 			return internalErrorMessage(e.getClass().getName() + ": " + e.getMessage(), debugMode, code);
 		}
 		return ServletUtil.internalErrorMessage(code);
@@ -251,14 +253,14 @@ public class ServletUtil {
 	public static String getPathAndQueryString(HttpServletRequest request) {
 		String pathInfo = request.getPathInfo();
 		if (pathInfo == null) {
-			pathInfo = "";
-		}
+            pathInfo = "";
+        }
 		String queryString = request.getQueryString();
 		if (queryString == null) {
-			queryString = "";
-		} else {
-			queryString = "?" + queryString;
-		}
+            queryString = "";
+        } else {
+            queryString = "?" + queryString;
+        }
 		return request.getServletPath() + pathInfo + queryString;
 	}
 

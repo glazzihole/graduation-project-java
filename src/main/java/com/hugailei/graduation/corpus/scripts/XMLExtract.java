@@ -15,10 +15,10 @@ import java.util.List;
  * </p>
  **/
 public class XMLExtract {
-    private static final String XML_FILES_PATH = "E:\\corpus\\一些语料\\BNC\\2554\\download\\Texts";
-    private static final String XML_EXTRACT_SCRIPT_PATH = "..\\xsltproc\\bin\\xsltproc.exe";
-    private static final String XML_STYLE_SHEET_PATH = "..\\stylesheet\\justTheText.xsl";
-    private static final String RESULT_FILE_PATH = "E:\\毕业论文相关\\bnc-title\\";
+    private static final String XML_FILES_PATH = "C:\\Users\\GAILEI\\Desktop\\2553\\2553\\download\\Texts";
+    private static final String XML_EXTRACT_SCRIPT_PATH = "D:\\xsltproc\\bin\\xsltproc.exe";
+    private static final String XML_STYLE_SHEET_PATH = "D:\\xsltproc\\stylesheet\\justTheWords.xsl";
+    private static final String RESULT_FILE_PATH = "E:\\毕业论文相关\\bnc-sample-text\\";
     public static void main(String[] args) {
         List<File> allFile = new ArrayList<>();
         FileUtil.getFilesUnderPath(XML_FILES_PATH, allFile);
@@ -40,11 +40,11 @@ public class XMLExtract {
     private static void getText(String filePath) {
         String fileName = new File(filePath).getName().replace("xml", "txt");
         try {
-            Runtime.getRuntime().exec("cmd.exe /c " + XML_EXTRACT_SCRIPT_PATH + " "
+            Runtime.getRuntime().exec("cmd.exe /c "
+                    + XML_EXTRACT_SCRIPT_PATH + " "
                     + XML_STYLE_SHEET_PATH + " "
                     + filePath + " >"
-                    + RESULT_FILE_PATH
-                    + fileName);
+                    + RESULT_FILE_PATH + fileName);
         } catch (IOException e) {
             System.out.println("提取出错：" + e.getStackTrace());
         }

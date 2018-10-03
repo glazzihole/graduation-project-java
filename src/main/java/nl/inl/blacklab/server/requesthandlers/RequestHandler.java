@@ -9,22 +9,21 @@ import java.util.Map.Entry;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.lucene.document.Document;
 
-import nl.inl.blacklab.core.perdocument.DocCount;
-import nl.inl.blacklab.core.perdocument.DocCounts;
-import nl.inl.blacklab.core.perdocument.DocGroupProperty;
-import nl.inl.blacklab.core.perdocument.DocResult;
-import nl.inl.blacklab.core.perdocument.DocResults;
-import nl.inl.blacklab.core.search.Hits;
-import nl.inl.blacklab.core.search.HitsSample;
-import nl.inl.blacklab.core.search.ResultsWindow;
-import nl.inl.blacklab.core.search.Searcher;
-import nl.inl.blacklab.core.search.grouping.DocOrHitGroups;
-import nl.inl.blacklab.core.search.indexstructure.IndexStructure;
+import nl.inl.blacklab.perdocument.DocCount;
+import nl.inl.blacklab.perdocument.DocCounts;
+import nl.inl.blacklab.perdocument.DocGroupProperty;
+import nl.inl.blacklab.perdocument.DocResult;
+import nl.inl.blacklab.perdocument.DocResults;
+import nl.inl.blacklab.search.Hits;
+import nl.inl.blacklab.search.HitsSample;
+import nl.inl.blacklab.search.ResultsWindow;
+import nl.inl.blacklab.search.Searcher;
+import nl.inl.blacklab.search.grouping.DocOrHitGroups;
+import nl.inl.blacklab.search.indexstructure.IndexStructure;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataFormat;
 import nl.inl.blacklab.server.datastream.DataStream;
@@ -42,9 +41,8 @@ import nl.inl.blacklab.server.util.ServletUtil;
 /**
  * Base class for request handlers, to handle the different types of requests. The static handle() method will dispatch the request to the appropriate subclass.
  */
+@Slf4j
 public abstract class RequestHandler {
-	static final Logger logger = LogManager.getLogger(RequestHandler.class);
-
 	public static final int HTTP_OK = HttpServletResponse.SC_OK;
 
 	/** The available request handlers by name */
@@ -113,7 +111,7 @@ public abstract class RequestHandler {
 
 		// If we're doing something with a private index, it must be our own.
 		boolean isPrivateIndex = false;
-		// logger.debug("Got indexName = \"" + indexName + "\" (len=" + indexName.length() + ")");
+		// log.debug("Got indexName = \"" + indexName + "\" (len=" + indexName.length() + ")");
 		String shortName = indexName;
 		if (indexName.contains(":")) {
 			isPrivateIndex = true;
@@ -254,19 +252,19 @@ public abstract class RequestHandler {
 						return errorObj.error(e.getBlsErrorCode(), e.getMessage(), e.getHttpStatusCode());
 					} catch (NoSuchMethodException e) {
 						// (can only happen if the required constructor is not available in the RequestHandler subclass)
-						logger.error("Could not get constructor to create request handler", e);
+						log.error("Could not get constructor to create request handler", e);
 						return errorObj.internalError(e, debugMode, 2);
 					} catch (IllegalArgumentException e) {
-						logger.error("Could not create request handler", e);
+						log.error("Could not create request handler", e);
 						return errorObj.internalError(e, debugMode, 3);
 					} catch (InstantiationException e) {
-						logger.error("Could not create request handler", e);
+						log.error("Could not create request handler", e);
 						return errorObj.internalError(e, debugMode, 4);
 					} catch (IllegalAccessException e) {
-						logger.error("Could not create request handler", e);
+						log.error("Could not create request handler", e);
 						return errorObj.internalError(e, debugMode, 5);
 					} catch (InvocationTargetException e) {
-						logger.error("Could not create request handler", e);
+						log.error("Could not create request handler", e);
 						return errorObj.internalError(e, debugMode, 6);
 					}
 				}
@@ -317,7 +315,7 @@ public abstract class RequestHandler {
 		String pathAndQueryString = ServletUtil.getPathAndQueryString(request);
 
 		if (!(this instanceof RequestHandlerStaticResponse) && !pathAndQueryString.startsWith("/cache-info")) { // annoying when monitoring
-			logger.info(ServletUtil.shortenIpv6(request.getRemoteAddr()) + " " + user.uniqueIdShort() + " " + request.getMethod() + " " + pathAndQueryString);
+			log.info(ServletUtil.shortenIpv6(request.getRemoteAddr()) + " " + request.getMethod() + " " + pathAndQueryString);
 		}
 
 		boolean isDocs = isDocsOperation();
@@ -359,22 +357,6 @@ public abstract class RequestHandler {
 
 	private void setDebug(boolean debugMode) {
 		this.debugMode = debugMode;
-	}
-
-	public void debug(Logger logger, String msg) {
-		logger.debug(user.uniqueIdShort() + " " + msg);
-	}
-
-	public void warn(Logger logger, String msg) {
-		logger.warn(user.uniqueIdShort() + " " + msg);
-	}
-
-	public void info(Logger logger, String msg) {
-		logger.info(user.uniqueIdShort() + " " + msg);
-	}
-
-	public void error(Logger logger, String msg) {
-		logger.error(user.uniqueIdShort() + " " + msg);
 	}
 
 	/**
@@ -473,7 +455,7 @@ public abstract class RequestHandler {
 		try {
 			return ParseUtil.strToBool(str);
 		} catch (IllegalArgumentException e) {
-			debug(logger, "Illegal boolean value for parameter '" + "block" + "': " + str);
+			log.error("isBlockingOperation | error: {}", e);
 			return false;
 		}
 	}
@@ -594,4 +576,3 @@ public abstract class RequestHandler {
 		}
 	}
 }
-

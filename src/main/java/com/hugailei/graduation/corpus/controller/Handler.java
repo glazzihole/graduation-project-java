@@ -1,7 +1,7 @@
 package com.hugailei.graduation.corpus.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.inl.blacklab.core.search.RegexpTooLargeException;
+import nl.inl.blacklab.search.RegexpTooLargeException;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataFormat;
 import nl.inl.blacklab.server.datastream.DataStream;
@@ -30,8 +30,6 @@ import java.io.*;
 @Slf4j
 public class Handler {
 
-    private BlackLabServer blackLabServer = new BlackLabServer();
-
     /**
      * 处理request请求
      *
@@ -39,6 +37,7 @@ public class Handler {
      * @param corpus
      * @param urlResource
      * @param urlPathPart
+     * @param blackLabServer
      * @param request
      * @param response
      * @param requestHandler
@@ -47,12 +46,12 @@ public class Handler {
                           String corpus,
                           String urlResource,
                           String urlPathPart,
+                          BlackLabServer blackLabServer,
                           HttpServletRequest request,
                           HttpServletResponse response,
                           RequestHandler requestHandler) {
-        User user = User.loggedIn("admin", "1");
-        checkConfig(request, response);
 
+        User user = User.loggedIn("admin", "1");
         // === Create RequestHandler object
         boolean debugMode = blackLabServer.getSearchManager().config().isDebugMode(request.getRemoteAddr());
         RequestHandlerStaticResponse errorRequestHandler = commonParamErrorCheck(corpus, user, blackLabServer, request, debugMode);
@@ -74,16 +73,19 @@ public class Handler {
      *
      * @param indexName
      * @param user
-     * @param servlet
+     * @param blackLabServer
      * @param request
      * @param debugMode
      * @return
      */
-    private RequestHandlerStaticResponse checkIndexErrorStatus(String indexName, User user, BlackLabServer servlet, HttpServletRequest request,
+    private RequestHandlerStaticResponse checkIndexErrorStatus(String indexName,
+                                                               User user,
+                                                               BlackLabServer blackLabServer,
+                                                               HttpServletRequest request,
                                                                boolean debugMode) {
         IndexManager.IndexStatus status;
         try {
-            status = servlet.getSearchManager().getIndexManager().getIndexStatus(indexName);
+            status = blackLabServer.getSearchManager().getIndexManager().getIndexStatus(indexName);
             if (status != IndexManager.IndexStatus.AVAILABLE) {
                 RequestHandlerStaticResponse errorObj = new RequestHandlerStaticResponse(blackLabServer, request, user, indexName, null, null);
                 return errorObj.unavailable(indexName, status.toString());
@@ -98,7 +100,9 @@ public class Handler {
 
     }
 
-    boolean checkConfig(HttpServletRequest request, HttpServletResponse responseObject) {
+    boolean checkConfig(HttpServletRequest request,
+                        HttpServletResponse responseObject,
+                        BlackLabServer blackLabServer) {
         if (!blackLabServer.isConfigRead()) {
             try {
                 blackLabServer.readConfig();
@@ -134,7 +138,10 @@ public class Handler {
         }
     }
 
-    RequestHandlerStaticResponse commonParamErrorCheck(String indexName, User user, BlackLabServer servlet, HttpServletRequest request,
+    RequestHandlerStaticResponse commonParamErrorCheck(String indexName,
+                                                       User user,
+                                                       BlackLabServer blackLabServer,
+                                                       HttpServletRequest request,
                                                        boolean debugMode) {
         RequestHandlerStaticResponse errorObj = new RequestHandlerStaticResponse(blackLabServer, request, user, indexName, null, null);
         if (indexName.startsWith(":")) {

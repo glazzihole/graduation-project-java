@@ -1,9 +1,9 @@
 package nl.inl.blacklab.server.search;
 
-import nl.inl.blacklab.core.externalstorage.ContentStore;
-import nl.inl.blacklab.core.forwardindex.ForwardIndex;
-import nl.inl.blacklab.core.search.QueryExecutionContext;
-import nl.inl.blacklab.core.search.Searcher;
+import java.io.File;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
@@ -11,9 +11,10 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 
-import java.io.File;
-import java.util.List;
-import java.util.Set;
+import nl.inl.blacklab.externalstorage.ContentStore;
+import nl.inl.blacklab.forwardindex.ForwardIndex;
+import nl.inl.blacklab.search.QueryExecutionContext;
+import nl.inl.blacklab.search.Searcher;
 
 /** A dummy Searcher placeholder while Searcher is being opened. */
 public class SearcherIsBeingOpened extends Searcher {

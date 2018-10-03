@@ -1,12 +1,46 @@
 package nl.inl.blacklab.server;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.velocity.Template;
+import org.xml.sax.SAXException;
+
+import com.bfsuolframework.core.utils.FileUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hugailei.graduation.corpus.utils.WebFileUtil;
-import nl.inl.blacklab.core.search.RegexpTooLargeException;
-import nl.inl.blacklab.core.search.Searcher;
-import nl.inl.blacklab.core.util.FileUtil;
-import nl.inl.blacklab.core.util.Json;
+
+import nl.inl.blacklab.search.RegexpTooLargeException;
+import nl.inl.blacklab.search.Searcher;
 import nl.inl.blacklab.server.datastream.DataFormat;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
@@ -18,22 +52,10 @@ import nl.inl.blacklab.server.requesthandlers.Response;
 import nl.inl.blacklab.server.requesthandlers.SearchParameters;
 import nl.inl.blacklab.server.search.SearchManager;
 import nl.inl.blacklab.server.util.ServletUtil;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.velocity.Template;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
+import nl.inl.corpuswebsite.utils.CorpusConfig;
+import nl.inl.corpuswebsite.utils.QueryServiceHandler;
+import nl.inl.util.FileUtil;
+import nl.inl.util.Json;
 
 public class BlackLabServer {
 	private static final Logger logger = LogManager.getLogger(BlackLabServer.class);
@@ -123,18 +145,14 @@ public class BlackLabServer {
 				// Write HTTP headers (status code, encoding, content type and cache)
 				responseObject.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				responseObject.setCharacterEncoding(OUTPUT_ENCODING.name().toLowerCase());
-				responseObject.setContentType("json/application");
+				responseObject.setContentType("text/xml");
 				ServletUtil.writeCacheHeaders(responseObject, 0);
 
 				// === Write the response that was captured in buf
 				try {
 					Writer realOut = new OutputStreamWriter(responseObject.getOutputStream(), OUTPUT_ENCODING);
-                    realOut.write("{'status':'ERROR'," +
-                            "'code':500''," +
-                            "'msg':''," +
-                            "'error':'" + e.getMessage() + "'," +
-                            "'data':" + null +
-                            "}");
+					realOut.write("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" + "<blacklabResponse><error><code>INTERNAL_ERROR</code><message><![CDATA[ "
+							+ e.getMessage() + " ]]></message></error></blacklabResponse>");
 					realOut.flush();
 				} catch (IOException e2) {
 					// Client cancelled the request midway through.
@@ -203,9 +221,9 @@ public class BlackLabServer {
 
 		// Write HTTP headers (status code, encoding, content type and cache)
 		if (!isJsonp) // JSONP request always returns 200 OK because otherwise script doesn't load
-        {
-            responseObject.setStatus(httpCode);
-        }
+		{
+			responseObject.setStatus(httpCode);
+		}
 		responseObject.setCharacterEncoding(OUTPUT_ENCODING.name().toLowerCase());
 		responseObject.setContentType(ServletUtil.getContentType(outputType));
 		ServletUtil.writeCacheHeaders(responseObject, cacheTime);
@@ -251,11 +269,11 @@ public class BlackLabServer {
 
 	// ======以下为自行编写内容，以上从BlackServer中拷贝而来======
 	/**
-	 *
+	 * 
 	 * @return
 	 */
 	public String getServletContext() {
-		String realPath = WebFileUtil.getROOTPath();
+		String realPath = FileUtils.getROOTPath();
 		return realPath;
 	}
 
@@ -286,6 +304,9 @@ public class BlackLabServer {
 
 	// ========以下来自MainServlet
 
+	/** Our configuration parameters gotten from blacklab-server */
+	private Map<String, CorpusConfig> corpusConfigs = new HashMap<>();
+
 	/** Our Velocity templates */
 	private Map<String, Template> templates = new HashMap<>();
 
@@ -303,6 +324,32 @@ public class BlackLabServer {
 	 */
 	private String warBuildTime = null;
 
+	/**
+	 * Get the corpus config (as returned from blacklab-server)
+	 *
+	 * @param corpus
+	 *            name of the corpus
+	 * @return the config
+	 */
+	public CorpusConfig getCorpusConfig(String corpus) {
+		if (!corpusConfigs.containsKey(corpus)) {
+			// Contact blacklab-server for the config xml file
+
+			QueryServiceHandler handler = new QueryServiceHandler(getWebserviceUrl(corpus));
+
+			Map<String, String[]> params = new HashMap<>();
+			params.put("outputformat", new String[] { "xml" });
+
+			try {
+				String xmlResult = handler.makeRequest(params);
+				corpusConfigs.put(corpus, new CorpusConfig(xmlResult));
+			} catch (IOException | SAXException | ParserConfigurationException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		return corpusConfigs.get(corpus);
+	}
 
 	/**
 	 * Get a file from the directory belonging to this corpus.
@@ -326,16 +373,16 @@ public class BlackLabServer {
 	// TODO re-enable caching
 	public InputStream getProjectFile(String corpus, String fileName, boolean getDefaultIfMissing) {
 		if (corpus == null || isUserCorpus(corpus) || !adminProps.containsKey("corporaInterfaceDataDir")) {
-            return getDefaultIfMissing ? getDefaultProjectFile(fileName) : null;
-        }
+			return getDefaultIfMissing ? getDefaultProjectFile(fileName) : null;
+		}
 
 		try {
 			Path baseDir = Paths.get(adminProps.getProperty("corporaInterfaceDataDir"));
 			Path corpusDir = baseDir.resolve(corpus).normalize();
 			Path filePath = corpusDir.resolve(fileName).normalize();
 			if (corpusDir.startsWith(baseDir) && filePath.startsWith(corpusDir)) {
-                return new FileInputStream(new File(filePath.toString()));
-            }
+				return new FileInputStream(new File(filePath.toString()));
+			}
 
 			// File path points outside the configured directory!
 			return getDefaultIfMissing ? getDefaultProjectFile(fileName) : null;
@@ -357,10 +404,10 @@ public class BlackLabServer {
 		try {
 			stream = new FileInputStream(getServletContext() + "/WEB-INF/interface-default/" + fileName);
 			if (stream == null) {
-                throw new RuntimeException("Default fallback for file " + fileName + " missing!");
-            }
+				throw new RuntimeException("Default fallback for file " + fileName + " missing!");
+			}
 		} catch (FileNotFoundException e) {
-			//            e.printStackTrace();
+			//			e.printStackTrace();
 			throw new RuntimeException("Default fallback for file " + fileName + " missing!");
 		}
 		return stream;
@@ -377,8 +424,8 @@ public class BlackLabServer {
 	public String getWebserviceUrl(String corpus) {
 		String url = adminProps.getProperty("blsUrl");
 		if (!url.endsWith("/")) {
-            url += "/";
-        }
+			url += "/";
+		}
 		url += corpus + "/";
 		return url;
 	}
@@ -386,11 +433,11 @@ public class BlackLabServer {
 	public String getExternalWebserviceUrl(String corpus) {
 		String url = adminProps.getProperty("blsUrlExternal");
 		if (!url.endsWith("/")) {
-            url += "/";
-        }
+			url += "/";
+		}
 		if (corpus != null && corpus.length() > 0) {
-            url += corpus + "/";
-        }
+			url += corpus + "/";
+		}
 		return url;
 	}
 
@@ -432,8 +479,8 @@ public class BlackLabServer {
 						if (atts != null) {
 							value = atts.getValue("Build-Time");
 							if (value == null) {
-                                value = atts.getValue("Build-Date"); // Old name for this info
-                            }
+								value = atts.getValue("Build-Date"); // Old name for this info
+							}
 						}
 						warBuildTime = (value == null ? "UNKNOWN" : value);
 					} finally {
@@ -453,29 +500,28 @@ public class BlackLabServer {
 
 	public static String getCorpusName(String corpus) {
 		if (corpus == null) {
-            return null;
-        }
+			return null;
+		}
 
 		int i = corpus.indexOf(":");
 		if (i != -1) {
-            return corpus.substring(i + 1);
-        }
+			return corpus.substring(i + 1);
+		}
 
 		return corpus;
 	}
 
 	public static String getCorpusOwner(String corpus) {
 		if (corpus == null) {
-            return null;
-        }
+			return null;
+		}
 
 		int i = corpus.indexOf(":");
 		if (i != -1) {
-            return corpus.substring(0, i);
-        }
+			return corpus.substring(0, i);
+		}
 
 		return null;
 	}
 
 }
-

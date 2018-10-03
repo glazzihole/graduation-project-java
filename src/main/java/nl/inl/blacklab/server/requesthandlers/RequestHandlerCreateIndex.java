@@ -1,16 +1,18 @@
 package nl.inl.blacklab.server.requesthandlers;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.jobs.User;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 /**
  * Display the contents of the cache.
  */
+@Slf4j
 public class RequestHandlerCreateIndex extends RequestHandler {
 	public RequestHandlerCreateIndex(BlackLabServer servlet, HttpServletRequest request, User user, String indexName, String urlResource, String urlPathPart) {
 		super(servlet, request, user, indexName, urlResource, urlPathPart);
@@ -27,9 +29,9 @@ public class RequestHandlerCreateIndex extends RequestHandler {
 			String displayName = request.getParameter("display");
 			String documentFormat = request.getParameter("format");
 
-			debug(logger, "REQ create index: " + newIndexName + ", " + displayName + ", " + documentFormat);
+			log.info( "REQ create index: " + newIndexName + ", " + displayName + ", " + documentFormat);
 			if (!user.isLoggedIn() || !newIndexName.startsWith(user.getUserId() + ":")) {
-				logger.debug("(forbidden, cannot create index in another user's area)");
+				log.info("(forbidden, cannot create index in another user's area)");
 				return Response.forbidden(ds, "You can only create indices in your own private area.");
 			}
 

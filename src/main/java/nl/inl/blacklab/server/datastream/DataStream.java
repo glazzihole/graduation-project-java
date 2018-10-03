@@ -1,10 +1,10 @@
 package nl.inl.blacklab.server.datastream;
 
-import nl.inl.blacklab.server.util.ServletUtil;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
+
+import nl.inl.blacklab.server.util.ServletUtil;
 
 /**
  * Class to stream out XML or JSON data.

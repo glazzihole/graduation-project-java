@@ -28,7 +28,7 @@ import java.util.Map;
  **/
 public class SaveParserResult2 {
     //文件路径
-    private static final String FILE_PATH = "E:\\毕业论文相关\\bnc-text";
+    private static final String FILE_PATH = "E:\\毕业论文相关\\bnc-sample-text";
 
     //数据库主机地址
     private static final String DB_HOST = "192.168.99.100";

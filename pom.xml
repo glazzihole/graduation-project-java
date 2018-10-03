@@ -191,6 +191,13 @@
             <version>2.9.6</version>
         </dependency>
 
+        <dependency>
+            <groupId>nl.inl.blacklab</groupId>
+            <artifactId>blacklab</artifactId>
+            <version>1.7.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/blacklab-1.7.0-SNAPSHOT.jar</systemPath>
+        </dependency>
 
     </dependencies>
 

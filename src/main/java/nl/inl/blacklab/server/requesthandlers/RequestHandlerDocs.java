@@ -1,16 +1,31 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import nl.inl.blacklab.core.perdocument.*;
-import nl.inl.blacklab.core.search.*;
-import nl.inl.blacklab.core.search.grouping.DocOrHitGroups;
-import nl.inl.blacklab.core.search.grouping.HitPropValue;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.lucene.document.Document;
+
+import nl.inl.blacklab.perdocument.DocGroup;
+import nl.inl.blacklab.perdocument.DocGroups;
+import nl.inl.blacklab.perdocument.DocProperty;
+import nl.inl.blacklab.perdocument.DocPropertyComplexFieldLength;
+import nl.inl.blacklab.perdocument.DocResult;
+import nl.inl.blacklab.perdocument.DocResults;
+import nl.inl.blacklab.perdocument.DocResultsWindow;
+import nl.inl.blacklab.search.Concordance;
+import nl.inl.blacklab.search.Hit;
+import nl.inl.blacklab.search.Hits;
+import nl.inl.blacklab.search.Kwic;
+import nl.inl.blacklab.search.Searcher;
+import nl.inl.blacklab.search.grouping.DocOrHitGroups;
+import nl.inl.blacklab.search.grouping.HitPropValue;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
-import nl.inl.blacklab.server.jobs.*;
-import org.apache.lucene.document.Document;
-
-import javax.servlet.http.HttpServletRequest;
+import nl.inl.blacklab.server.jobs.Job;
+import nl.inl.blacklab.server.jobs.JobDocsGrouped;
+import nl.inl.blacklab.server.jobs.JobDocsTotal;
+import nl.inl.blacklab.server.jobs.JobDocsWindow;
+import nl.inl.blacklab.server.jobs.User;
 
 /**
  * Request handler for the doc results.
@@ -126,7 +141,7 @@ public class RequestHandlerDocs extends RequestHandler {
 			// The summary
 			ds.startEntry("summary").startMap();
 			DocResults docResults = group == null ? total.getDocResults() : group.getResults();
-			double totalTime = total.threwException() ? -1 : total.userWaitTime();
+			double totalTime = group == null ? (total.threwException() ? -1 : total.userWaitTime()) : searchGrouped.userWaitTime();
 			addSummaryCommonFields(ds, searchParam, search.userWaitTime(), totalTime, (Hits)null, group != null, docResults, (DocOrHitGroups)null, window);
 			if (includeTokenCount) {
                 ds.entry("tokensInMatchingDocuments", totalTokens);

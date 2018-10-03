@@ -1,18 +1,49 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import nl.inl.blacklab.core.perdocument.DocGroupProperty;
-import nl.inl.blacklab.core.perdocument.DocGroupPropertySize;
-import nl.inl.blacklab.core.perdocument.DocProperty;
-import nl.inl.blacklab.core.perdocument.DocPropertyMultiple;
-import nl.inl.blacklab.core.queryParser.corpusql.ParseException;
-import nl.inl.blacklab.core.search.*;
-import nl.inl.blacklab.core.search.grouping.GroupProperty;
-import nl.inl.blacklab.core.search.grouping.GroupPropertySize;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.lucene.search.Query;
+
+import nl.inl.blacklab.perdocument.DocGroupProperty;
+import nl.inl.blacklab.perdocument.DocGroupPropertySize;
+import nl.inl.blacklab.perdocument.DocProperty;
+import nl.inl.blacklab.perdocument.DocPropertyMultiple;
+import nl.inl.blacklab.queryParser.corpusql.ParseException;
+import nl.inl.blacklab.search.ConcordanceType;
+import nl.inl.blacklab.search.HitsSample;
+import nl.inl.blacklab.search.Searcher;
+import nl.inl.blacklab.search.SingleDocIdFilter;
+import nl.inl.blacklab.search.TextPattern;
+import nl.inl.blacklab.search.grouping.GroupProperty;
+import nl.inl.blacklab.search.grouping.GroupPropertySize;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BadRequest;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.exceptions.NotFound;
-import nl.inl.blacklab.server.jobs.*;
+import nl.inl.blacklab.server.jobs.ContextSettings;
+import nl.inl.blacklab.server.jobs.DocGroupSettings;
+import nl.inl.blacklab.server.jobs.DocGroupSortSettings;
+import nl.inl.blacklab.server.jobs.DocSortSettings;
+import nl.inl.blacklab.server.jobs.HitFilterSettings;
+import nl.inl.blacklab.server.jobs.HitGroupSettings;
+import nl.inl.blacklab.server.jobs.HitGroupSortSettings;
+import nl.inl.blacklab.server.jobs.HitSortSettings;
+import nl.inl.blacklab.server.jobs.JobDescription;
 import nl.inl.blacklab.server.jobs.JobDocs.JobDescDocs;
 import nl.inl.blacklab.server.jobs.JobDocsGrouped.JobDescDocsGrouped;
 import nl.inl.blacklab.server.jobs.JobDocsSorted.JobDescDocsSorted;
@@ -26,21 +57,15 @@ import nl.inl.blacklab.server.jobs.JobHitsSorted.JobDescHitsSorted;
 import nl.inl.blacklab.server.jobs.JobHitsTotal.JobDescHitsTotal;
 import nl.inl.blacklab.server.jobs.JobHitsWindow.JobDescHitsWindow;
 import nl.inl.blacklab.server.jobs.JobSampleHits.JobDescSampleHits;
+import nl.inl.blacklab.server.jobs.MaxSettings;
+import nl.inl.blacklab.server.jobs.SampleSettings;
+import nl.inl.blacklab.server.jobs.SearchSettings;
+import nl.inl.blacklab.server.jobs.WindowSettings;
 import nl.inl.blacklab.server.search.SearchManager;
 import nl.inl.blacklab.server.util.BlsUtils;
 import nl.inl.blacklab.server.util.GapFiller;
 import nl.inl.blacklab.server.util.ParseUtil;
 import nl.inl.blacklab.server.util.ServletUtil;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.lucene.search.Query;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * The parameters passed in the request.
@@ -79,6 +104,7 @@ public class SearchParameters {
 		defaultParameterValues.put("fimatch", "-1");
 		defaultParameterValues.put("usecache", "yes");
 		defaultParameterValues.put("explain", "no");
+		defaultParameterValues.put("listvalues", "");
 		defaultParameterValues.put("subprops", "");
 	}
 
@@ -93,51 +119,98 @@ public class SearchParameters {
 	public static SearchParameters get(SearchManager searchMan, boolean isDocs, String indexName, HttpServletRequest request) {
 		SearchParameters param = new SearchParameters(searchMan, isDocs);
 		param.put("indexname", indexName);
-		for (String name: SearchParameters.NAMES) {
+		
+		for (String name : SearchParameters.NAMES) {
 			String value = ServletUtil.getParameter(request, name, "").trim();
 			if (value.length() == 0) {
                 continue;
             }
 			param.put(name, value);
 		}
+		
+		//读取attribute里面的配置信息（键值对），这些信息均是在Controller层程序添加，而非前端用户添加
+		for (String name : SearchParameters.NAMES) {
+			Object attribute = request.getAttribute(name);
+			if(attribute!=null){
+				String value=attribute.toString().trim();
+				if (value.length() == 0) {
+                    continue;
+                }
+				param.put(name, value);
+			}
+			
+		}
+		
+		{
+			// 兼容Dictool框架的分页参数
+			String pageNo = ServletUtil.getParameter(request, "pageNo", "").trim();
+			int first = 0;
+			try {
+				first = Integer.parseInt(pageNo)-1<0?0:Integer.parseInt(pageNo)-1;//要-1是因为first从0开始，但pageNo是从1开始的
+			} catch (Exception e) {
+				;
+			}
+
+			String pageSize = ServletUtil.getParameter(request, "pageSize", "").trim();
+			int number = 0;
+			try {
+				number = Integer.parseInt(pageSize);
+			} catch (Exception e) {
+				;
+			}
+
+			if (number != 0){
+				first=first*number;
+				param.put("first", String.valueOf(first));
+				param.put("number", pageSize);
+			}
+			else {
+			    first = Integer.parseInt( getDefault("number") )*first;
+			    param.put("first", String.valueOf(first));
+			}
+			
+
+		}
+		
 		param.setDebugMode(searchMan.config().isDebugMode(request.getRemoteAddr()));
 		return param;
 	}
 
 	/** Parameters involved in search */
 	private static final List<String> NAMES = Arrays.asList(
-		// What to search for
-		"patt", "pattlang", "pattgapdata",   // pattern to search for
-		"filter", "filterlang", "docpid",    // docs to search
-		"sample", "samplenum", "sampleseed", // what hits to select
-		"hitfiltercrit", "hitfilterval",
+			// What to search for
+			"patt", "pattlang", "pattgapdata", // pattern to search for
+			"filter", "filterlang", "docpid", // docs to search
+			"sample", "samplenum", "sampleseed", // what hits to select
+			"hitfiltercrit", "hitfilterval",
 
-		// How to search
-		"fimatch",                           // [debug] set NFA FI matching threshold
-		"usecache",                          // [debug] use cache or bypass it?
+			// How to search
+			"fimatch", // [debug] set NFA FI matching threshold
+			"usecache", // [debug] use cache or bypass it?
 
-		// How to present results
-		"sort",                         // sorting (grouped) hits/docs
-		"first", "number",              // results window
-		"wordsaroundhit", "usecontent", // concordances
-		"hitstart", "hitend",           // doc snippets
-		"wordstart", "wordend",
-		"explain",                      // explain query rewriting?
-		"subprops",                     // on field info page, show all subprops and values for property
-		                                // EXPERIMENTAL, mostly for part of speech
+			// How to present results
+			"sort", // sorting (grouped) hits/docs
+			"first", "number", // results window
+			"wordsaroundhit", "usecontent", // concordances
+			"hitstart", "hitend", // doc snippets
+			"wordstart", "wordend", "explain", // explain query rewriting?
+			"listvalues", // on field info page, show (non-sub) values for property?
+							// EXPERIMENTAL, mostly for part of speech, limited to 500 values
+			"subprops", // on field info page, show all subprops and values for property
+						// EXPERIMENTAL, mostly for part of speech
 
-		// How to process results
-		"facets",                       // include facet information?
-		"includetokencount",            // count tokens in all matched documents?
-		"maxretrieve", "maxcount",      // limits to numbers of hits to process
+			// How to process results
+			"facets", // include facet information?
+			"includetokencount", // count tokens in all matched documents?
+			"maxretrieve", "maxcount", // limits to numbers of hits to process
 
-		// Alternative views
-		"calc",                         // collocations, or other context-based calculations
-		"group", "viewgroup",           // grouping hits/docs
-		"property", "sensitive",        // for term frequency
+			// Alternative views
+			"calc", // collocations, or other context-based calculations
+			"group", "viewgroup", // grouping hits/docs
+			"property", "sensitive", // for term frequency
 
-		// How to execute request
-		"waitfortotal"                  // wait until total number of results known?
+			// How to execute request
+			"waitfortotal" // wait until total number of results known?
 	);
 
 	/** The search manager, for querying default value for missing parameters */
@@ -220,7 +293,7 @@ public class SearchParameters {
 
 	public void dataStream(DataStream ds) {
 		ds.startMap();
-		for (Entry<String, String> e: map.entrySet()) {
+		for (Entry<String, String> e : map.entrySet()) {
 			ds.entry(e.getKey(), e.getValue());
 		}
 		ds.endMap();
@@ -299,7 +372,7 @@ public class SearchParameters {
 	}
 
 	private SampleSettings getSampleSettings() {
-		if (! (containsKey("sample") || containsKey("samplenum")) ) {
+		if (!(containsKey("sample") || containsKey("samplenum"))) {
             return null;
         }
 		float samplePercentage = containsKey("sample") ? getFloat("sample") : -1f;
@@ -330,7 +403,7 @@ public class SearchParameters {
 		int contextSize = getInteger("wordsaroundhit");
 		int maxContextSize = searchManager.config().maxContextSize();
 		if (contextSize > maxContextSize) {
-			//debug(logger, "Clamping context size to " + maxContextSize + " (" + contextSize + " requested)");
+			// debug(logger, "Clamping context size to " + maxContextSize + " (" + contextSize + " requested)");
 			contextSize = maxContextSize;
 		}
 		ConcordanceType concType = getString("usecontent").equals("orig") ? ConcordanceType.CONTENT_STORE : ConcordanceType.FORWARD_INDEX;
@@ -350,7 +423,7 @@ public class SearchParameters {
 			facetProps = new ArrayList<>();
 			if (propMultipleFacets instanceof DocPropertyMultiple) {
 				// Multiple facets requested
-				for (DocProperty prop: (DocPropertyMultiple)propMultipleFacets) {
+				for (DocProperty prop : (DocPropertyMultiple) propMultipleFacets) {
 					facetProps.add(prop);
 				}
 			} else {
@@ -419,7 +492,7 @@ public class SearchParameters {
 		return new DocSortSettings(sortProp, reverse);
 	}
 
-	private HitGroupSortSettings hitGroupSortSettings()  {
+	private HitGroupSortSettings hitGroupSortSettings() {
 		GroupProperty sortProp = null;
 		boolean reverse = false;
 		if (!isDocsOperation) {
@@ -467,6 +540,16 @@ public class SearchParameters {
 			sortBy = sortBy.substring(1);
 		}
 		return new HitSortSettings(sortBy, reverse);
+	}
+
+	public Set<String> listValuesFor() {
+		String par = getString("listvalues").trim();
+		return new HashSet<>(Arrays.asList(par.split("\\s*,\\s*")));
+	}
+
+	public Set<String> listSubpropsFor() {
+		String par = getString("subprops").trim();
+		return new HashSet<>(Arrays.asList(par.split("\\s*,\\s*")));
 	}
 
 	public boolean containsKey(String key) {
@@ -561,7 +644,7 @@ public class SearchParameters {
 		try {
 			Set<String> skipEntries = new HashSet<>(Arrays.asList("indexname"));
 			StringBuilder b = new StringBuilder();
-			for (Entry<String, String> e: map.entrySet()) {
+			for (Entry<String, String> e : map.entrySet()) {
 				String name = e.getKey();
 				String value = e.getValue();
 				if (skipEntries.contains(name) || defaultParameterValues.containsKey(name) && defaultParameterValues.get(name).equals(value)) {

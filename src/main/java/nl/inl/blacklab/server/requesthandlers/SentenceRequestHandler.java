@@ -1,35 +1,46 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import lombok.extern.slf4j.Slf4j;
-import nl.inl.blacklab.core.search.*;
-import nl.inl.blacklab.core.search.grouping.HitGroup;
-import nl.inl.blacklab.core.search.grouping.HitGroups;
-import nl.inl.blacklab.core.search.grouping.HitPropValue;
-import nl.inl.blacklab.core.search.grouping.HitProperty;
-import nl.inl.blacklab.server.BlackLabServer;
-import nl.inl.blacklab.server.datastream.DataStream;
-import nl.inl.blacklab.server.exceptions.BlsException;
-import nl.inl.blacklab.server.jobs.*;
-import nl.inl.blacklab.server.search.BlsConfig;
-import org.apache.lucene.document.Document;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** 
- * 例句查询<br>
- * 改动了返回数据结构及内容，原文件内容见RequestHandlerHits.java.txt
- * 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.hugailei.graduation.corpus.constants.CorpusConstant;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.lucene.document.Document;
+import nl.inl.blacklab.search.Concordance;
+import nl.inl.blacklab.search.Hit;
+import nl.inl.blacklab.search.Hits;
+import nl.inl.blacklab.search.HitsWindow;
+import nl.inl.blacklab.search.Kwic;
+import nl.inl.blacklab.search.Searcher;
+import nl.inl.blacklab.search.TermFrequency;
+import nl.inl.blacklab.search.TermFrequencyList;
+import nl.inl.blacklab.search.grouping.HitGroup;
+import nl.inl.blacklab.search.grouping.HitGroups;
+import nl.inl.blacklab.search.grouping.HitPropValue;
+import nl.inl.blacklab.search.grouping.HitProperty;
+import nl.inl.blacklab.server.BlackLabServer;
+import nl.inl.blacklab.server.datastream.DataStream;
+import nl.inl.blacklab.server.exceptions.BlsException;
+import nl.inl.blacklab.server.jobs.Job;
+import nl.inl.blacklab.server.jobs.JobHitsGrouped;
+import nl.inl.blacklab.server.jobs.JobHitsTotal;
+import nl.inl.blacklab.server.jobs.JobHitsWindow;
+import nl.inl.blacklab.server.jobs.User;
+import nl.inl.blacklab.server.search.BlsConfig;
+
+/**
+ * 例句查询处理类
+ *
  * @author HU Gailei
  */
 @Slf4j
 public class SentenceRequestHandler extends RequestHandler {
-    public SentenceRequestHandler(BlackLabServer blackLabServer, HttpServletRequest request, User user, String indexName, String urlResource, String urlPathPart) {
-        super(blackLabServer, request, user, indexName, urlResource, urlPathPart);
+    public SentenceRequestHandler(BlackLabServer servlet, HttpServletRequest request, User user, String indexName, String urlResource, String urlPathPart) {
+        super(servlet, request, user, indexName, urlResource, urlPathPart);
     }
 
     @Override
@@ -56,6 +67,9 @@ public class SentenceRequestHandler extends RequestHandler {
             HitGroup group = null;
             boolean block = isBlockingOperation();
             if (groupBy.length() > 0 && viewGroup.length() > 0) {
+
+                // TODO: clean up, do using JobHitsGroupedViewGroup or something (also cache sorted group!)
+
                 // Yes. Group, then show hits from the specified group
                 searchGrouped = (JobHitsGrouped) searchMan.search(user, searchParam.hitsGrouped(), block);
                 search = searchGrouped;
@@ -81,7 +95,7 @@ public class SentenceRequestHandler extends RequestHandler {
                 } else {
                     group.getHits().settings().setContextSize( 500 );
                 }
-                
+
                 String sortBy = searchParam.getString("sort");
                 HitProperty sortProp = sortBy != null && sortBy.length() > 0 ? HitProperty.deserialize(group.getHits(), sortBy) : null;
                 Hits hitsSorted;
@@ -104,17 +118,17 @@ public class SentenceRequestHandler extends RequestHandler {
                 }
                 window = hitsSorted.window(first, number);
 
-            } 
+            }
             else {
                 searchWindow = (JobHitsWindow) searchMan.search(user, searchParam.hitsWindow(), block);
                 search = searchWindow;
                 search.incrRef();
-
                 total = (JobHitsTotal) searchMan.search(user, searchParam.hitsTotal(), searchParam.getBoolean("waitfortotal"));
 
                 if (!search.finished()) {
                     return Response.busy(ds, servlet);
                 }
+
                 window = searchWindow.getWindow();
             }
 
@@ -124,9 +138,8 @@ public class SentenceRequestHandler extends RequestHandler {
             }
 
             Searcher searcher = search.getSearcher();
-
             Hits hits = searchWindow != null ? hits = searchWindow.getWindow().getOriginalHits() : group.getHits();
-            
+
             double totalTime = 0;
             if (total != null) {
                 totalTime = total.threwException() ? -1 : total.userWaitTime();
@@ -138,34 +151,35 @@ public class SentenceRequestHandler extends RequestHandler {
             int totalHits = -1;
             if (hits != null) {
                 // We have a hits object we can query for this information
-               totalHits =  countFailed ? -1 : hits.countSoFarHitsCounted();        
-            } 
+                totalHits =  countFailed ? -1 : hits.countSoFarHitsCounted();
+            }
             int pageNo = (searchParam.getInteger("first")/searchParam.getInteger("number")) + 1 ;
             int pageSize =  searchParam.getInteger("number") < 0 || searchParam.getInteger("number") > searchMan.config().maxPageSize() ? searchMan.config().defaultPageSize() : searchParam.getInteger("number");
             int totalPages = (int) Math.ceil( (double)totalHits/ (double)pageSize );
-           
+
             ds.startItem("result").startMap();
             ds.entry("status", CorpusConstant.SUCCESS);
             ds.entry("code", CorpusConstant.SUCCESS_CODE);
             ds.entry("msg", "");
+            ds.entry("error", "");
+            ds.startEntry("data");
+            ds.entry("pageNo", pageNo);
+            ds.entry("pageSize", pageSize);
+            ds.entry("orderBy", null);
+            ds.entry("orderDir", null);
+            ds.entry("nextPage", pageNo>=totalPages?totalPages:pageNo+1);
+            ds.entry("prePage", pageNo<=1?1:pageNo-1);
+            ds.entry("totalPages", totalPages);
+            ds.entry("totalItems", totalHits);
+            ds.entry("startIndexNo", searchParam.getInteger("first"));
+            ds.entry("hasNextPage", pageNo>=totalPages?false:true);
+            ds.entry("hasPrePage", pageNo<=1?false:true);
 
-            ds.startEntry("data")
-                .entry("pageNo", pageNo)
-                .entry("pageSize", pageSize)
-                .entry("orderBy", null)
-                .entry("orderDir", null)
-                .entry("nextPage", pageNo>=totalPages?totalPages:pageNo+1)
-                .entry("prePage", pageNo<=1?1:pageNo-1)
-                .entry("totalPages", totalPages)
-                .entry("totalItems", totalHits)
-                .entry("startIndexNo", searchParam.getInteger("first"))
-                .entry("hasNextPage", pageNo>=totalPages?false:true)
-                .entry("hasPrePage", pageNo<=1?false:true)
-                .startEntry("page").startList();
-
+            ds.startEntry("page").startList();
             Map<Integer, String> pids = new HashMap<>();
             for (Hit hit: window) {
                 ds.startItem("hit").startMap();
+
                 // Find pid
                 String pid = pids.get(hit.doc);
                 if (pid == null) {
@@ -181,16 +195,16 @@ public class SentenceRequestHandler extends RequestHandler {
                     // Add concordance from original XML
                     Concordance c = window.getConcordance(hit);
                     ds  .startEntry("left").plain(c.left()).endEntry()
-                        .startEntry("match").plain(c.match()).endEntry()
-                        .startEntry("right").plain(c.right()).endEntry();
-                } 
+                            .startEntry("match").plain(c.match()).endEntry()
+                            .startEntry("right").plain(c.right()).endEntry();
+                }
                 else {
                     String left = "", match = "", right = "";
                     // Add KWIC info
                     if(window!=null) {
-                        Kwic c = window.getKwic(hit);                 
+                        Kwic c = window.getKwic(hit);
                         List<String> leftWordsList = c.getLeft( "word" ),matchWordsList = c.getMatch( "word" ),rightWordsList = c.getRight( "word" );
-                        
+
                         for(String word : leftWordsList) {
                             left = left + word + " ";
                         }
@@ -204,7 +218,7 @@ public class SentenceRequestHandler extends RequestHandler {
                     ds.entry("left", left);
                     ds.entry("match", match);
                     ds.entry("right", right);
-                    
+
                 }
                 ds.entry("corpus", searchParam.getIndexName());
                 ds.endMap().endItem();
@@ -212,13 +226,12 @@ public class SentenceRequestHandler extends RequestHandler {
             ds.endList().endEntry();
             ds.endEntry();
             ds.endMap().endItem();
-
             if (BlsConfig.traceRequestHandling) {
                 log.info("SentenceRequestHandler | handle end");
             }
             return HTTP_OK;
         } catch (Exception e) {
-            log.error("SentenceRequestHandler | error：{}", e);
+            log.info("SentenceRequestHandler | error: {}", e);
             return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
         } finally {
             if (search != null) {
@@ -241,7 +254,7 @@ public class SentenceRequestHandler extends RequestHandler {
         ds.startMap().startEntry("tokenFrequencies").startMap();
         TermFrequencyList tfl = originalHits.getCollocations();
         tfl.sort();
-        for (TermFrequency tf : tfl) {
+        for (TermFrequency tf: tfl) {
             ds.attrEntry("token", "text", tf.term, tf.frequency);
         }
         ds.endMap().endEntry().endMap();

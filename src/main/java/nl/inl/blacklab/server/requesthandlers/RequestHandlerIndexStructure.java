@@ -1,18 +1,21 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import nl.inl.blacklab.core.index.complex.ComplexFieldUtil;
-import nl.inl.blacklab.core.search.Searcher;
-import nl.inl.blacklab.core.search.indexstructure.ComplexFieldDesc;
-import nl.inl.blacklab.core.search.indexstructure.IndexStructure;
-import nl.inl.blacklab.core.search.indexstructure.MetadataFieldDesc;
-import nl.inl.blacklab.core.search.indexstructure.PropertyDesc;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+
+import nl.inl.blacklab.search.Searcher;
+import nl.inl.blacklab.search.indexstructure.ComplexFieldDesc;
+import nl.inl.blacklab.search.indexstructure.IndexStructure;
+import nl.inl.blacklab.search.indexstructure.IndexStructure.MetadataGroup;
+import nl.inl.blacklab.search.indexstructure.MetadataFieldDesc;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.jobs.User;
-import nl.inl.blacklab.core.util.StringUtil;
-
-import javax.servlet.http.HttpServletRequest;
+import nl.inl.util.StringUtil;
 
 /**
  * Get information about the structure of an index.
@@ -67,28 +70,14 @@ public class RequestHandlerIndexStructure extends RequestHandler {
 		// Complex fields
 		//DataObjectMapAttribute doComplexFields = new DataObjectMapAttribute("complexField", "name");
 		for (String name: struct.getComplexFields()) {
-			ds.startAttrEntry("complexField", "name", name).startMap();
+			ds.startAttrEntry("complexField", "name", name);
+
+	        Set<String> setShowValuesFor = searchParam.listValuesFor();
+	        Set<String> setShowSubpropsFor = searchParam.listSubpropsFor();
 			ComplexFieldDesc fieldDesc = struct.getComplexFieldDesc(name);
+            RequestHandlerFieldInfo.describeComplexField(ds, null, name, fieldDesc, searcher, setShowValuesFor, setShowSubpropsFor);
 
-			ds	.entry("displayName", fieldDesc.getDisplayName())
-				.entry("description", fieldDesc.getDescription())
-				.entry("mainProperty", fieldDesc.getMainProperty().getName());
-
-			ds.startEntry("basicProperties").startMap();
-			//DataObjectMapAttribute doProps = new DataObjectMapAttribute("property", "name");
-			for (String propName: fieldDesc.getProperties()) {
-				if (propName.equals(ComplexFieldUtil.START_TAG_PROP_NAME) || propName.equals(ComplexFieldUtil.END_TAG_PROP_NAME) ||
-					propName.equals(ComplexFieldUtil.PUNCTUATION_PROP_NAME)) {
-                    continue; // skip tag properties as we don't search on them directly; they are shown in detailed field info
-                }
-				PropertyDesc propDesc = fieldDesc.getPropertyDesc(propName);
-				ds.startAttrEntry("property", "name", propName).startMap()
-					.entry("sensitivity", propDesc.getSensitivity().toString())
-				.endMap().endAttrEntry();
-			}
-			ds.endMap().endEntry();
-
-			ds.endMap().endAttrEntry();
+			ds.endAttrEntry();
 		}
 		ds.endMap().endEntry();
 
@@ -96,15 +85,41 @@ public class RequestHandlerIndexStructure extends RequestHandler {
 		// Metadata fields
 		//DataObjectMapAttribute doMetaFields = new DataObjectMapAttribute("metadataField", "name");
 		for (String name: struct.getMetadataFields()) {
-			MetadataFieldDesc fd = struct.getMetadataFieldDesc(name);
-			ds.startAttrEntry("metadataField", "name", name).startMap()
-				.entry("fieldName", fd.getName())
-				.entry("displayName", fd.getDisplayName())
-				.entry("type", fd.getType().toString())
-				.entry("group", fd.getGroup());
-			ds.endMap().endAttrEntry();
+			ds.startAttrEntry("metadataField", "name", name);
+
+            MetadataFieldDesc fd = struct.getMetadataFieldDesc(name);
+			RequestHandlerFieldInfo.describeMetadataField(ds, null, name, fd, true);
+
+			ds.endAttrEntry();
 		}
 		ds.endMap().endEntry();
+
+        Map<String, MetadataGroup> metaGroups = struct.getMetaFieldGroups();
+		Set<String> metadataFieldsNotInGroups = new HashSet<>(struct.getMetadataFields());
+        for (MetadataGroup metaGroup: metaGroups.values()) {
+            for (String field: metaGroup.getFields()) {
+                metadataFieldsNotInGroups.remove(field);
+            }
+        }
+        ds.startEntry("metadataFieldGroups").startList();
+        boolean addedRemaining = false;
+        for (MetadataGroup metaGroup: metaGroups.values()) {
+            ds.startItem("metadataFieldGroup").startMap();
+            ds.entry("name", metaGroup.getName());
+            ds.startEntry("fields").startList();
+            for (String field: metaGroup.getFields()) {
+                ds.item("field", field);
+            }
+            if (!addedRemaining && metaGroup.addRemainingFields()) {
+                addedRemaining = true;
+                for (String field: metadataFieldsNotInGroups) {
+                    ds.item("field", field);
+                }
+            }
+            ds.endList().endEntry();
+            ds.endMap().endItem();
+        }
+        ds.endList().endEntry();
 
 		// Remove any empty settings
 		//response.removeEmptyMapValues();

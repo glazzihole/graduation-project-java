@@ -1,15 +1,17 @@
 package nl.inl.blacklab.server.requesthandlers;
 
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.jobs.User;
 
-import javax.servlet.http.HttpServletRequest;
-
 /**
  * Display the contents of the cache.
  */
+@Slf4j
 public class RequestHandlerDeleteIndex extends RequestHandler {
 	public RequestHandlerDeleteIndex(BlackLabServer servlet, HttpServletRequest request, User user, String indexName, String urlResource, String urlPathPart) {
 		super(servlet, request, user, indexName, urlResource, urlPathPart);
@@ -20,7 +22,7 @@ public class RequestHandlerDeleteIndex extends RequestHandler {
 		if (indexName != null && indexName.length() > 0) {
 			// Delete index
 			try {
-				debug(logger, "REQ delete index: " + indexName);
+				log.info("REQ delete index: " + indexName);
 				indexMan.deleteUserIndex(indexName);
 				return Response.status(ds, "SUCCESS", "Index deleted succesfully.", HTTP_OK);
 			} catch (BlsException e) {

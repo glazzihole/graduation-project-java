@@ -1,9 +1,9 @@
 package nl.inl.blacklab.server.datastream;
 
-import org.apache.commons.lang3.StringEscapeUtils;
-
 import java.io.PrintWriter;
 import java.util.List;
+
+import org.apache.commons.lang3.StringEscapeUtils;
 
 /**
  * Class to stream out JSON data.

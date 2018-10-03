@@ -1,9 +1,9 @@
 package nl.inl.blacklab.server.search;
 
+import java.lang.Thread.UncaughtExceptionHandler;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.lang.Thread.UncaughtExceptionHandler;
 
 /**
  * A thread that regularly calls SearchCache.performLoadManagement(null)

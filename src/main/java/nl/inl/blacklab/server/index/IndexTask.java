@@ -1,12 +1,17 @@
 package nl.inl.blacklab.server.index;
 
-import nl.inl.blacklab.core.index.*;
-import nl.inl.blacklab.core.search.indexstructure.IndexStructure;
-import nl.inl.blacklab.server.exceptions.NotAuthorized;
+import java.io.File;
+import java.io.InputStream;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import nl.inl.blacklab.index.DocIndexerFactory;
+import nl.inl.blacklab.index.IndexListener;
+import nl.inl.blacklab.index.IndexListenerDecorator;
+import nl.inl.blacklab.index.Indexer;
+import nl.inl.blacklab.search.indexstructure.IndexStructure;
+import nl.inl.blacklab.server.exceptions.NotAuthorized;
 
 public class IndexTask {
 
@@ -72,19 +77,13 @@ public class IndexTask {
 	public void run() throws Exception {
 		Indexer indexer = null;
 		try {
-			indexer = new Indexer(indexDir, false, null);
+		    // Open the index, automatically detecting the document format it was created with.
+			indexer = new Indexer(indexDir, false, (DocIndexerFactory)null, (File)null);
 
-			// We created the Indexer with a null DocIndexer class.
-			// Now we figure out what the indices' own document format is,
-			// resolve it to a DocIndexer class and update the Indexer with it.
 			IndexStructure indexStructure = indexer.getSearcher().getIndexStructure();
 			if (indexStructure.getTokenCount() > MAX_TOKEN_COUNT) {
 				throw new NotAuthorized("Sorry, this index is already larger than the maximum of " + MAX_TOKEN_COUNT + ". Cannot add any more data to it.");
 			}
-			String docFormat = indexStructure.getDocumentFormat();
-			Class<? extends DocIndexer> docIndexerClass;
-			docIndexerClass = DocumentFormats.getIndexerClass(docFormat);
-			indexer.setDocIndexer(docIndexerClass);
 
 			indexer.setListener(decoratedListener);
 			anyDocsFound = false;
@@ -96,19 +95,17 @@ public class IndexTask {
 					indexer.index(dataFile, "*.xml");
 				} else if (name.endsWith(".tar.gz") || name.endsWith(".tgz")) {
 					// Tar gzipped data; read directly from stream.
-					indexer.indexTarGzip(name, data, "*.xml", true);
+					indexer.indexInputStream(name, data, "*.xml", true);
 				} else if (name.endsWith(".gz")) {
 					// Tar gzipped data; read directly from stream.
-					indexer.indexGzip(name, data);
+					indexer.indexInputStream(name, data, "*.xml", true);
 				} else {
 					// Straight XML data. Read as UTF-8.
-					try (Reader reader = new BufferedReader(new InputStreamReader(data, Indexer.DEFAULT_INPUT_ENCODING))) {
-						logger.debug("Starting indexing");
-						indexer.index(name, reader);
-						logger.debug("Done indexing");
-						if (!anyDocsFound) {
-							indexError = "The file contained no documents in the selected format. Do the corpus and file formats match?";
-						}
+					logger.debug("Starting indexing");
+					indexer.index(name, data);
+					logger.debug("Done indexing");
+					if (!anyDocsFound) {
+						indexError = "The file contained no documents in the selected format. Do the corpus and file formats match?";
 					}
 				}
 			} catch (Exception e) {

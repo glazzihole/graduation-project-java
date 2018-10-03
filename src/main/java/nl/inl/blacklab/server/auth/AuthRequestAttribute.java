@@ -1,14 +1,16 @@
 package nl.inl.blacklab.server.auth;
 
-import nl.inl.blacklab.server.BlackLabServer;
-import nl.inl.blacklab.server.jobs.User;
-import nl.inl.blacklab.server.search.SearchManager;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.util.Map;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import nl.inl.blacklab.server.BlackLabServer;
+import nl.inl.blacklab.server.jobs.User;
+import nl.inl.blacklab.server.search.SearchManager;
 
 /**
  * Authentication system using servlet request attributes for logged-in user id.
@@ -33,7 +35,7 @@ public class AuthRequestAttribute {
 		this.attributeName = attributeName;
 	}
 
-	public User determineCurrentUser(HttpServlet servlet,
+	public User determineCurrentUser(BlackLabServer servlet,
 			HttpServletRequest request) {
 		String sessionId = request.getSession().getId();
 		if (attributeName == null) {
@@ -52,7 +54,7 @@ public class AuthRequestAttribute {
 		return User.loggedIn(userId, sessionId);
 	}
 
-	protected String getUserId(HttpServlet servlet, HttpServletRequest request) {
+	protected String getUserId(BlackLabServer servlet, HttpServletRequest request) {
 
 		String userId = null;
 

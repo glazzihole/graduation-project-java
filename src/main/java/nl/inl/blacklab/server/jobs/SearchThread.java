@@ -1,9 +1,9 @@
 package nl.inl.blacklab.server.jobs;
 
+import java.lang.Thread.UncaughtExceptionHandler;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.lang.Thread.UncaughtExceptionHandler;
 
 /**
  * A (background) thread the search is executed in.

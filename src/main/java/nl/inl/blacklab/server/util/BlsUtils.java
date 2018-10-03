@@ -1,16 +1,9 @@
 package nl.inl.blacklab.server.util;
 
-import nl.inl.blacklab.core.perdocument.DocResults;
-import nl.inl.blacklab.core.queryParser.contextql.ContextualQueryLanguageParser;
-import nl.inl.blacklab.core.queryParser.corpusql.CorpusQueryLanguageParser;
-import nl.inl.blacklab.core.queryParser.corpusql.ParseException;
-import nl.inl.blacklab.core.queryParser.corpusql.TokenMgrError;
-import nl.inl.blacklab.core.search.CompleteQuery;
-import nl.inl.blacklab.core.search.Searcher;
-import nl.inl.blacklab.core.search.TextPattern;
-import nl.inl.blacklab.server.exceptions.BadRequest;
-import nl.inl.blacklab.server.exceptions.BlsException;
-import nl.inl.blacklab.server.exceptions.ServiceUnavailable;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
@@ -19,9 +12,17 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
+import nl.inl.blacklab.perdocument.DocResults;
+import nl.inl.blacklab.queryParser.contextql.ContextualQueryLanguageParser;
+import nl.inl.blacklab.queryParser.corpusql.CorpusQueryLanguageParser;
+import nl.inl.blacklab.queryParser.corpusql.ParseException;
+import nl.inl.blacklab.queryParser.corpusql.TokenMgrError;
+import nl.inl.blacklab.search.CompleteQuery;
+import nl.inl.blacklab.search.Searcher;
+import nl.inl.blacklab.search.TextPattern;
+import nl.inl.blacklab.server.exceptions.BadRequest;
+import nl.inl.blacklab.server.exceptions.BlsException;
+import nl.inl.blacklab.server.exceptions.ServiceUnavailable;
 
 public class BlsUtils {
 	private static final Logger logger = LogManager.getLogger(BlsUtils.class);
@@ -62,11 +63,11 @@ public class BlsUtils {
 				CompleteQuery q = ContextualQueryLanguageParser.parse(searcher,
 						filter);
 				return q.getFilterQuery();
-			} catch (nl.inl.blacklab.core.queryParser.contextql.TokenMgrError e) {
+			} catch (nl.inl.blacklab.queryParser.contextql.TokenMgrError e) {
 				throw new BadRequest("FILTER_SYNTAX_ERROR",
 						"Error parsing ContextQL filter query: "
 								+ e.getMessage());
-			} catch (nl.inl.blacklab.core.queryParser.contextql.ParseException e) {
+			} catch (nl.inl.blacklab.queryParser.contextql.ParseException e) {
 				throw new BadRequest("FILTER_SYNTAX_ERROR",
 						"Error parsing ContextQL filter query: "
 								+ e.getMessage());
@@ -103,10 +104,10 @@ public class BlsUtils {
 				CompleteQuery q = ContextualQueryLanguageParser.parse(searcher,
 						pattern);
 				return q.getContentsQuery();
-			} catch (nl.inl.blacklab.core.queryParser.contextql.TokenMgrError e) {
+			} catch (nl.inl.blacklab.queryParser.contextql.TokenMgrError e) {
 				throw new BadRequest("PATT_SYNTAX_ERROR",
 						"Syntax error in ContextQL pattern: " + e.getMessage());
-			} catch (nl.inl.blacklab.core.queryParser.contextql.ParseException e) {
+			} catch (nl.inl.blacklab.queryParser.contextql.ParseException e) {
 				throw new BadRequest("PATT_SYNTAX_ERROR",
 						"Syntax error in ContextQL pattern: " + e.getMessage());
 			}

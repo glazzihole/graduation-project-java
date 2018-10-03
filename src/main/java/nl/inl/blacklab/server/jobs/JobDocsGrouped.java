@@ -1,7 +1,7 @@
 package nl.inl.blacklab.server.jobs;
 
-import nl.inl.blacklab.core.perdocument.DocGroups;
-import nl.inl.blacklab.core.perdocument.DocResults;
+import nl.inl.blacklab.perdocument.DocGroups;
+import nl.inl.blacklab.perdocument.DocResults;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.requesthandlers.SearchParameters;

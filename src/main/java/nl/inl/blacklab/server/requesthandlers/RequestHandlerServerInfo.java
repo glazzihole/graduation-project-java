@@ -1,14 +1,15 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import nl.inl.blacklab.core.search.Searcher;
-import nl.inl.blacklab.core.search.indexstructure.IndexStructure;
+import java.util.Collection;
+
+import javax.servlet.http.HttpServletRequest;
+
+import nl.inl.blacklab.search.Searcher;
+import nl.inl.blacklab.search.indexstructure.IndexStructure;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.jobs.User;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
 
 /**
  * Get information about this BlackLab server.
@@ -64,7 +65,7 @@ public class RequestHandlerServerInfo extends RequestHandler {
 		ds.entry("canCreateIndex", user.isLoggedIn() ? indexMan.canCreateIndex(user.getUserId()) : false);
 		ds.endMap().endEntry();
 
-		ds.entry("helpPageUrl", servlet.getServletContext().getContextPath() + "/help");
+		ds.entry("helpPageUrl", servlet.getServletContext() + "/help");
 		if (debugMode) {
 			ds.startEntry("cacheStatus");
 			searchMan.getCache().dataStreamCacheStatus(ds);

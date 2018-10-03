@@ -1,16 +1,16 @@
 package nl.inl.blacklab.server.jobs;
 
-import nl.inl.blacklab.core.perdocument.DocCounts;
-import nl.inl.blacklab.core.perdocument.DocProperty;
-import nl.inl.blacklab.core.perdocument.DocResults;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import nl.inl.blacklab.perdocument.DocCounts;
+import nl.inl.blacklab.perdocument.DocProperty;
+import nl.inl.blacklab.perdocument.DocResults;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.requesthandlers.SearchParameters;
 import nl.inl.blacklab.server.search.SearchManager;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Represents a hits search and sort operation.

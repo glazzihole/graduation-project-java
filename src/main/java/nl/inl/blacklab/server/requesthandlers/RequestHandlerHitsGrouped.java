@@ -1,18 +1,18 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import nl.inl.blacklab.core.perdocument.DocResults;
-import nl.inl.blacklab.core.search.Hits;
-import nl.inl.blacklab.core.search.ResultsWindow;
-import nl.inl.blacklab.core.search.grouping.HitGroup;
-import nl.inl.blacklab.core.search.grouping.HitGroups;
+import javax.servlet.http.HttpServletRequest;
+
+import nl.inl.blacklab.perdocument.DocResults;
+import nl.inl.blacklab.search.Hits;
+import nl.inl.blacklab.search.ResultsWindow;
+import nl.inl.blacklab.search.grouping.HitGroup;
+import nl.inl.blacklab.search.grouping.HitGroups;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.jobs.JobHitsGrouped;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.jobs.WindowSettings;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Request handler for grouped hit results.

@@ -1,6 +1,6 @@
 package nl.inl.blacklab.server.jobs;
 
-import nl.inl.blacklab.core.search.ConcordanceType;
+import nl.inl.blacklab.search.ConcordanceType;
 
 public class ContextSettings {
 

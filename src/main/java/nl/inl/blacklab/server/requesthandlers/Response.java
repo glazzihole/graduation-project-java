@@ -1,11 +1,12 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import nl.inl.blacklab.server.BlackLabServer;
-import nl.inl.blacklab.server.datastream.DataStream;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.servlet.http.HttpServletResponse;
+import nl.inl.blacklab.server.BlackLabServer;
+import nl.inl.blacklab.server.datastream.DataStream;
 
 public class Response {
 	static final Logger logger = LogManager.getLogger(Response.class);

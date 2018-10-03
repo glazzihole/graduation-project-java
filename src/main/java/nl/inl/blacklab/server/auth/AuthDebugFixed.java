@@ -1,12 +1,13 @@
 package nl.inl.blacklab.server.auth;
 
-import nl.inl.blacklab.server.BlackLabServer;
-import nl.inl.blacklab.server.jobs.User;
-import nl.inl.blacklab.server.search.SearchManager;
+import java.util.Map;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
+
+import nl.inl.blacklab.server.BlackLabServer;
+import nl.inl.blacklab.server.jobs.User;
+import nl.inl.blacklab.server.search.SearchManager;
 
 /**
  * Authentication system used for debugging.
@@ -22,7 +23,7 @@ public class AuthDebugFixed {
 		this.userId = parameters.get("userId").toString();
 	}
 
-	public User determineCurrentUser(HttpServlet servlet,
+	public User determineCurrentUser(BlackLabServer servlet,
 			HttpServletRequest request) {
 
 		String sessionId = request.getSession().getId();

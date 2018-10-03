@@ -1,17 +1,18 @@
 package nl.inl.blacklab.server.jobs;
 
-import nl.inl.blacklab.core.perdocument.DocProperty;
-import nl.inl.blacklab.core.search.TextPattern;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.apache.lucene.search.Query;
+
+import nl.inl.blacklab.perdocument.DocProperty;
+import nl.inl.blacklab.search.TextPattern;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.exceptions.InternalServerError;
 import nl.inl.blacklab.server.requesthandlers.SearchParameters;
 import nl.inl.blacklab.server.search.SearchManager;
-import org.apache.lucene.search.Query;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
 
 /** Description of a job */
 public abstract class JobDescription {

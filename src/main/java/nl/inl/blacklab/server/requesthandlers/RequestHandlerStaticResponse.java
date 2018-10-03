@@ -1,13 +1,15 @@
 package nl.inl.blacklab.server.requesthandlers;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.jobs.User;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+@Slf4j
 public class RequestHandlerStaticResponse extends RequestHandler {
 
 	/** Error or status? */
@@ -79,7 +81,7 @@ public class RequestHandlerStaticResponse extends RequestHandler {
 	// Highest internal error code so far: 31
 
 	public RequestHandlerStaticResponse internalError(Exception e, boolean debugMode, int code) {
-		logger.debug("INTERNAL ERROR " + code + ":");
+		log.debug("INTERNAL ERROR " + code + ":");
 		e.printStackTrace();
 		this.exception = e;
 		this.debugMode = debugMode;
@@ -89,7 +91,7 @@ public class RequestHandlerStaticResponse extends RequestHandler {
 	}
 
 	public RequestHandlerStaticResponse internalError(String message, boolean debugMode, int code) {
-		logger.debug("INTERNAL ERROR " + code + ": " + message);
+		log.debug("INTERNAL ERROR " + code + ": " + message);
 		msg = message;
 		this.debugMode = debugMode;
 		internalErrorCode = code;
@@ -98,7 +100,7 @@ public class RequestHandlerStaticResponse extends RequestHandler {
 	}
 
 	public RequestHandlerStaticResponse internalError(int code) {
-		logger.debug("INTERNAL ERROR " + code + " (no message)");
+		log.debug("INTERNAL ERROR " + code + " (no message)");
 		internalErrorCode = code;
 		httpCode = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 		return this;

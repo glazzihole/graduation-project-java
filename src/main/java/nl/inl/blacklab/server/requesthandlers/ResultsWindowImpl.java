@@ -1,6 +1,6 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import nl.inl.blacklab.core.search.ResultsWindow;
+import nl.inl.blacklab.search.ResultsWindow;
 
 class ResultsWindowImpl implements ResultsWindow {
 	private final int first;

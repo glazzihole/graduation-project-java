@@ -1,6 +1,11 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import nl.inl.blacklab.core.search.Searcher;
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.lucene.document.Document;
+
+import nl.inl.blacklab.search.Searcher;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BadRequest;
@@ -9,13 +14,11 @@ import nl.inl.blacklab.server.exceptions.InternalServerError;
 import nl.inl.blacklab.server.exceptions.NotFound;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.util.BlsUtils;
-import org.apache.lucene.document.Document;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Get information about the structure of an index.
  */
+@Slf4j
 public class RequestHandlerDocInfo extends RequestHandler {
 
 	public RequestHandlerDocInfo(BlackLabServer servlet, HttpServletRequest request, User user, String indexName, String urlResource, String urlPathPart) {
@@ -42,7 +45,7 @@ public class RequestHandlerDocInfo extends RequestHandler {
         }
 
 		// Document info
-		debug(logger, "REQ doc info: " + indexName + "-" + docId);
+		log.info("REQ doc info: " + indexName + "-" + docId);
 
 		ds.startMap()
 			.entry("docPid", docId);

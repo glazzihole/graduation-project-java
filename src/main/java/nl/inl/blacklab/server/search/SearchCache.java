@@ -1,18 +1,31 @@
 package nl.inl.blacklab.server.search;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.exceptions.ServiceUnavailable;
 import nl.inl.blacklab.server.exceptions.TooManyRequests;
-import nl.inl.blacklab.server.jobs.*;
+import nl.inl.blacklab.server.jobs.Job;
+import nl.inl.blacklab.server.jobs.JobDescription;
+import nl.inl.blacklab.server.jobs.JobDocsTotal;
+import nl.inl.blacklab.server.jobs.JobHitsTotal;
+import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.util.MemoryUtil;
-import nl.inl.blacklab.core.util.ThreadPriority;
-import nl.inl.blacklab.core.util.ThreadPriority.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.util.*;
-import java.util.Map.Entry;
+import nl.inl.util.ThreadPriority;
+import nl.inl.util.ThreadPriority.Level;
 
 public class SearchCache {
 
@@ -226,8 +239,8 @@ public class SearchCache {
 	 */
 	private void put(Job search) {
 		if (cacheConfig.getMaxNumberOfJobs() <= 0) {
-			return;
-		}
+            return;
+        }
 
 		performLoadManagement(search);
 
@@ -239,8 +252,8 @@ public class SearchCache {
 			}
 			// Same object already in cache, do nothing
 			if (BlsConfig.traceCache) {
-				logger.debug("Same object put in cache twice: " + uniqueIdentifier);
-			}
+                logger.debug("Same object put in cache twice: " + uniqueIdentifier);
+            }
 			return;
 		}
 
@@ -258,8 +271,8 @@ public class SearchCache {
 	private void clearCache(boolean cancelRunning) {
 		for (Job cachedSearch: cachedSearches.values()) {
 			if (!cachedSearch.finished()) {
-				cachedSearch.cancelJob();
-			}
+                cachedSearch.cancelJob();
+            }
 			cachedSearch.decrRef();
 		}
 		cachedSearches.clear();
@@ -356,12 +369,12 @@ public class SearchCache {
 					// logger.debug("Remove from cache: " + search);
 					if (BlsConfig.traceCache) {
 						if (minSearchesToRemove > 0) {
-							logger.debug("Not enough free mem (free " + freeMegs + "M < min free " + cacheConfig.getMinFreeMemTargetMegs() + "M)");
-						} else if (isCacheTooBig) {
-							logger.debug("Cache too large (size " + cacheSizeMegs + "M > max size " + cacheConfig.getMaxSizeMegs() + "M)");
-						} else {
-							logger.debug("Searchjob too old (age " + (int)search1.cacheAge() + "s > max age " + cacheConfig.getMaxJobAgeSec() + "s)");
-						}
+                            logger.debug("Not enough free mem (free " + freeMegs + "M < min free " + cacheConfig.getMinFreeMemTargetMegs() + "M)");
+                        } else if (isCacheTooBig) {
+                            logger.debug("Cache too large (size " + cacheSizeMegs + "M > max size " + cacheConfig.getMaxSizeMegs() + "M)");
+                        } else {
+                            logger.debug("Searchjob too old (age " + (int)search1.cacheAge() + "s > max age " + cacheConfig.getMaxJobAgeSec() + "s)");
+                        }
 						logger.debug("  Removing searchjob: " + search1);
 					}
 					removeFromCache(search1);
@@ -441,16 +454,16 @@ public class SearchCache {
 		case RUN_NORMALLY:
 			if (search.getPriorityLevel() != Level.RUNNING) {
 				if (BlsConfig.traceCache) {
-					logger.debug("LOADMGR: Resuming search: " + search + " (" + reason + ")");
-				}
+                    logger.debug("LOADMGR: Resuming search: " + search + " (" + reason + ")");
+                }
 				search.setPriorityLevel(Level.RUNNING);
 			}
 			break;
 		case PAUSE:
 			if (search.getPriorityLevel() != Level.PAUSED) {
 				if (BlsConfig.traceCache) {
-					logger.debug("LOADMGR: Pausing search: " + search + " (was: " + search.getPriorityLevel() + ") (" + reason + ")");
-				}
+                    logger.debug("LOADMGR: Pausing search: " + search + " (was: " + search.getPriorityLevel() + ") (" + reason + ")");
+                }
 				search.setPriorityLevel(Level.PAUSED);
 			}
 			break;
@@ -458,15 +471,15 @@ public class SearchCache {
 			if (!search.finished()) {
 				// TODO: Maybe we should blacklist certain searches for a time?
 				if (BlsConfig.traceCache) {
-					logger.warn("LOADMGR: Aborting search: " + search + " (" + reason + ")");
-				}
+                    logger.warn("LOADMGR: Aborting search: " + search + " (" + reason + ")");
+                }
 				abortSearch(search);
 			}
 			break;
 		case REMOVE_FROM_CACHE:
 			if (BlsConfig.traceCache) {
-				logger.debug("LOADMGR: Discarding from cache: " + search + " (" + reason + ")");
-			}
+                logger.debug("LOADMGR: Discarding from cache: " + search + " (" + reason + ")");
+            }
 			removeFromCache(search);
 			break;
 		}

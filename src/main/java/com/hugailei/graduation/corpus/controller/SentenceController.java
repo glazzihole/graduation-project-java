@@ -6,6 +6,7 @@ import nl.inl.blacklab.server.requesthandlers.SentenceRequestHandler;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,9 +29,10 @@ public class SentenceController {
     public void searchSentence (Pageable pageable,
                                 HttpServletRequest request,
                                 HttpServletResponse response,
-                                String corpus,
-                                String patt) {
+                                @RequestParam String corpus,
+                                @RequestParam String patt) {
+        handler.checkConfig(request, response, blackLabServer);
         RequestHandler requestHandler = new SentenceRequestHandler(blackLabServer, request, null, corpus, null, null);
-        handler.checkAndHandler(pageable, corpus, null, null, request, response, requestHandler);
+        handler.checkAndHandler(pageable, corpus, null, null, blackLabServer, request, response, requestHandler);
     }
 }

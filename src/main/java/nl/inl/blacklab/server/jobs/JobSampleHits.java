@@ -1,8 +1,8 @@
 package nl.inl.blacklab.server.jobs;
 
 
-import nl.inl.blacklab.core.search.Hits;
-import nl.inl.blacklab.core.search.HitsSample;
+import nl.inl.blacklab.search.Hits;
+import nl.inl.blacklab.search.HitsSample;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.requesthandlers.SearchParameters;

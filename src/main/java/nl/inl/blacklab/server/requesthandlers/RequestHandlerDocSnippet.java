@@ -1,6 +1,17 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import nl.inl.blacklab.core.search.*;
+import java.util.Arrays;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.lucene.document.Document;
+
+import nl.inl.blacklab.search.Concordance;
+import nl.inl.blacklab.search.ConcordanceType;
+import nl.inl.blacklab.search.Hit;
+import nl.inl.blacklab.search.Hits;
+import nl.inl.blacklab.search.Kwic;
+import nl.inl.blacklab.search.Searcher;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BadRequest;
@@ -9,10 +20,6 @@ import nl.inl.blacklab.server.exceptions.InternalServerError;
 import nl.inl.blacklab.server.exceptions.NotFound;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.util.BlsUtils;
-import org.apache.lucene.document.Document;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 
 /**
  * Get information about the structure of an index.

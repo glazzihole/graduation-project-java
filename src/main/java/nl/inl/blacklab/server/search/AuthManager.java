@@ -1,13 +1,16 @@
 package nl.inl.blacklab.server.search;
 
-import nl.inl.blacklab.server.jobs.User;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
-import java.lang.reflect.Method;
-import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import nl.inl.blacklab.server.BlackLabServer;
+import nl.inl.blacklab.server.jobs.User;
 
 public class AuthManager {
 
@@ -29,7 +32,7 @@ public class AuthManager {
 				}
 				Class<?> cl = Class.forName(authClass);
 				authObj = cl.getConstructor(Map.class).newInstance(authParam);
-				authMethodDetermineCurrentUser = cl.getMethod("determineCurrentUser", HttpServlet.class, HttpServletRequest.class);
+				authMethodDetermineCurrentUser = cl.getMethod("determineCurrentUser", BlackLabServer.class, HttpServletRequest.class);
 			} catch (Exception e) {
 				throw new RuntimeException("Error instantiating auth system: " + authClass, e);
 			}
@@ -43,7 +46,7 @@ public class AuthManager {
 		return authMethodDetermineCurrentUser;
 	}
 
-	public User determineCurrentUser(HttpServlet servlet, HttpServletRequest request) {
+	public User determineCurrentUser(BlackLabServer servlet, HttpServletRequest request) {
 		// If no auth system is configured, all users are anonymous
 		if (authObj == null) {
 			User user = User.anonymous(request.getSession().getId());

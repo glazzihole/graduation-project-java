@@ -1,10 +1,10 @@
 package nl.inl.blacklab.server.requesthandlers;
 
+import javax.servlet.http.HttpServletRequest;
+
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.jobs.User;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Get information about this BlackLab server.
@@ -17,8 +17,8 @@ public class RequestHandlerBlsHelp extends RequestHandler {
 
 	@Override
 	public int handle(DataStream ds) {
-		String urlPrefix = servlet.getServletContext().getContextPath() + "/";
-		String urlIndexPrefix = servlet.getServletContext().getContextPath() + "/myIndexName/";
+		String urlPrefix = servlet.getServletContext() + "/";
+		String urlIndexPrefix = servlet.getServletContext() + "/myIndexName/";
 		ds.startMap()
 			.entry("readme", "This simple help response gives some examples of BlackLab Server URLs. For the complete documentation, please refer to the official project page on GitHub (https://github.com/INL/BlackLab)")
 			.entry("serverInfo", urlPrefix)
