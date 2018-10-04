@@ -65,7 +65,7 @@ public class DataStreamJson extends DataStream {
 
 	@Override
 	public DataStream startItem(String name) {
-		return optSep().newlineIndent();
+		return optSep(true).newlineIndent();
 	}
 
 	@Override
@@ -83,8 +83,8 @@ public class DataStreamJson extends DataStream {
 		return closebl("}");
 	}
 
-	DataStream optSep() {
-		if (!firstEntry) {
+	DataStream optSep(boolean common) {
+		if (!firstEntry && common) {
             return print(",");
         }
 		firstEntry = false;
@@ -92,13 +92,28 @@ public class DataStreamJson extends DataStream {
 	}
 
 	@Override
+	public DataStream startEntry(boolean common, String key) {
+		return optSep(common).newlineIndent().print("\"").print(StringEscapeUtils.escapeJson(key)).print("\":").space();
+	}
+
+	@Override
 	public DataStream startEntry(String key) {
-		return optSep().newlineIndent().print("\"").print(StringEscapeUtils.escapeJson(key)).print("\":").space();
+		return optSep(true).newlineIndent().print("\"").print(StringEscapeUtils.escapeJson(key)).print("\":").space();
 	}
 
 	@Override
 	public DataStream endEntry() {
 		return this;
+	}
+
+	@Override
+	public DataStream startDataEntry(String key) {
+		return optSep(true).newlineIndent().print("\"").print(StringEscapeUtils.escapeJson(key)).print("\":{");
+	}
+
+	@Override
+	public DataStream endDataEntry(String key) {
+		return this.print("}");
 	}
 
 	@Override
@@ -122,7 +137,7 @@ public class DataStreamJson extends DataStream {
 		int valuesPerWord = names.size();
 		int numberOfWords = values.size() / valuesPerWord;
 		for (int k = 0; k < names.size(); k++) {
-			optSep();
+			optSep(true);
 			newlineIndent();
 			String name = names.get(k);
 			print("\"").print(StringEscapeUtils.escapeJson(name)).print("\":[");

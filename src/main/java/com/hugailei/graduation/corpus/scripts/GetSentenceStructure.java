@@ -1,6 +1,6 @@
 package com.hugailei.graduation.corpus.scripts;
 
-import com.hugailei.graduation.corpus.utils.StanfordParserUtil;
+import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;

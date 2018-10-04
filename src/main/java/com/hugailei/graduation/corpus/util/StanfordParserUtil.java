@@ -1,4 +1,4 @@
-package com.hugailei.graduation.corpus.utils;
+package com.hugailei.graduation.corpus.util;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;

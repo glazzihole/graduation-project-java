@@ -1,8 +1,8 @@
 package com.hugailei.graduation.corpus.scripts;
 
 import com.hugailei.graduation.corpus.domain.Word;
-import com.hugailei.graduation.corpus.utils.FileUtil;
-import com.hugailei.graduation.corpus.utils.StanfordParserUtil;
+import com.hugailei.graduation.corpus.util.FileUtil;
+import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.util.CoreMap;

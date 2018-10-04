@@ -168,6 +168,21 @@ public class DataStreamXml extends DataStream {
 	}
 
 	@Override
+	public DataStream startEntry(boolean common, String key) {
+		return openEl(key);
+	}
+
+	@Override
+	public DataStream startDataEntry(String key) {
+		return openEl(key);
+	}
+
+	@Override
+	public DataStream endDataEntry(String key) {
+		return closeEl();
+	}
+
+	@Override
 	public DataStream attrEntry(String elementName, String attrName, String key, Object value) {
 		return indent().startCompact().startAttrEntry(elementName, attrName, key).value(value).endAttrEntry().endCompact().newline();
 	}

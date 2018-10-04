@@ -1,4 +1,4 @@
-package com.hugailei.graduation.corpus.utils;
+package com.hugailei.graduation.corpus.util;
 
 
 import java.util.Scanner;

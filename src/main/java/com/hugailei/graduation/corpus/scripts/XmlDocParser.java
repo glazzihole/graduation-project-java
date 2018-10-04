@@ -1,6 +1,6 @@
 package com.hugailei.graduation.corpus.scripts;
 
-import com.hugailei.graduation.corpus.utils.FileUtil;
+import com.hugailei.graduation.corpus.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.dom4j.Document;
 import org.dom4j.Element;

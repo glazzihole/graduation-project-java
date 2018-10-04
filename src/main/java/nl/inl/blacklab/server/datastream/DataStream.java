@@ -237,6 +237,10 @@ public abstract class DataStream {
 
 	public abstract DataStream endEntry();
 
+	public abstract DataStream startEntry(boolean common, String key);
+	public abstract DataStream startDataEntry(String key);
+	public abstract DataStream endDataEntry(String key);
+
 	public DataStream entry(String key, String value) {
 		return startEntry(key).value(value).endEntry();
 	}

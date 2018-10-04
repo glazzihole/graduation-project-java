@@ -162,8 +162,8 @@ public class SentenceRequestHandler extends RequestHandler {
             ds.entry("code", CorpusConstant.SUCCESS_CODE);
             ds.entry("msg", "");
             ds.entry("error", "");
-            ds.startEntry("data");
-            ds.entry("pageNo", pageNo);
+            ds.startDataEntry("data");
+            ds.startEntry(false,"pageNo").value(pageNo).endEntry();
             ds.entry("pageSize", pageSize);
             ds.entry("orderBy", null);
             ds.entry("orderDir", null);
@@ -224,7 +224,7 @@ public class SentenceRequestHandler extends RequestHandler {
                 ds.endMap().endItem();
             }
             ds.endList().endEntry();
-            ds.endEntry();
+            ds.endDataEntry("data");
             ds.endMap().endItem();
             if (BlsConfig.traceRequestHandling) {
                 log.info("SentenceRequestHandler | handle end");

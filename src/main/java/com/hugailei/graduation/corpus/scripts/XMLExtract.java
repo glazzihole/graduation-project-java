@@ -1,6 +1,6 @@
 package com.hugailei.graduation.corpus.scripts;
 
-import com.hugailei.graduation.corpus.utils.FileUtil;
+import com.hugailei.graduation.corpus.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
