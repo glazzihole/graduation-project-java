@@ -147,6 +147,7 @@ public class SaveParserResult2 {
             preparedStatement.setInt(4, word.getFreq());
             preparedStatement.setString(5, word.getSentenceIds());
             preparedStatement.setString(6, word.getCorpus());
+            preparedStatement.execute();
         }
     }
 }

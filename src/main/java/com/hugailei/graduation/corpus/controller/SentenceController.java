@@ -1,6 +1,7 @@
 package com.hugailei.graduation.corpus.controller;
 
 import nl.inl.blacklab.server.BlackLabServer;
+import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.requesthandlers.RequestHandler;
 import nl.inl.blacklab.server.requesthandlers.SentenceRequestHandler;
 import org.springframework.data.domain.Pageable;
@@ -31,8 +32,9 @@ public class SentenceController {
                                 HttpServletResponse response,
                                 @RequestParam String corpus,
                                 @RequestParam String patt) {
+        User user = User.loggedIn("admin", "1");
         handler.checkConfig(request, response, blackLabServer);
-        RequestHandler requestHandler = new SentenceRequestHandler(blackLabServer, request, null, corpus, null, null);
-        handler.checkAndHandler(pageable, corpus, null, null, blackLabServer, request, response, requestHandler);
+        RequestHandler requestHandler = new SentenceRequestHandler(blackLabServer, request, user, corpus, null, null);
+        handler.checkAndHandler(pageable, corpus, blackLabServer, request, response, requestHandler);
     }
 }

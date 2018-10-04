@@ -231,7 +231,7 @@ public class SentenceRequestHandler extends RequestHandler {
             }
             return HTTP_OK;
         } catch (Exception e) {
-            log.info("SentenceRequestHandler | error: {}", e);
+            log.error("SentenceRequestHandler | error: {}", e);
             return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
         } finally {
             if (search != null) {

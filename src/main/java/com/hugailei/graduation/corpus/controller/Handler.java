@@ -35,8 +35,6 @@ public class Handler {
      *
      * @param pageable
      * @param corpus
-     * @param urlResource
-     * @param urlPathPart
      * @param blackLabServer
      * @param request
      * @param response
@@ -44,13 +42,12 @@ public class Handler {
      */
     void checkAndHandler (Pageable pageable,
                           String corpus,
-                          String urlResource,
-                          String urlPathPart,
                           BlackLabServer blackLabServer,
                           HttpServletRequest request,
                           HttpServletResponse response,
                           RequestHandler requestHandler) {
-
+        //设置默认数据格式为json
+        request.setAttribute("outputformat","json");
         User user = User.loggedIn("admin", "1");
         // === Create RequestHandler object
         boolean debugMode = blackLabServer.getSearchManager().config().isDebugMode(request.getRemoteAddr());
