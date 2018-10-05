@@ -1,0 +1,162 @@
+<configuration scan="true" scanPeriod="300 seconds">
+    <!-- 以下属性看情况自己配置 -->
+    <property name="IM_LOG_DIR" value="/corpus"/>
+    <property name="IM_LOG_NAME" value="corpus"/>
+    <property name="IM_WARN_LOG_NAME" value="corpus-warn"/>
+    <property name="IM_ERROR_LOG_NAME" value="corpus-error"/>
+    <property name="IM_MESSAGE_CONTENT_LOG_NAME" value="message-content-failed"/>
+    <property name="MONITOR_LOG_NAME" value="monitor-log-info"/>
+    <property name="IM_HYSTRIX_WARN_NAME" value="hystrix-warn"/>
+
+
+
+    <!-- info log appender config -->
+    <appender name="info_appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${IM_LOG_DIR}/${IM_LOG_NAME}.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${IM_LOG_DIR}/${IM_LOG_NAME}.%d{yyyy-MM-dd-HH}.log.gz</fileNamePattern>
+            <!-- history time unit : hour -->
+            <maxHistory>240</maxHistory>
+        </rollingPolicy>
+
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d [%thread] [%X{REQUEST_ID}] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- warn log appender config -->
+    <appender name="warn_appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${IM_LOG_DIR}/${IM_WARN_LOG_NAME}.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${IM_LOG_DIR}/${IM_WARN_LOG_NAME}.%d{yyyy-MM-dd-HH}.log.gz</fileNamePattern>
+            <!-- history time unit : hour -->
+            <maxHistory>240</maxHistory>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d [%thread] [%X{REQUEST_ID}] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- error log appender config -->
+    <appender name="error_appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${IM_LOG_DIR}/${IM_ERROR_LOG_NAME}.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${IM_LOG_DIR}/${IM_ERROR_LOG_NAME}.%d{yyyy-MM-dd-HH}.log.gz</fileNamePattern>
+            <!-- history time unit : hour -->
+            <maxHistory>240</maxHistory>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d [%thread] [%X{REQUEST_ID}] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- failed message content log appender config -->
+    <appender name="message_failed_appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${IM_LOG_DIR}/${IM_MESSAGE_CONTENT_LOG_NAME}.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${IM_LOG_DIR}/${IM_MESSAGE_CONTENT_LOG_NAME}.%i.log.gz</fileNamePattern>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+        </triggeringPolicy>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d  %msg%n</pattern>
+        </encoder>
+    </appender>
+
+ <!-- monitor log  appender-->
+    <appender name="monitor_info_appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${IM_LOG_DIR}/${MONITOR_LOG_NAME}.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${IM_LOG_DIR}/${MONITOR_LOG_NAME}.%d{yyyy-MM-dd-HH}.log.gz</fileNamePattern>
+            <!-- history time unit : hour -->
+            <maxHistory>240</maxHistory>
+        </rollingPolicy>
+        <!-- level filter chain for info warn -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>NEUTRAL</onMismatch>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d [%thread] [%X{REQUEST_ID}] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+
+    <!-- failed hystrix log appender config -->
+    <appender name="hystrix_failed_appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${IM_LOG_DIR}/${IM_HYSTRIX_WARN_NAME}.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${IM_LOG_DIR}/${IM_HYSTRIX_WARN_NAME}.%d{yyyy-MM-dd-HH}.log.gz</fileNamePattern>
+            <!-- history time unit : hour -->
+            <maxHistory>240</maxHistory>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d [%thread] [%X{REQUEST_ID}] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- root log config -->
+    <root level="INFO,TRACE,DEBUG">
+        <appender-ref ref="info_appender"/>
+        <appender-ref ref="warn_appender"/>
+        <appender-ref ref="error_appender"/>
+    </root>
+
+    <!-- rabbitmq sender and receiver config -->
+    <logger name="im_message_failed" level="ERROR">
+        <appender-ref ref="message_failed_appender"/>
+    </logger>
+
+
+    <logger name="monitor_info" level="INFO">
+        <appender-ref ref="monitor_info_appender"/>
+    </logger>
+
+    <logger name="im_hystrix_warning" level="WARN">
+        <appender-ref ref="hystrix_failed_appender"/>
+    </logger>
+  
+  
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" />
+    <logger name="org.hibernate.type.descriptor.sql.BasicExtractor" level="DEBUG" />
+    <logger name="org.hibernate.SQL" level="DEBUG" />
+    <logger name="org.hibernate.engine.QueryParameters" level="DEBUG" />
+    <logger name="org.hibernate.engine.query.HQLQueryPlan" level="DEBUG" />
+
+    <!-- third part library logger config -->
+    <!-- <logger name="org.apache" level="WARN"/> -->
+    <!-- <logger name="org.apache.zookeeper" level="WARN"/> -->
+
+</configuration>

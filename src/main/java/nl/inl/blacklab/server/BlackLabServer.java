@@ -145,14 +145,19 @@ public class BlackLabServer {
 				// Write HTTP headers (status code, encoding, content type and cache)
 				responseObject.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				responseObject.setCharacterEncoding(OUTPUT_ENCODING.name().toLowerCase());
-				responseObject.setContentType("text/xml");
+				responseObject.setContentType("application/json");
 				ServletUtil.writeCacheHeaders(responseObject, 0);
 
 				// === Write the response that was captured in buf
 				try {
 					Writer realOut = new OutputStreamWriter(responseObject.getOutputStream(), OUTPUT_ENCODING);
-					realOut.write("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" + "<blacklabResponse><error><code>INTERNAL_ERROR</code><message><![CDATA[ "
-							+ e.getMessage() + " ]]></message></error></blacklabResponse>");
+					realOut.write("{\"status\":\"ERROR\"," +
+							"\"code\":500," +
+							"\"msg\":\"\"," +
+							"\"error\":\"" + e.getMessage().replaceAll("\n","")
+															.replaceAll("\"","'")+ "\"," +
+							"\"data\":" + null +
+							"}");
 					realOut.flush();
 				} catch (IOException e2) {
 					// Client cancelled the request midway through.
@@ -338,7 +343,7 @@ public class BlackLabServer {
 			QueryServiceHandler handler = new QueryServiceHandler(getWebserviceUrl(corpus));
 
 			Map<String, String[]> params = new HashMap<>();
-			params.put("outputformat", new String[] { "xml" });
+			params.put("outputformat", new String[] { "json" });
 
 			try {
 				String xmlResult = handler.makeRequest(params);

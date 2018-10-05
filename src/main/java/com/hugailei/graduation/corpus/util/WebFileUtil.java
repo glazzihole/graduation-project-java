@@ -643,7 +643,7 @@ public class WebFileUtil {
      * @return
      */
     public static String getDatePath() {
-        return DateTimeUtils.getCurrentDateTimeString("yyyy/MM/dd");
+        return DateTimeUtil.getCurrentDateTimeString("yyyy/MM/dd");
     }
 
     /**
@@ -652,7 +652,7 @@ public class WebFileUtil {
      * @return
      */
     public static String getDateTimePath() {
-        return DateTimeUtils.getCurrentDateTimeString("yyyy/MM/dd/HH/mm");
+        return DateTimeUtil.getCurrentDateTimeString("yyyy/MM/dd/HH/mm");
     }
 
     public static void main(String[] args) {

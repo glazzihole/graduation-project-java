@@ -4,6 +4,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
+import com.hugailei.graduation.corpus.constants.CorpusConstant;
+import com.sun.tools.internal.ws.wsdl.document.http.HTTPConstants;
 import nl.inl.blacklab.server.util.ServletUtil;
 
 /**
@@ -68,20 +70,20 @@ public abstract class DataStream {
 	 * @param e if specified, include stack trace
 	 */
 	public void error(String code, String msg, Exception e) {
-		startMap()
-		.startEntry("error")
-			.startMap()
-				.entry("code", code)
-				.entry("message", msg);
+		startMap();
+		entry("status", "ERROR");
+		entry("code", CorpusConstant.FAILED_CODE);
+		entry("msg", msg);
 		if (e != null) {
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
-			entry("stackTrace", sw.toString());
+			entry("error", sw.toString());
+		} else {
+			entry("error", code);
 		}
-				endMap()
-			.endEntry()
-		.endMap();
+		entry("data", null);
+		endMap();
 	}
 
 	/**

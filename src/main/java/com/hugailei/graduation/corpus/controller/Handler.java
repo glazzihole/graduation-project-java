@@ -116,11 +116,12 @@ public class Handler {
                 // === Write the response that was captured in buf
                 try {
                     Writer realOut = new OutputStreamWriter(responseObject.getOutputStream(), BlackLabServer.OUTPUT_ENCODING);
-                    realOut.write("{'status':'ERROR'," +
-                                        "'code':500''," +
-                                        "'msg':''," +
-                                        "'error':'" + e.getMessage() + "'," +
-                                        "'data':" + null +
+                    realOut.write("{\"status\":\"ERROR\"," +
+                                        "\"code\":500," +
+                                        "\"msg\":\"\"," +
+                                        "\"error\":\"" + e.getMessage().replaceAll("\n","")
+                                                                       .replaceAll("\"","'")+ "\"," +
+                                        "\"data\":" + null +
                                     "}");
                     realOut.flush();
                 } catch (IOException e2) {
