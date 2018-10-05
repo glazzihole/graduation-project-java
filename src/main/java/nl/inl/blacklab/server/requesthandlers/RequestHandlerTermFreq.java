@@ -1,11 +1,5 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.lucene.search.Query;
-
 import nl.inl.blacklab.search.Searcher;
 import nl.inl.blacklab.search.TermFrequency;
 import nl.inl.blacklab.search.TermFrequencyList;
@@ -16,6 +10,10 @@ import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.util.LuceneUtil;
+import org.apache.lucene.search.Query;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 /**
  * Request handler for term frequencies for a set of documents.

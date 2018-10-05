@@ -1,17 +1,16 @@
 package nl.inl.blacklab.server.index;
 
-import java.io.File;
-import java.io.InputStream;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import nl.inl.blacklab.index.DocIndexerFactory;
 import nl.inl.blacklab.index.IndexListener;
 import nl.inl.blacklab.index.IndexListenerDecorator;
 import nl.inl.blacklab.index.Indexer;
 import nl.inl.blacklab.search.indexstructure.IndexStructure;
 import nl.inl.blacklab.server.exceptions.NotAuthorized;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.File;
+import java.io.InputStream;
 
 public class IndexTask {
 

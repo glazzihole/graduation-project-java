@@ -1,11 +1,14 @@
 package com.hugailei.graduation.corpus.controller;
 
 import com.hugailei.graduation.corpus.dto.DependencyDto;
+import com.hugailei.graduation.corpus.service.SentenceService;
+import com.hugailei.graduation.corpus.util.ResponseUtil;
 import com.hugailei.graduation.corpus.vo.ResponseVO;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.requesthandlers.RequestHandler;
 import nl.inl.blacklab.server.requesthandlers.SentenceRequestHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +29,9 @@ public class SentenceController {
     private Handler handler = new Handler();
     private BlackLabServer blackLabServer = new BlackLabServer();
 
+    @Autowired
+    private SentenceService sentenceService;
+
     @GetMapping("/search")
     public void searchSentence (Pageable pageable,
                                 HttpServletRequest request,
@@ -40,9 +46,8 @@ public class SentenceController {
 
     @PostMapping("/dependency")
     @ResponseBody
-    public ResponseVO getDependency(Pageable pageable,
-                                    @RequestParam String text,
-                                    @RequestParam String corpus) {
-        List<DependencyDto> dependencyList = null;
+    public ResponseVO getDependency(@RequestParam String text) {
+        List<DependencyDto> dependencyList = sentenceService.getDependency(text);
+        return ResponseUtil.success(dependencyList);
     }
 }

@@ -1,12 +1,11 @@
 package nl.inl.blacklab.server.datastream;
 
+import com.hugailei.graduation.corpus.constants.CorpusConstant;
+import nl.inl.blacklab.server.util.ServletUtil;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
-
-import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.sun.tools.internal.ws.wsdl.document.http.HTTPConstants;
-import nl.inl.blacklab.server.util.ServletUtil;
 
 /**
  * Class to stream out XML or JSON data.

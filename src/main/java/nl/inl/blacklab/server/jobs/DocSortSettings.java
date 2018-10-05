@@ -1,8 +1,8 @@
 package nl.inl.blacklab.server.jobs;
 
-import java.util.Map;
-
 import nl.inl.blacklab.perdocument.DocProperty;
+
+import java.util.Map;
 
 public class DocSortSettings {
 	private DocProperty sortBy;

@@ -1,38 +1,20 @@
 package nl.inl.blacklab.server.search;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.fasterxml.jackson.databind.JsonNode;
-
 import nl.inl.blacklab.search.Searcher;
-import nl.inl.blacklab.server.exceptions.BadRequest;
-import nl.inl.blacklab.server.exceptions.BlsException;
-import nl.inl.blacklab.server.exceptions.ConfigurationException;
-import nl.inl.blacklab.server.exceptions.IllegalIndexName;
-import nl.inl.blacklab.server.exceptions.IndexNotFound;
-import nl.inl.blacklab.server.exceptions.InternalServerError;
-import nl.inl.blacklab.server.exceptions.NotAuthorized;
-import nl.inl.blacklab.server.exceptions.ServiceUnavailable;
+import nl.inl.blacklab.server.exceptions.*;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.util.BlsUtils;
 import nl.inl.blacklab.server.util.JsonUtil;
 import nl.inl.util.FileUtil;
 import nl.inl.util.FileUtil.FileTask;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class IndexManager {
 	private static final Logger logger = LogManager.getLogger(IndexManager.class);

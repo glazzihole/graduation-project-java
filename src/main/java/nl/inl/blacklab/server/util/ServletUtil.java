@@ -1,5 +1,13 @@
 package nl.inl.blacklab.server.util;
 
+import nl.inl.blacklab.server.datastream.DataFormat;
+import nl.inl.blacklab.server.exceptions.InternalServerError;
+import nl.inl.util.ExUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.text.DateFormat;
@@ -8,16 +16,6 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import nl.inl.blacklab.server.datastream.DataFormat;
-import nl.inl.blacklab.server.exceptions.InternalServerError;
-import nl.inl.util.ExUtil;
 
 public class ServletUtil {
 	private static final Logger logger = LogManager.getLogger(ServletUtil.class);

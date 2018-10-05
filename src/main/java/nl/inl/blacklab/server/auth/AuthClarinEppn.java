@@ -1,10 +1,9 @@
 package nl.inl.blacklab.server.auth;
 
-import java.util.Map;
+import nl.inl.blacklab.server.BlackLabServer;
 
 import javax.servlet.http.HttpServletRequest;
-
-import nl.inl.blacklab.server.BlackLabServer;
+import java.util.Map;
 
 /**
  * Used for CLARIN login (Shibboleth), which passes userid

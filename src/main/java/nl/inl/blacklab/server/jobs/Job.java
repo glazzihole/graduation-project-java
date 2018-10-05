@@ -1,23 +1,20 @@
 package nl.inl.blacklab.server.jobs;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import nl.inl.blacklab.search.Prioritizable;
-import nl.inl.blacklab.search.QueryExplanation;
 import nl.inl.blacklab.search.Searcher;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.exceptions.ServiceUnavailable;
 import nl.inl.blacklab.server.search.SearchManager;
 import nl.inl.util.ExUtil;
-import nl.inl.util.ThreadPriority;
 import nl.inl.util.ThreadPriority.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.HashSet;
+import java.util.Set;
 
 @SuppressWarnings("unused")
 public abstract class Job implements Comparable<Job>, Prioritizable {

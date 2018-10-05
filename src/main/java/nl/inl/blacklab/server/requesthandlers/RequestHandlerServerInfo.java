@@ -1,15 +1,14 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import java.util.Collection;
-
-import javax.servlet.http.HttpServletRequest;
-
 import nl.inl.blacklab.search.Searcher;
 import nl.inl.blacklab.search.indexstructure.IndexStructure;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.jobs.User;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Collection;
 
 /**
  * Get information about this BlackLab server.

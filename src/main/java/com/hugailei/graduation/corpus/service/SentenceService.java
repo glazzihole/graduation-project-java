@@ -1,5 +1,6 @@
 package com.hugailei.graduation.corpus.service;
 
+import com.hugailei.graduation.corpus.dto.DependencyDto;
 import com.hugailei.graduation.corpus.dto.SentenceDto;
 
 import java.util.List;
@@ -18,4 +19,12 @@ public interface SentenceService {
      * @return
      */
     List<SentenceDto> searchSentenceFromDataBase();
+
+    /**
+     * 获取一个文本中的所有依存关系
+     *
+     * @param text
+     * @return
+     */
+    List<DependencyDto> getDependency(String text);
 }

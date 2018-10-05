@@ -1,23 +1,8 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.lucene.document.Document;
-import nl.inl.blacklab.search.Concordance;
-import nl.inl.blacklab.search.Hit;
-import nl.inl.blacklab.search.Hits;
-import nl.inl.blacklab.search.HitsWindow;
-import nl.inl.blacklab.search.Kwic;
-import nl.inl.blacklab.search.Searcher;
-import nl.inl.blacklab.search.TermFrequency;
-import nl.inl.blacklab.search.TermFrequencyList;
+import nl.inl.blacklab.search.*;
 import nl.inl.blacklab.search.grouping.HitGroup;
 import nl.inl.blacklab.search.grouping.HitGroups;
 import nl.inl.blacklab.search.grouping.HitPropValue;
@@ -25,12 +10,15 @@ import nl.inl.blacklab.search.grouping.HitProperty;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
-import nl.inl.blacklab.server.jobs.Job;
-import nl.inl.blacklab.server.jobs.JobHitsGrouped;
-import nl.inl.blacklab.server.jobs.JobHitsTotal;
-import nl.inl.blacklab.server.jobs.JobHitsWindow;
-import nl.inl.blacklab.server.jobs.User;
+import nl.inl.blacklab.server.jobs.*;
 import nl.inl.blacklab.server.search.BlsConfig;
+import org.apache.lucene.document.Document;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 例句查询处理类

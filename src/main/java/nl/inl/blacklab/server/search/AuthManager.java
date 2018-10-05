@@ -1,16 +1,13 @@
 package nl.inl.blacklab.server.search;
 
-import java.lang.reflect.Method;
-import java.util.Map;
-
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-
+import nl.inl.blacklab.server.BlackLabServer;
+import nl.inl.blacklab.server.jobs.User;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import nl.inl.blacklab.server.BlackLabServer;
-import nl.inl.blacklab.server.jobs.User;
+import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 public class AuthManager {
 

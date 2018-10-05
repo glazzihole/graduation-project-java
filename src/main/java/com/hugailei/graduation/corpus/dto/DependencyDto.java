@@ -1,5 +1,8 @@
 package com.hugailei.graduation.corpus.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
@@ -10,6 +13,8 @@ import java.io.Serializable;
  * description:
  * </p>
  **/
+@Data
+@AllArgsConstructor
 public class DependencyDto implements Serializable {
 
     private Long id;
@@ -27,7 +32,7 @@ public class DependencyDto implements Serializable {
     private String governorPos;
 
     @NotNull
-    private String dependentIndex;
+    private Integer dependentIndex;
 
     @NotNull
     private String dependent;

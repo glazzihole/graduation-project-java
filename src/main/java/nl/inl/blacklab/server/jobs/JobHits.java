@@ -1,10 +1,6 @@
 package nl.inl.blacklab.server.jobs;
 
 
-import org.apache.lucene.search.BooleanQuery.TooManyClauses;
-
-import org.apache.lucene.search.Query;
-
 import nl.inl.blacklab.search.HitsSettings;
 import nl.inl.blacklab.search.RegexpTooLargeException;
 import nl.inl.blacklab.search.TextPattern;
@@ -15,6 +11,8 @@ import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.exceptions.InternalServerError;
 import nl.inl.blacklab.server.requesthandlers.SearchParameters;
 import nl.inl.blacklab.server.search.SearchManager;
+import org.apache.lucene.search.BooleanQuery.TooManyClauses;
+import org.apache.lucene.search.Query;
 
 /**
  * Represents a hit search operation.

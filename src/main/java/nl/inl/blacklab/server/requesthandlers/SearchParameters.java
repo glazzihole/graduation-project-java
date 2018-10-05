@@ -1,49 +1,18 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.lucene.search.Query;
-
 import nl.inl.blacklab.perdocument.DocGroupProperty;
 import nl.inl.blacklab.perdocument.DocGroupPropertySize;
 import nl.inl.blacklab.perdocument.DocProperty;
 import nl.inl.blacklab.perdocument.DocPropertyMultiple;
 import nl.inl.blacklab.queryParser.corpusql.ParseException;
-import nl.inl.blacklab.search.ConcordanceType;
-import nl.inl.blacklab.search.HitsSample;
-import nl.inl.blacklab.search.Searcher;
-import nl.inl.blacklab.search.SingleDocIdFilter;
-import nl.inl.blacklab.search.TextPattern;
+import nl.inl.blacklab.search.*;
 import nl.inl.blacklab.search.grouping.GroupProperty;
 import nl.inl.blacklab.search.grouping.GroupPropertySize;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BadRequest;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.exceptions.NotFound;
-import nl.inl.blacklab.server.jobs.ContextSettings;
-import nl.inl.blacklab.server.jobs.DocGroupSettings;
-import nl.inl.blacklab.server.jobs.DocGroupSortSettings;
-import nl.inl.blacklab.server.jobs.DocSortSettings;
-import nl.inl.blacklab.server.jobs.HitFilterSettings;
-import nl.inl.blacklab.server.jobs.HitGroupSettings;
-import nl.inl.blacklab.server.jobs.HitGroupSortSettings;
-import nl.inl.blacklab.server.jobs.HitSortSettings;
-import nl.inl.blacklab.server.jobs.JobDescription;
+import nl.inl.blacklab.server.jobs.*;
 import nl.inl.blacklab.server.jobs.JobDocs.JobDescDocs;
 import nl.inl.blacklab.server.jobs.JobDocsGrouped.JobDescDocsGrouped;
 import nl.inl.blacklab.server.jobs.JobDocsSorted.JobDescDocsSorted;
@@ -57,15 +26,21 @@ import nl.inl.blacklab.server.jobs.JobHitsSorted.JobDescHitsSorted;
 import nl.inl.blacklab.server.jobs.JobHitsTotal.JobDescHitsTotal;
 import nl.inl.blacklab.server.jobs.JobHitsWindow.JobDescHitsWindow;
 import nl.inl.blacklab.server.jobs.JobSampleHits.JobDescSampleHits;
-import nl.inl.blacklab.server.jobs.MaxSettings;
-import nl.inl.blacklab.server.jobs.SampleSettings;
-import nl.inl.blacklab.server.jobs.SearchSettings;
-import nl.inl.blacklab.server.jobs.WindowSettings;
 import nl.inl.blacklab.server.search.SearchManager;
 import nl.inl.blacklab.server.util.BlsUtils;
 import nl.inl.blacklab.server.util.GapFiller;
 import nl.inl.blacklab.server.util.ParseUtil;
 import nl.inl.blacklab.server.util.ServletUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.lucene.search.Query;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * The parameters passed in the request.

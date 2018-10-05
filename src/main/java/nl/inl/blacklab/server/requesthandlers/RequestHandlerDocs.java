@@ -1,31 +1,16 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.lucene.document.Document;
-
-import nl.inl.blacklab.perdocument.DocGroup;
-import nl.inl.blacklab.perdocument.DocGroups;
-import nl.inl.blacklab.perdocument.DocProperty;
-import nl.inl.blacklab.perdocument.DocPropertyComplexFieldLength;
-import nl.inl.blacklab.perdocument.DocResult;
-import nl.inl.blacklab.perdocument.DocResults;
-import nl.inl.blacklab.perdocument.DocResultsWindow;
-import nl.inl.blacklab.search.Concordance;
-import nl.inl.blacklab.search.Hit;
-import nl.inl.blacklab.search.Hits;
-import nl.inl.blacklab.search.Kwic;
-import nl.inl.blacklab.search.Searcher;
+import nl.inl.blacklab.perdocument.*;
+import nl.inl.blacklab.search.*;
 import nl.inl.blacklab.search.grouping.DocOrHitGroups;
 import nl.inl.blacklab.search.grouping.HitPropValue;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
-import nl.inl.blacklab.server.jobs.Job;
-import nl.inl.blacklab.server.jobs.JobDocsGrouped;
-import nl.inl.blacklab.server.jobs.JobDocsTotal;
-import nl.inl.blacklab.server.jobs.JobDocsWindow;
-import nl.inl.blacklab.server.jobs.User;
+import nl.inl.blacklab.server.jobs.*;
+import org.apache.lucene.document.Document;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Request handler for the doc results.

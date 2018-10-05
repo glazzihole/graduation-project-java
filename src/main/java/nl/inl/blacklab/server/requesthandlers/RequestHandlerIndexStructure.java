@@ -1,11 +1,5 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-
 import nl.inl.blacklab.search.Searcher;
 import nl.inl.blacklab.search.indexstructure.ComplexFieldDesc;
 import nl.inl.blacklab.search.indexstructure.IndexStructure;
@@ -16,6 +10,11 @@ import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.util.StringUtil;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Get information about the structure of an index.

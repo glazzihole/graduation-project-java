@@ -1,29 +1,23 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import java.io.File;
-import java.io.InputStream;
-import java.util.Arrays;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.fileupload.FileItem;
-
 import nl.inl.blacklab.index.IndexListener;
 import nl.inl.blacklab.index.IndexListenerReportConsole;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
-import nl.inl.blacklab.server.exceptions.BadRequest;
-import nl.inl.blacklab.server.exceptions.BlsException;
-import nl.inl.blacklab.server.exceptions.IndexNotFound;
-import nl.inl.blacklab.server.exceptions.InternalServerError;
-import nl.inl.blacklab.server.exceptions.NotAuthorized;
+import nl.inl.blacklab.server.exceptions.*;
 import nl.inl.blacklab.server.index.IndexTask;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.search.IndexManager.IndexStatus;
 import nl.inl.blacklab.server.util.FileUploadHandler;
 import nl.inl.blacklab.server.util.FileUploadHandler.UploadedFileTask;
+import org.apache.commons.fileupload.FileItem;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.InputStream;
+import java.util.Arrays;
 
 /**
  * Display the contents of the cache.

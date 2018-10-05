@@ -1,17 +1,5 @@
 package nl.inl.blacklab.server.util;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-
 import nl.inl.blacklab.perdocument.DocResults;
 import nl.inl.blacklab.queryParser.contextql.ContextualQueryLanguageParser;
 import nl.inl.blacklab.queryParser.corpusql.CorpusQueryLanguageParser;
@@ -23,6 +11,17 @@ import nl.inl.blacklab.search.TextPattern;
 import nl.inl.blacklab.server.exceptions.BadRequest;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.exceptions.ServiceUnavailable;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
 
 public class BlsUtils {
 	private static final Logger logger = LogManager.getLogger(BlsUtils.class);

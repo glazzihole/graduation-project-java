@@ -1,23 +1,7 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.lucene.document.Document;
-
-import nl.inl.blacklab.perdocument.DocCount;
-import nl.inl.blacklab.perdocument.DocCounts;
-import nl.inl.blacklab.perdocument.DocGroupProperty;
-import nl.inl.blacklab.perdocument.DocResult;
-import nl.inl.blacklab.perdocument.DocResults;
+import nl.inl.blacklab.perdocument.*;
 import nl.inl.blacklab.search.Hits;
 import nl.inl.blacklab.search.HitsSample;
 import nl.inl.blacklab.search.ResultsWindow;
@@ -37,6 +21,16 @@ import nl.inl.blacklab.server.search.SearchManager;
 import nl.inl.blacklab.server.util.BlsUtils;
 import nl.inl.blacklab.server.util.ParseUtil;
 import nl.inl.blacklab.server.util.ServletUtil;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.lucene.document.Document;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Base class for request handlers, to handle the different types of requests. The static handle() method will dispatch the request to the appropriate subclass.

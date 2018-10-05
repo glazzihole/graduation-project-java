@@ -1,10 +1,6 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import javax.servlet.http.HttpServletRequest;
-
 import lombok.extern.slf4j.Slf4j;
-import org.apache.lucene.document.Document;
-
 import nl.inl.blacklab.search.Searcher;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
@@ -14,6 +10,9 @@ import nl.inl.blacklab.server.exceptions.InternalServerError;
 import nl.inl.blacklab.server.exceptions.NotFound;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.util.BlsUtils;
+import org.apache.lucene.document.Document;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Get information about the structure of an index.

@@ -1,31 +1,18 @@
 package nl.inl.blacklab.server.search;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.exceptions.ServiceUnavailable;
 import nl.inl.blacklab.server.exceptions.TooManyRequests;
-import nl.inl.blacklab.server.jobs.Job;
-import nl.inl.blacklab.server.jobs.JobDescription;
-import nl.inl.blacklab.server.jobs.JobDocsTotal;
-import nl.inl.blacklab.server.jobs.JobHitsTotal;
-import nl.inl.blacklab.server.jobs.User;
+import nl.inl.blacklab.server.jobs.*;
 import nl.inl.blacklab.server.util.MemoryUtil;
 import nl.inl.util.ThreadPriority;
 import nl.inl.util.ThreadPriority.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 public class SearchCache {
 

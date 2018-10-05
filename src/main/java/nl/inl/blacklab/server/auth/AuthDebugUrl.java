@@ -1,13 +1,11 @@
 package nl.inl.blacklab.server.auth;
 
-import java.util.Map;
-
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.search.SearchManager;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 /**
  * Authentication system used for debugging.

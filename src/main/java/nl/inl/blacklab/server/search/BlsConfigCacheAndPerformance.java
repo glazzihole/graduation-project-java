@@ -1,11 +1,9 @@
 package nl.inl.blacklab.server.search;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import nl.inl.blacklab.server.util.JsonUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import com.fasterxml.jackson.databind.JsonNode;
-
-import nl.inl.blacklab.server.util.JsonUtil;
 
 public class BlsConfigCacheAndPerformance {
 

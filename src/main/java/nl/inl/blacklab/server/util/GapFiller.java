@@ -1,20 +1,19 @@
 package nl.inl.blacklab.server.util;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
-
+import nl.inl.blacklab.queryParser.corpusql.CorpusQueryLanguageParser;
+import nl.inl.blacklab.queryParser.corpusql.ParseException;
+import nl.inl.blacklab.search.TextPattern;
+import nl.inl.blacklab.search.TextPatternOr;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import nl.inl.blacklab.queryParser.corpusql.CorpusQueryLanguageParser;
-import nl.inl.blacklab.queryParser.corpusql.ParseException;
-import nl.inl.blacklab.search.TextPattern;
-import nl.inl.blacklab.search.TextPatternOr;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Fills gaps in a template string with column values from TSV data.
