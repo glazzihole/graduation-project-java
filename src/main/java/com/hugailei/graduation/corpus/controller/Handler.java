@@ -118,9 +118,10 @@ public class Handler {
                     Writer realOut = new OutputStreamWriter(responseObject.getOutputStream(), BlackLabServer.OUTPUT_ENCODING);
                     realOut.write("{\"status\":\"ERROR\"," +
                                         "\"code\":500," +
-                                        "\"msg\":\"\"," +
-                                        "\"error\":\"" + e.getMessage().replaceAll("\n","")
-                                                                       .replaceAll("\"","'")+ "\"," +
+                                        "\"msg\":\"" + e.getMessage().replaceAll("\n","")
+                                                                     .replaceAll("\"","'")
+                                                                     .replaceAll("\\\\","/") + "\"," +
+                                        "\"error\":\"\"," +
                                         "\"data\":" + null +
                                     "}");
                     realOut.flush();
