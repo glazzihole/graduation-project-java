@@ -1,5 +1,7 @@
 package com.hugailei.graduation.corpus.dto;
 
+import java.io.Serializable;
+
 /**
  * @author HU Gailei
  * @date 2018/10/1
@@ -7,7 +9,7 @@ package com.hugailei.graduation.corpus.dto;
  * description:
  * </p>
  **/
-public class SentenceDto {
+public class SentenceDto implements Serializable {
     private Long id;
     private String setence;
     private Long textId;
