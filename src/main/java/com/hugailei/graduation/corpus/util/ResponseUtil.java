@@ -29,6 +29,14 @@ public class ResponseUtil {
                 null);
     }
 
+    public static ResponseVO error() {
+        return new ResponseVO(CorpusConstant.FAILED,
+                CorpusConstant.FAILED_CODE,
+                CorpusConstant.FAILED,
+                "",
+                null);
+    }
+
     public static ResponseVO error(String status, String msg) {
         return new ResponseVO(status,
                             CorpusConstant.FAILED_CODE,

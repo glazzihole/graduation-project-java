@@ -19,12 +19,4 @@ public interface SentenceService {
      * @return
      */
     List<SentenceDto> searchSentenceFromDataBase();
-
-    /**
-     * 获取一个文本中的所有依存关系
-     *
-     * @param text
-     * @return
-     */
-    List<DependencyDto> getDependency(String text);
 }

@@ -9,20 +9,23 @@ import java.io.Serializable;
 
 /**
  * @author HU Gailei
- * @date 2018/10/5
+ * @date 2018/10/7
  * <p>
- * description: 依赖关系
- * </p>
- **/
+ * description: 学生作文中中的句法依存关系
+ * <p/>
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "tb_dependency")
-public class Dependency implements Serializable {
+@Table(name = "tb_student_dependency")
+public class StudentDependency implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
+
+    @Column(name = "stu_id", nullable = false)
+    private Long stuId;
 
     @Column(name = "dependency_type", nullable = false)
     private String dependencyType;

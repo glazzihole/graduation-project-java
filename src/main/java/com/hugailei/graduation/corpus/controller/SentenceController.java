@@ -1,9 +1,11 @@
 package com.hugailei.graduation.corpus.controller;
 
+import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import com.hugailei.graduation.corpus.dto.DependencyDto;
 import com.hugailei.graduation.corpus.service.SentenceService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;
 import com.hugailei.graduation.corpus.vo.ResponseVO;
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.requesthandlers.RequestHandler;
@@ -20,11 +22,12 @@ import java.util.List;
  * @author HU Gailei
  * @date 2018/10/1
  * <p>
- * description: 对句子进行检索
+ * description: 对句子进行存储、检索
  * </p>
  **/
 @RestController
-@RequestMapping("/sentence")
+@RequestMapping("/corpus/sentence")
+@Slf4j
 public class SentenceController {
     private Handler handler = new Handler();
     private BlackLabServer blackLabServer = new BlackLabServer();
@@ -32,22 +35,25 @@ public class SentenceController {
     @Autowired
     private SentenceService sentenceService;
 
+    /**
+     * 句子检索
+     *
+     * @param pageable
+     * @param request
+     * @param response
+     * @param corpus
+     * @param patt
+     */
     @GetMapping("/search")
     public void searchSentence (Pageable pageable,
                                 HttpServletRequest request,
                                 HttpServletResponse response,
                                 @RequestParam String corpus,
                                 @RequestParam String patt) {
+        log.info("searchSentence | request to search sentence, patt: {}, corpus: {}", patt, corpus);
         User user = User.loggedIn("admin", "1");
         handler.checkConfig(request, response, blackLabServer);
         RequestHandler requestHandler = new SentenceRequestHandler(blackLabServer, request, user, corpus, null, null);
         handler.checkAndHandler(pageable, corpus, blackLabServer, request, response, requestHandler);
-    }
-
-    @PostMapping("/dependency")
-    @ResponseBody
-    public ResponseVO getDependency(@RequestParam String text) {
-        List<DependencyDto> dependencyList = sentenceService.getDependency(text);
-        return ResponseUtil.success(dependencyList);
     }
 }
