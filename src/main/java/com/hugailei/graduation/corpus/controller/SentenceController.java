@@ -22,7 +22,7 @@ import java.util.List;
  * @author HU Gailei
  * @date 2018/10/1
  * <p>
- * description: 对句子进行存储、检索
+ * description: 对语料库中的句子进行存储、检索
  * </p>
  **/
 @RestController

@@ -9,7 +9,7 @@ import java.util.List;
  * @author HU Gailei
  * @date 2018/10/1
  * <p>
- * description:
+ * description: 查询语料库中的句子
  * </p>
  **/
 public interface SentenceService {

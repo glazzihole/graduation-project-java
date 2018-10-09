@@ -70,7 +70,7 @@ public class StudentTextServiceImpl implements StudentTextService {
     public StudentTextDto getStudentText(Long textId) {
         try {
             log.info("getStudentText | text id: {}", textId);
-            StudentText studentText = studentTextDao.findById(textId).get();
+            StudentText studentText = studentTextDao.findOne(textId);
             StudentTextDto studentTextDto = new StudentTextDto();
             BeanUtils.copyProperties(studentText, studentTextDto);
             log.info("getStudentText | result: {}", studentTextDto);
@@ -87,7 +87,7 @@ public class StudentTextServiceImpl implements StudentTextService {
             // 存储每个句子和句子中的句法关系
             List<StudentSentence> studentSentenceList = new ArrayList<>();
             List<StudentDependency> studentDependencyList = new ArrayList<>();
-            StudentText studentText = studentTextDao.findById(textId).get();
+            StudentText studentText = studentTextDao.findOne(textId);
             String text = studentText.getText();
             Long stuId = studentText.getStuId();
             log.info("getAndSaveDependency | start to parse text: {}", text);

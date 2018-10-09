@@ -33,7 +33,11 @@ public class CorpusConstant {
         }
     };
 
+    public final static String REQUEST_ID = "REQUEST_ID";
+
+    public final static String LEMMA = "lemma";
+    public final static String POS = "pos";
+    public final static String FORM = "form";
     public static final String PUNCT = "punct";
 
-    public final static String REQUEST_ID = "REQUEST_ID";
 }
