@@ -1,5 +1,6 @@
 package nl.inl.blacklab.server.jobs;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.perdocument.DocResults;
 import nl.inl.blacklab.perdocument.DocResultsWindow;
 import nl.inl.blacklab.search.Prioritizable;
@@ -11,6 +12,7 @@ import nl.inl.blacklab.server.search.SearchManager;
 /**
  * Represents searching for a window in a larger set of hits.
  */
+@Slf4j
 public class JobDocsWindow extends Job {
 
 	public static class JobDescDocsWindow extends JobDescription {
@@ -64,7 +66,7 @@ public class JobDocsWindow extends Job {
 		int first = windowSett.first();
 		requestedWindowSize = windowSett.size();
 		if (!sourceResults.sizeAtLeast(first + 1)) {
-			debug(logger, "Parameter first (" + first + ") out of range; setting to 0");
+			log.info( "Parameter first (" + first + ") out of range; setting to 0");
 			first = 0;
 		}
 		window = sourceResults.window(first, requestedWindowSize);

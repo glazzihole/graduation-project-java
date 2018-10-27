@@ -1,5 +1,6 @@
 package nl.inl.blacklab.server.requesthandlers;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.perdocument.DocGroupProperty;
 import nl.inl.blacklab.perdocument.DocGroupPropertySize;
 import nl.inl.blacklab.perdocument.DocProperty;
@@ -32,8 +33,6 @@ import nl.inl.blacklab.server.util.GapFiller;
 import nl.inl.blacklab.server.util.ParseUtil;
 import nl.inl.blacklab.server.util.ServletUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.lucene.search.Query;
 
 import javax.servlet.http.HttpServletRequest;
@@ -47,8 +46,8 @@ import java.util.Map.Entry;
  *
  * We create the necessary JobDescriptions from this.
  */
+@Slf4j
 public class SearchParameters {
-	private static final Logger logger = LogManager.getLogger(SearchParameters.class);
 
 	// TODO: move to SearchParameters?
 	/** Default values for request parameters */
@@ -231,7 +230,7 @@ public class SearchParameters {
 		try {
 			return ParseUtil.strToInt(value);
 		} catch (IllegalArgumentException e) {
-			logger.debug("Illegal integer value for parameter '" + name + "': " + value);
+			log.debug("Illegal integer value for parameter '" + name + "': " + value);
 			return 0;
 		}
 	}
@@ -241,7 +240,7 @@ public class SearchParameters {
 		try {
 			return ParseUtil.strToLong(value);
 		} catch (IllegalArgumentException e) {
-			logger.debug("Illegal integer value for parameter '" + name + "': " + value);
+			log.debug("Illegal integer value for parameter '" + name + "': " + value);
 			return 0L;
 		}
 	}
@@ -251,7 +250,7 @@ public class SearchParameters {
 		try {
 			return ParseUtil.strToFloat(value);
 		} catch (IllegalArgumentException e) {
-			logger.debug("Illegal integer value for parameter '" + name + "': " + value);
+			log.debug("Illegal integer value for parameter '" + name + "': " + value);
 			return 0L;
 		}
 	}
@@ -261,7 +260,7 @@ public class SearchParameters {
 		try {
 			return ParseUtil.strToBool(value);
 		} catch (IllegalArgumentException e) {
-			logger.debug("Illegal boolean value for parameter '" + name + "': " + value);
+			log.debug("Illegal boolean value for parameter '" + name + "': " + value);
 			return false;
 		}
 	}
@@ -330,7 +329,7 @@ public class SearchParameters {
 				if (luceneDocId < 0) {
                     throw new NotFound("DOC_NOT_FOUND", "Document with pid '" + docId + "' not found.");
                 }
-				logger.debug("Filtering on single doc-id");
+				log.debug("Filtering on single doc-id");
 				filterQuery = new SingleDocIdFilter(luceneDocId);
 			} else if (containsKey("filter")) {
 				filterQuery = BlsUtils.parseFilter(getSearcher(), getString("filter"), getString("filterlang"));
@@ -378,7 +377,7 @@ public class SearchParameters {
 		int contextSize = getInteger("wordsaroundhit");
 		int maxContextSize = searchManager.config().maxContextSize();
 		if (contextSize > maxContextSize) {
-			// debug(logger, "Clamping context size to " + maxContextSize + " (" + contextSize + " requested)");
+			// debug(log, "Clamping context size to " + maxContextSize + " (" + contextSize + " requested)");
 			contextSize = maxContextSize;
 		}
 		ConcordanceType concType = getString("usecontent").equals("orig") ? ConcordanceType.CONTENT_STORE : ConcordanceType.FORWARD_INDEX;

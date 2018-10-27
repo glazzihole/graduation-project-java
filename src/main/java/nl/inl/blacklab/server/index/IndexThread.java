@@ -1,15 +1,14 @@
 package nl.inl.blacklab.server.index;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 
 /**
  * A (background) thread for indexing.
  */
+@Slf4j
 final public class IndexThread extends Thread implements UncaughtExceptionHandler {
-	protected static final Logger logger = LogManager.getLogger(IndexThread.class);
 
 	/** If search execution failed, this is the exception that was thrown */
 	Throwable thrownException = null;
@@ -76,7 +75,7 @@ final public class IndexThread extends Thread implements UncaughtExceptionHandle
 
 	@Override
 	public void uncaughtException(Thread t, Throwable e) {
-		logger.debug("Index thread threw an exception, saving it:\n" + e.getClass().getName() + ": " + e.getMessage());
+		log.debug("Index thread threw an exception, saving it:\n" + e.getClass().getName() + ": " + e.getMessage());
 		thrownException = e;
 	}
 

@@ -1,5 +1,6 @@
 package nl.inl.blacklab.server.jobs;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.search.Prioritizable;
 import nl.inl.blacklab.search.Searcher;
 import nl.inl.blacklab.server.datastream.DataStream;
@@ -8,19 +9,14 @@ import nl.inl.blacklab.server.exceptions.ServiceUnavailable;
 import nl.inl.blacklab.server.search.SearchManager;
 import nl.inl.util.ExUtil;
 import nl.inl.util.ThreadPriority.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.Set;
 
 @SuppressWarnings("unused")
+@Slf4j
 public abstract class Job implements Comparable<Job>, Prioritizable {
-
-	protected static final Logger logger = LogManager.getLogger(Job.class);
-
 	private static final double ALMOST_ZERO = 0.0001;
 
 	private static final int RUN_PAUSE_PHASE_JUST_STARTED = 5;
@@ -281,7 +277,7 @@ public abstract class Job implements Comparable<Job>, Prioritizable {
 		// Create and start thread
 		// TODO: use thread pooling..?
 		startedAt = System.currentTimeMillis();
-		//logger.debug("Search " + this + " started at " + startedAt);
+		//log.debug("Search " + this + " started at " + startedAt);
 		setLevelRunningAt = startedAt;
 		searchThread = new SearchThread(this);
 		searchThread.start();
@@ -362,7 +358,7 @@ public abstract class Job implements Comparable<Job>, Prioritizable {
 		if (exception == null) {
             return;
         }
-		logger.debug("Re-throwing exception from search thread:\n" + exception.getClass().getName() + ": " + exception.getMessage());
+		log.debug("Re-throwing exception from search thread:\n" + exception.getClass().getName() + ": " + exception.getMessage());
 		if (exception instanceof BlsException) {
             throw (BlsException)exception;
         }
@@ -452,22 +448,6 @@ public abstract class Job implements Comparable<Job>, Prioritizable {
 
 	private String shortUserId() {
 		return user.uniqueIdShort();
-	}
-
-	public void debug(Logger logger, String msg) {
-		logger.debug(shortUserId() + " " + msg);
-	}
-
-	public void warn(Logger logger, String msg) {
-		logger.warn(shortUserId() + " " + msg);
-	}
-
-	public void info(Logger logger, String msg) {
-		logger.info(shortUserId() + " " + msg);
-	}
-
-	public void error(Logger logger, String msg) {
-		logger.error(shortUserId() + " " + msg);
 	}
 
 	public void dataStream(DataStream ds, boolean debugInfo) {
@@ -579,7 +559,7 @@ public abstract class Job implements Comparable<Job>, Prioritizable {
 	}
 
 	protected void cleanup() {
-		logger.debug("Job.cleanup() called");
+		log.debug("Job.cleanup() called");
 		if (waitingFor != null) {
 			synchronized(waitingFor) {
 				for (Job j: waitingFor) {
@@ -611,7 +591,7 @@ public abstract class Job implements Comparable<Job>, Prioritizable {
 			// Because of a bug in the reference counting mechanism, this sometimes happens
 			// and will lead to the "Cannot decrement refs, job was already cleaned up!" error.
 			// For now, we reset the refsToJob to -1 to prevent this error.
-			logger.error("Job has negative reference count: " + this);
+			log.error("Job has negative reference count: " + this);
 			refsToJob = -1;
 		}
 		if (refsToJob == 1) {
@@ -829,7 +809,7 @@ public abstract class Job implements Comparable<Job>, Prioritizable {
 
 	public void setFinished() {
 		lastAccessed = finishedAt = System.currentTimeMillis();
-		//logger.debug("Search " + this + " finished at " + finishedAt);
+		//log.debug("Search " + this + " finished at " + finishedAt);
 		if (level != Level.RUNNING) {
 			// Don't confuse the system by still being in PAUSED
 			// (possible because this is cooperative multitasking,

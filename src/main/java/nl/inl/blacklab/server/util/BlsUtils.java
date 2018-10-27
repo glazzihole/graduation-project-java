@@ -1,5 +1,6 @@
 package nl.inl.blacklab.server.util;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.perdocument.DocResults;
 import nl.inl.blacklab.queryParser.contextql.ContextualQueryLanguageParser;
 import nl.inl.blacklab.queryParser.corpusql.CorpusQueryLanguageParser;
@@ -11,8 +12,6 @@ import nl.inl.blacklab.search.TextPattern;
 import nl.inl.blacklab.server.exceptions.BadRequest;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.exceptions.ServiceUnavailable;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -23,8 +22,8 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 
+@Slf4j
 public class BlsUtils {
-	private static final Logger logger = LogManager.getLogger(BlsUtils.class);
 
 	public static Query parseFilter(Searcher searcher, String filter,
 			String filterLang) throws BlsException {
@@ -155,7 +154,7 @@ public class BlsUtils {
 				// Should probably throw a fatal exception, but sometimes
 				// documents accidentally occur twice in a dataset...
 				// Make configurable whether or not a fatal exception is thrown
-				logger.error("Pid must uniquely identify a document, but it has " + docResults.size() + " hits: " + pid);
+				log.error("Pid must uniquely identify a document, but it has " + docResults.size() + " hits: " + pid);
 			}
 			if (docResults.size() == 0) {
 				if (lowerCase) {

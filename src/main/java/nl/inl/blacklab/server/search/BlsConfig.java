@@ -1,21 +1,19 @@
 package nl.inl.blacklab.server.search;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.search.Searcher;
 import nl.inl.blacklab.server.datastream.DataFormat;
 import nl.inl.blacklab.server.util.JsonUtil;
 import nl.inl.blacklab.server.util.ServletUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+@Slf4j
 public class BlsConfig {
-
-	protected static final Logger logger = LogManager.getLogger(Searcher.class);
 
 	/** Maximum context size allowed */
 	private int maxContextSize;
@@ -90,7 +88,7 @@ public class BlsConfig {
 		// Old location of debugModeIps: top-level
 		// DEPRECATED
 		if (properties.has("debugModeIps")) {
-			logger.warn("DEPRECATED setting debugModeIps found at top-level. Use debug.addresses instead.");
+			log.warn("DEPRECATED setting debugModeIps found at top-level. Use debug.addresses instead.");
 			JsonNode jsonDebugModeIps = properties.get("debugModeIps");
 			for (int i = 0; i < jsonDebugModeIps.size(); i++) {
 				debugModeIps.add(jsonDebugModeIps.get(i).textValue());

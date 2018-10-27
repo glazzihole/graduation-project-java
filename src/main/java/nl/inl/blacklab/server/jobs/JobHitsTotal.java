@@ -1,5 +1,6 @@
 package nl.inl.blacklab.server.jobs;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.search.Hits;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
@@ -9,6 +10,7 @@ import nl.inl.blacklab.server.search.SearchManager;
 /**
  * Represents finding the total number of hits.
  */
+@Slf4j
 public class JobHitsTotal extends Job {
 
 	public static class JobDescHitsTotal extends JobDescription {
@@ -48,12 +50,12 @@ public class JobHitsTotal extends Job {
 			// can detect that we stopped counting at some point.
 			//throw new ServiceUnavailable("Determining total number of hits took too long, cancelled");
 			if (threwException()) {
-				logger.warn("Exception occurred while counting hits: " + getThrownException().getMessage());
+				log.warn("Exception occurred while counting hits: " + getThrownException().getMessage());
 			} else {
 				if (!jobDesc.getSearchSettings().isUseCache()) {
-                    logger.warn("Search not cached, count aborted immediately.");
+                    log.warn("Search not cached, count aborted immediately.");
                 } else {
-                    logger.warn("Determining total number of hits took too long, cancelled");
+                    log.warn("Determining total number of hits took too long, cancelled");
                 }
 			}
 		}

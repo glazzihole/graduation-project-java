@@ -128,7 +128,7 @@ public class SentenceRequestHandler extends RequestHandler {
             Searcher searcher = search.getSearcher();
             Hits hits = searchWindow != null ? hits = searchWindow.getWindow().getOriginalHits() : group.getHits();
 
-            double totalTime = 0;
+            double totalTime;
             if (total != null) {
                 totalTime = total.threwException() ? -1 : total.userWaitTime();
             } else {
@@ -182,30 +182,20 @@ public class SentenceRequestHandler extends RequestHandler {
                 if (useOrigContent) {
                     // Add concordance from original XML
                     Concordance c = window.getConcordance(hit);
-                    ds  .startEntry("left").plain(c.left()).endEntry()
-                            .startEntry("match").plain(c.match()).endEntry()
-                            .startEntry("right").plain(c.right()).endEntry();
+                    ds.startEntry("sentence").plain(c.match()).endEntry();
                 }
                 else {
                     String left = "", match = "", right = "";
                     // Add KWIC info
                     if(window!=null) {
                         Kwic c = window.getKwic(hit);
-                        List<String> leftWordsList = c.getLeft( "word" ),matchWordsList = c.getMatch( "word" ),rightWordsList = c.getRight( "word" );
-
-                        for(String word : leftWordsList) {
-                            left = left + word + " ";
-                        }
+                        List<String> matchWordsList = c.getMatch( "word" );
                         for(String word : matchWordsList) {
                             match = match + word + " ";
                         }
-                        for(String word : rightWordsList) {
-                            right = right + word + " ";
-                        }
+
                     }
-                    ds.entry("left", left);
-                    ds.entry("match", match);
-                    ds.entry("right", right);
+                    ds.entry("sentence", match);
 
                 }
                 ds.entry("corpus", searchParam.getIndexName());

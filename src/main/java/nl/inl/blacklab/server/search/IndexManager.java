@@ -1,6 +1,7 @@
 package nl.inl.blacklab.server.search;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.search.Searcher;
 import nl.inl.blacklab.server.exceptions.*;
 import nl.inl.blacklab.server.jobs.User;
@@ -8,17 +9,14 @@ import nl.inl.blacklab.server.util.BlsUtils;
 import nl.inl.blacklab.server.util.JsonUtil;
 import nl.inl.util.FileUtil;
 import nl.inl.util.FileUtil.FileTask;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
+@Slf4j
 public class IndexManager {
-	private static final Logger logger = LogManager.getLogger(IndexManager.class);
-
 	private static final int MAX_USER_INDICES = 10;
 
 	private SearchManager searchMan;
@@ -75,12 +73,12 @@ public class IndexManager {
 
 				File dir = JsonUtil.getFileProp(indexConfig, "dir", null);
 				if (dir == null || !dir.canRead()) {
-					logger.error("Index directory for index '" + indexName
+					log.error("Index directory for index '" + indexName
 							+ "' does not exist or cannot be read: " + dir);
 					continue;
 				}
 				if (!Searcher.isIndex(dir)) {
-					logger.warn("Directory " + dir + " does not contain a BlackLab index.");
+					log.warn("Directory " + dir + " does not contain a BlackLab index.");
 					continue;
 				}
 
@@ -88,7 +86,7 @@ public class IndexManager {
 				if (pid.length() != 0) {
 					// Should be specified in index metadata now, not in
 					// blacklab-server.json.
-					logger.error("blacklab-server.json specifies 'pid' property for index '"
+					log.error("blacklab-server.json specifies 'pid' property for index '"
 							+ indexName
 							+ "'; this setting should not be in blacklab-server.json but in the blacklab index metadata!");
 				}
@@ -124,7 +122,7 @@ public class IndexManager {
 											// could in the future
 					collectionsDirs.add(indexCollection);
 				} else {
-					logger.warn("Configured collection not found or not readable: "
+					log.warn("Configured collection not found or not readable: "
 							+ indexCollection);
 				}
 			}
@@ -134,7 +132,7 @@ public class IndexManager {
 		if (properties.has("userCollectionsDir")) {
 			userCollectionsDir = new File(properties.get("userCollectionsDir").textValue());
 			if (!userCollectionsDir.canRead()) {
-				logger.error("Configured user collections dir not found or not readable: "
+				log.error("Configured user collections dir not found or not readable: "
 						+ userCollectionsDir);
 				userCollectionsDir = null;
 			} else {
@@ -172,8 +170,8 @@ public class IndexManager {
             dir.mkdir();
         }
 		if (!dir.canRead()) {
-			logger.error("Cannot read collections dir for user: " + dir);
-			logger.error("(userCollectionsDir = " + userCollectionsDir);
+			log.error("Cannot read collections dir for user: " + dir);
+			log.error("(userCollectionsDir = " + userCollectionsDir);
 			return null;
 		}
 		return dir;
@@ -316,7 +314,7 @@ public class IndexManager {
 		File indexDir = par.getDir();
 		Searcher searcher;
 		try {
-			logger.debug("Opening index '" + indexName + "', dir = " + indexDir);
+			log.debug("Opening index '" + indexName + "', dir = " + indexDir);
 			searchers.put(indexName, new SearcherIsBeingOpened(indexName, indexDir));
 			indexStatus.put(indexName, IndexStatus.OPENING);
 			searcher = Searcher.open(indexDir);
@@ -337,7 +335,7 @@ public class IndexManager {
 		String configPid = par.getPidField();
 		if (indexPid.length() > 0 && !configPid.equals(indexPid)) {
 			if (configPid.length() > 0) {
-				logger.error("Different pid field configured in blacklab-server.json than in index metadata! ("
+				log.error("Different pid field configured in blacklab-server.json than in index metadata! ("
 						+ configPid + "/" + indexPid + "); using the latter");
 			}
 			// Update index parameters with the pid field found in the metadata
@@ -353,7 +351,7 @@ public class IndexManager {
             }
 		}
 		if (indexPid.length() == 0 && configPid.length() == 0) {
-			logger.warn("No pid given for index '" + indexName
+			log.warn("No pid given for index '" + indexName
 					+ "'; using Lucene doc ids.");
 		}
 
@@ -363,12 +361,12 @@ public class IndexManager {
 		boolean blsConfigContentViewable = par.mayViewContents();
 		if (par.mayViewContentsSpecified()
 				&& contentViewable != blsConfigContentViewable) {
-			logger.error("Index metadata and blacklab-server.json configuration disagree on content view settings! Disallowing free content viewing.");
+			log.error("Index metadata and blacklab-server.json configuration disagree on content view settings! Disallowing free content viewing.");
 			par.setMayViewContent(false);
 			searcher.getIndexStructure()._setContentViewable(false);
 		}
 
-		logger.debug("  Finished opening index '" + indexName + "'.");
+		log.debug("  Finished opening index '" + indexName + "'.");
 
 		return searcher;
 	}

@@ -3,6 +3,7 @@ package nl.inl.blacklab.server;
 import com.bfsuolframework.core.utils.FileUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.search.RegexpTooLargeException;
 import nl.inl.blacklab.search.Searcher;
 import nl.inl.blacklab.server.datastream.DataFormat;
@@ -22,8 +23,6 @@ import nl.inl.util.FileUtil;
 import nl.inl.util.Json;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.velocity.Template;
 import org.xml.sax.SAXException;
 
@@ -38,9 +37,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
-
+@Slf4j
 public class BlackLabServer {
-	private static final Logger logger = LogManager.getLogger(BlackLabServer.class);
 
 	public static final Charset CONFIG_ENCODING = Charset.forName("utf-8");
 
@@ -56,7 +54,7 @@ public class BlackLabServer {
 			// 下面方法略有改动
 			File servletPath = new File(getServletContext());
 			System.out.println(servletPath);
-			logger.debug("Running from dir: " + servletPath);
+			log.debug("Running from dir: " + servletPath);
 			String configFileName = "blacklab-server";
 			List<File> searchDirs = new ArrayList<>();
 			// searchDirs.add(new File(servletPath.getAbsolutePath() + "/WEB-INF/classes/"));
@@ -71,7 +69,7 @@ public class BlackLabServer {
 			if (configFile != null && configFile.exists()) {
 				// Read from dir
 				try {
-					logger.debug("Reading configuration file " + configFile);
+					log.debug("Reading configuration file " + configFile);
 					is = new BufferedInputStream(new FileInputStream(configFile));
 					isJson = configFile.getName().endsWith(".json");
 				} catch (FileNotFoundException e) {
@@ -79,7 +77,7 @@ public class BlackLabServer {
 				}
 			} else {
 				// Read from classpath
-				logger.debug(configFileName + ".(json|yaml) not found in webapps dir; searching classpath...");
+				log.debug(configFileName + ".(json|yaml) not found in webapps dir; searching classpath...");
 				for (String ext : exts) {
 					is = getClass().getClassLoader().getResourceAsStream(configFileName + "." + ext);
 					if (is != null) {
@@ -88,7 +86,7 @@ public class BlackLabServer {
 					}
 				}
 				if (is == null) {
-					logger.debug(configFileName + ".(json|yaml) not found on classpath either. Using internal defaults.");
+					log.debug(configFileName + ".(json|yaml) not found on classpath either. Using internal defaults.");
 					// configFileName = "blacklab-server-defaults.json"; // internal defaults file
 					// is = getClass().getClassLoader().getResourceAsStream(configFileName);
 					// if (is == null) {
@@ -101,7 +99,7 @@ public class BlackLabServer {
 							+ "    \"/my/indices\" \n" + "  ]\n" + "}\n\n"
 							+ "With this configuration, one index could be in /my/indices/my-first-index/, for example.. For additional documentation, please see http://inl.github.io/BlackLab/");
 				}
-				logger.debug("Reading configuration file from classpath: " + configFileName);
+				log.debug("Reading configuration file from classpath: " + configFileName);
 			}
 
 			try {
@@ -145,7 +143,7 @@ public class BlackLabServer {
 				} catch (IOException e2) {
 					// Client cancelled the request midway through.
 					// This is okay, don't raise the alarm.
-					logger.debug("(couldn't send response, client probably cancelled the request)");
+					log.debug("(couldn't send response, client probably cancelled the request)");
 				}
 				return;
 			}
@@ -226,7 +224,7 @@ public class BlackLabServer {
 		} catch (IOException e) {
 			// Client cancelled the request midway through.
 			// This is okay, don't raise the alarm.
-			logger.debug("(couldn't send response, client probably cancelled the request)");
+			log.debug("(couldn't send response, client probably cancelled the request)");
 			return;
 		}
 	}
@@ -284,10 +282,6 @@ public class BlackLabServer {
 
 	public void setSearchManager(SearchManager searchManager) {
 		this.searchManager = searchManager;
-	}
-
-	public static Logger getLogger() {
-		return logger;
 	}
 
 	// ========以下来自MainServlet

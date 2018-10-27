@@ -1,14 +1,12 @@
 package nl.inl.blacklab.server.search;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.server.util.JsonUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
+@Slf4j
 public class BlsConfigCacheAndPerformance {
-
-	private static final Logger logger = LogManager.getLogger(BlsConfigCacheAndPerformance.class);
-
+	
 	/** Maximum size in MB to target, or -1 for no limit. NOT IMPLEMENTED YET. */
 	private long maxSizeMegs = -1;
 
@@ -117,7 +115,7 @@ public class BlsConfigCacheAndPerformance {
 			autoDetectMaxConcurrent = maxConcurrentSearches <= 0;
 			if (autoDetectMaxConcurrent) {
 				maxConcurrentSearches = Math.max(Runtime.getRuntime().availableProcessors() - 1, 1);
-				logger.debug("Autodetect maxConcurrentSearches: " + maxConcurrentSearches);
+				log.debug("Autodetect maxConcurrentSearches: " + maxConcurrentSearches);
 			}
 
 			maxPausedSearches = JsonUtil.getIntProp(serverLoadSettings, "maxPausedSearches", 10);
@@ -183,7 +181,7 @@ public class BlsConfigCacheAndPerformance {
 	public void autoAdjustMaxConcurrent() {
 		int n = Math.max(Runtime.getRuntime().availableProcessors() - 1, 1);
 		if (n != maxConcurrentSearches) {
-			logger.debug("maxConcurrentSearches autodetect: changed from " + maxConcurrentSearches + " to " + n);
+			log.debug("maxConcurrentSearches autodetect: changed from " + maxConcurrentSearches + " to " + n);
 			maxConcurrentSearches = n;
 		}
 	}

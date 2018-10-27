@@ -1,10 +1,9 @@
 package nl.inl.blacklab.server.auth;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.search.SearchManager;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
@@ -14,15 +13,15 @@ import java.util.Map;
  *
  * Can be used, for example, with Shibboleth authentication.
  */
+@Slf4j
 public class AuthRequestAttribute {
-	static final Logger logger = LogManager.getLogger(AuthRequestAttribute.class);
 
 	private String attributeName = null;
 
 	public AuthRequestAttribute(Map<String, Object> parameters) {
 		Object parName = parameters.get("attributeName");
 		if (parName == null) {
-			logger.error("authSystem.attributeName parameter missing in blacklab-server.json");
+			log.error("authSystem.attributeName parameter missing in blacklab-server.json");
 		} else {
 			this.attributeName = parName.toString();
 		}
@@ -37,7 +36,7 @@ public class AuthRequestAttribute {
 		String sessionId = request.getSession().getId();
 		if (attributeName == null) {
 			// (not configured correctly)
-			logger.warn("Cannot determine current user; missing authSystem.attributeName parameter in blacklab-server.json");
+			log.warn("Cannot determine current user; missing authSystem.attributeName parameter in blacklab-server.json");
 			return User.anonymous(sessionId);
 		}
 

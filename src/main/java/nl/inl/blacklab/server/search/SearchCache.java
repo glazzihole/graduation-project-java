@@ -1,5 +1,6 @@
 package nl.inl.blacklab.server.search;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.exceptions.ServiceUnavailable;
@@ -8,19 +9,15 @@ import nl.inl.blacklab.server.jobs.*;
 import nl.inl.blacklab.server.util.MemoryUtil;
 import nl.inl.util.ThreadPriority;
 import nl.inl.util.ThreadPriority.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.Map.Entry;
-
+@Slf4j
 public class SearchCache {
 
 	/** In nonblocking mode, how long should we wait to see if the job finishes really quickly,
 	 *  to avoid unnecessary polling? */
 	private static final int INITIAL_JOB_FINISH_WAIT = 500;
-
-	private static final Logger logger = LogManager.getLogger(SearchCache.class);
 
 	/**
 	 * What we can do to a query in response to the server load.
@@ -162,7 +159,7 @@ public class SearchCache {
 				Set<Job> runningJobs = updateRunningJobs(user.uniqueId());
 				if (runningJobs.size() >= cacheConfig.getMaxRunningJobsPerUser()) {
 					// User has too many running jobs. Can't start another one.
-					logger.warn("Can't start new search, user already has " + runningJobs.size() + " jobs running.");
+					log.warn("Can't start new search, user already has " + runningJobs.size() + " jobs running.");
 					throw new TooManyRequests(
 							"You already have too many running searches. Please wait for some previous searches to complete before starting new ones.");
 				}
@@ -210,9 +207,9 @@ public class SearchCache {
 	private Job get(JobDescription jobDesc) {
 		Job search = cachedSearches.get(jobDesc.uniqueIdentifier());
 		if (search == null) {
-			// logger.debug("Cache miss: " + jobDesc);
+			// log.debug("Cache miss: " + jobDesc);
 		} else {
-			// logger.debug("Cache hit: " + jobDesc);
+			// log.debug("Cache hit: " + jobDesc);
 			search.resetLastAccessed();
 		}
 		return search;
@@ -239,13 +236,13 @@ public class SearchCache {
 			}
 			// Same object already in cache, do nothing
 			if (BlsConfig.traceCache) {
-                logger.debug("Same object put in cache twice: " + uniqueIdentifier);
+                log.debug("Same object put in cache twice: " + uniqueIdentifier);
             }
 			return;
 		}
 
 		// Put search in cache
-		// logger.debug("Put in cache: " + uniqueIdentifier);
+		// log.debug("Put in cache: " + uniqueIdentifier);
 		cachedSearches.put(uniqueIdentifier, search);
 		search.incrRef();
 	}
@@ -263,7 +260,7 @@ public class SearchCache {
 			cachedSearch.decrRef();
 		}
 		cachedSearches.clear();
-		logger.debug("Cache cleared.");
+		log.debug("Cache cleared.");
 	}
 
 	private long calculateSizeBytes(Collection<Job> collection) {
@@ -293,7 +290,7 @@ public class SearchCache {
 			Job job = e.getValue();
 			String uniqId = job.getDescription().uniqueIdentifier();
 			if (!key.equals(uniqId)) {
-				logger.error("### Cached job's key has changed. OLD=" + key + ", NEW=" + uniqId);
+				log.error("### Cached job's key has changed. OLD=" + key + ", NEW=" + uniqId);
 			}
 		}
 
@@ -326,8 +323,8 @@ public class SearchCache {
 			if (!search1.finished() && search1.userWaitTime() > cacheConfig.getMaxSearchTimeSec()) {
 				// Search is taking too long. Cancel it.
 				if (BlsConfig.traceCache) {
-					logger.debug("Search is taking too long (time " + search1.userWaitTime() + "s > max time " + cacheConfig.getMaxSearchTimeSec() + "s)");
-					logger.debug("  Cancelling searchjob: " + search1);
+					log.debug("Search is taking too long (time " + search1.userWaitTime() + "s > max time " + cacheConfig.getMaxSearchTimeSec() + "s)");
+					log.debug("  Cancelling searchjob: " + search1);
 				}
 				abortSearch(search1);
 				removed.add(search1);
@@ -353,16 +350,16 @@ public class SearchCache {
 				if (minSearchesToRemove > 0 || removeBecauseOfCacheSizeOrAge) {
 					// Search is too old or cache is too big. Keep removing searches until that's no
 					// longer the case
-					// logger.debug("Remove from cache: " + search);
+					// log.debug("Remove from cache: " + search);
 					if (BlsConfig.traceCache) {
 						if (minSearchesToRemove > 0) {
-                            logger.debug("Not enough free mem (free " + freeMegs + "M < min free " + cacheConfig.getMinFreeMemTargetMegs() + "M)");
+                            log.debug("Not enough free mem (free " + freeMegs + "M < min free " + cacheConfig.getMinFreeMemTargetMegs() + "M)");
                         } else if (isCacheTooBig) {
-                            logger.debug("Cache too large (size " + cacheSizeMegs + "M > max size " + cacheConfig.getMaxSizeMegs() + "M)");
+                            log.debug("Cache too large (size " + cacheSizeMegs + "M > max size " + cacheConfig.getMaxSizeMegs() + "M)");
                         } else {
-                            logger.debug("Searchjob too old (age " + (int)search1.cacheAge() + "s > max age " + cacheConfig.getMaxJobAgeSec() + "s)");
+                            log.debug("Searchjob too old (age " + (int)search1.cacheAge() + "s > max age " + cacheConfig.getMaxJobAgeSec() + "s)");
                         }
-						logger.debug("  Removing searchjob: " + search1);
+						log.debug("  Removing searchjob: " + search1);
 					}
 					removeFromCache(search1);
 					removed.add(search1);
@@ -441,7 +438,7 @@ public class SearchCache {
 		case RUN_NORMALLY:
 			if (search.getPriorityLevel() != Level.RUNNING) {
 				if (BlsConfig.traceCache) {
-                    logger.debug("LOADMGR: Resuming search: " + search + " (" + reason + ")");
+                    log.debug("LOADMGR: Resuming search: " + search + " (" + reason + ")");
                 }
 				search.setPriorityLevel(Level.RUNNING);
 			}
@@ -449,7 +446,7 @@ public class SearchCache {
 		case PAUSE:
 			if (search.getPriorityLevel() != Level.PAUSED) {
 				if (BlsConfig.traceCache) {
-                    logger.debug("LOADMGR: Pausing search: " + search + " (was: " + search.getPriorityLevel() + ") (" + reason + ")");
+                    log.debug("LOADMGR: Pausing search: " + search + " (was: " + search.getPriorityLevel() + ") (" + reason + ")");
                 }
 				search.setPriorityLevel(Level.PAUSED);
 			}
@@ -458,14 +455,14 @@ public class SearchCache {
 			if (!search.finished()) {
 				// TODO: Maybe we should blacklist certain searches for a time?
 				if (BlsConfig.traceCache) {
-                    logger.warn("LOADMGR: Aborting search: " + search + " (" + reason + ")");
+                    log.warn("LOADMGR: Aborting search: " + search + " (" + reason + ")");
                 }
 				abortSearch(search);
 			}
 			break;
 		case REMOVE_FROM_CACHE:
 			if (BlsConfig.traceCache) {
-                logger.debug("LOADMGR: Discarding from cache: " + search + " (" + reason + ")");
+                log.debug("LOADMGR: Discarding from cache: " + search + " (" + reason + ")");
             }
 			removeFromCache(search);
 			break;
@@ -476,7 +473,7 @@ public class SearchCache {
 		String identifier = search.getDescription().uniqueIdentifier();
 		Job removed = cachedSearches.remove(identifier);
 		if (removed == null) {
-			logger.error("Tried to remove search, but not found: " + identifier);
+			log.error("Tried to remove search, but not found: " + identifier);
 		}
 		search.decrRef();
 		cacheSizeBytes -= search.estimateSizeBytes();
@@ -505,12 +502,12 @@ public class SearchCache {
 		long freeMegs = MemoryUtil.getFree() / 1000000;
 		if (freeMegs < cacheConfig.getMinFreeMemForSearchMegs()) {
 			performLoadManagement(null); //removeOldSearches(); // try to free up space for next search
-			logger.warn(
+			log.warn(
 					"Can't start new search, not enough memory (" + freeMegs + "M < " + cacheConfig.getMinFreeMemForSearchMegs() + "M)");
-			logger.warn("(NOTE: make sure Tomcat's max heap mem is set to an appropriate value!)");
+			log.warn("(NOTE: make sure Tomcat's max heap mem is set to an appropriate value!)");
 			throw new ServiceUnavailable("The server seems to be under heavy load right now. Please try again later.");
 		}
-		// logger.debug("Enough free memory: " + freeMegs + "M");
+		// log.debug("Enough free memory: " + freeMegs + "M");
 	}
 
 }

@@ -1,5 +1,6 @@
 package nl.inl.blacklab.server.jobs;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.perdocument.DocResults;
 import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
@@ -9,6 +10,7 @@ import nl.inl.blacklab.server.search.SearchManager;
 /**
  * Represents finding the total number of docs.
  */
+@Slf4j
 public class JobDocsTotal extends Job {
 
 	public static class JobDescDocsTotal extends JobDescription {
@@ -49,7 +51,7 @@ public class JobDocsTotal extends Job {
 			// want to look at a page of results. maxHitsCounted is set to true, however, so the application
 			// can detect that we stopped counting at some point.
 			//throw new ServiceUnavailable("Determining total number of docs took too long, cancelled");
-			logger.warn("Determining total number of docs took too long, cancelled");
+			log.warn("Determining total number of docs took too long, cancelled");
 		}
 	}
 

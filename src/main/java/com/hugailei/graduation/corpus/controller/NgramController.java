@@ -1,12 +1,11 @@
 package com.hugailei.graduation.corpus.controller;
 
-import com.hugailei.graduation.corpus.service.SentenceService;
 import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.jobs.User;
+import nl.inl.blacklab.server.requesthandlers.NGramRequestHandler;
 import nl.inl.blacklab.server.requesthandlers.RequestHandler;
 import nl.inl.blacklab.server.requesthandlers.SentenceRequestHandler;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,40 +17,38 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author HU Gailei
- * @date 2018/10/1
+ * @date 2018/10/26
  * <p>
- * description: 对语料库中的句子进行存储、检索
+ * description:
  * </p>
  **/
 @RestController
-@RequestMapping("/corpus/sentence")
+@RequestMapping("/corpus/ngram")
 @Slf4j
-public class SentenceController {
+public class NgramController {
+
     private Handler handler = new Handler();
     private BlackLabServer blackLabServer = new BlackLabServer();
 
-    @Autowired
-    private SentenceService sentenceService;
-
     /**
-     * 句子检索
+     * 按表达式查询包含指定形式的ngram
      *
      * @param pageable
      * @param request
      * @param response
-     * @param corpus
-     * @param patt
+     * @param corpus    语料库
+     * @param patt      CQL表达式
      */
     @GetMapping("/search")
-    public void searchSentence (Pageable pageable,
-                                HttpServletRequest request,
-                                HttpServletResponse response,
-                                @RequestParam String corpus,
-                                @RequestParam String patt) {
-        log.info("searchSentence | request to search sentence, patt: {}, corpus: {}", patt, corpus);
+    public void searchNgramByPatt(Pageable pageable,
+                                  HttpServletRequest request,
+                                  HttpServletResponse response,
+                                  @RequestParam String corpus,
+                                  @RequestParam String patt) {
+        log.info("searchNgramByPatt | request to search ngram in corpus {} by patt: {}", corpus, patt);
         User user = User.loggedIn("admin", "1");
         handler.checkConfig(request, response, blackLabServer);
-        RequestHandler requestHandler = new SentenceRequestHandler(blackLabServer, request, user, corpus, null, null);
+        RequestHandler requestHandler = new NGramRequestHandler(blackLabServer, request, user, corpus, patt, null, null);
         handler.checkAndHandler(pageable, corpus, blackLabServer, request, response, requestHandler);
     }
 }

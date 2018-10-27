@@ -1,5 +1,6 @@
 package nl.inl.blacklab.server.jobs;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.search.Hits;
 import nl.inl.blacklab.search.HitsWindow;
 import nl.inl.blacklab.server.datastream.DataStream;
@@ -10,6 +11,7 @@ import nl.inl.blacklab.server.search.SearchManager;
 /**
  * Represents searching for a window in a larger set of hits.
  */
+@Slf4j
 public class JobHitsWindow extends Job {
 
 	public static class JobDescHitsWindow extends JobDescription {
@@ -61,7 +63,7 @@ public class JobHitsWindow extends Job {
 		int first = windowSett.first();
 		requestedWindowSize = windowSett.size();
 		if (!hits.sizeAtLeast(first + 1)) {
-			debug(logger, "Parameter first (" + first + ") out of range; setting to 0");
+			log.info("Parameter first (" + first + ") out of range; setting to 0");
 			first = 0;
 		}
 		hitsWindow = hits.window(first, requestedWindowSize);

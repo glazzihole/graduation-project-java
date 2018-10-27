@@ -1,6 +1,5 @@
 package com.hugailei.graduation.corpus.service;
 
-import com.hugailei.graduation.corpus.domain.Word;
 import com.hugailei.graduation.corpus.dto.WordDto;
 
 import java.util.List;
@@ -33,4 +32,13 @@ public interface WordService {
      * @return
      */
     List<WordDto> searchDetail(String query, String corpus, String queryType);
+
+    /**
+     * 所输入内容在不同语料库中的分布
+     *
+     * @param query         关键词
+     * @param queryType     关键词的类型
+     * @return
+     */
+    List<WordDto> searchCorpus(String query, String queryType);
 }

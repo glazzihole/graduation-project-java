@@ -21,7 +21,7 @@ import java.util.List;
  * <p/>
  */
 @RestController
-@RequestMapping("/student/text")
+@RequestMapping("/student")
 @Slf4j
 public class StudentTextController {
 
@@ -34,7 +34,7 @@ public class StudentTextController {
      * @param studentTextDto
      * @return
      */
-    @PostMapping
+    @PostMapping("/text")
     @ResponseBody
     public ResponseVO saveStudentText(@RequestBody StudentTextDto studentTextDto) {
         log.info("saveStudentText | request to save student text");
@@ -51,7 +51,7 @@ public class StudentTextController {
      * @param studentTextDto
      * @return
      */
-    @PostMapping
+    @PutMapping("/text")
     @ResponseBody
     public ResponseVO updateStudentText(@RequestBody StudentTextDto studentTextDto) {
         log.info("saveStudentText | request to update student text");
@@ -72,7 +72,7 @@ public class StudentTextController {
      * @param textId
      * @return
      */
-    @GetMapping
+    @GetMapping("/text")
     @ResponseBody
     public ResponseVO getStudentText(@RequestParam Long textId) {
         log.info("getStudentText | request to get student text by id: {}", textId);
@@ -89,7 +89,7 @@ public class StudentTextController {
      * @param textId    作文id
      * @return
      */
-    @GetMapping("/dependency")
+    @GetMapping("/text/dependency")
     @ResponseBody
     public ResponseVO getAndSaveDependency(@RequestParam Long textId) {
         log.info("getAndSaveDependency | request to get syntactic dependency of text");
@@ -106,7 +106,7 @@ public class StudentTextController {
      * @param text
      * @return
      */
-    @PostMapping("/dependency")
+    @PostMapping("/text/dependency")
     @ResponseBody
     public ResponseVO getDependency(@RequestParam String text) {
         log.info("getDependency | request to get dependency");

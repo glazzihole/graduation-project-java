@@ -1,15 +1,13 @@
 package nl.inl.blacklab.server.jobs;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import lombok.extern.slf4j.Slf4j;
 import java.lang.Thread.UncaughtExceptionHandler;
 
 /**
  * A (background) thread the search is executed in.
  */
+@Slf4j
 final class SearchThread extends Thread implements UncaughtExceptionHandler {
-	protected static final Logger logger = LogManager.getLogger(SearchThread.class);
 
 	/** The job to execute */
 	private Job search;
@@ -53,7 +51,7 @@ final class SearchThread extends Thread implements UncaughtExceptionHandler {
 
 	@Override
 	public void uncaughtException(Thread t, Throwable e) {
-		logger.debug("Search thread threw an exception, saving it:\n" + e.getClass().getName() + ": " + e.getMessage());
+		log.debug("Search thread threw an exception, saving it:\n" + e.getClass().getName() + ": " + e.getMessage());
 		if (search != null) {
 			search.thrownException = e;
 			search.setFinished();

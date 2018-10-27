@@ -69,16 +69,18 @@ public class WordRequestHandler extends RequestHandler {
 
             ds.startEntry("page").startList();
             int i = 0;
-            groups.sortGroups( new GroupPropertySize(), false );//按每个group的大小降序排序
+
+            //按每个group的大小降序排序
+            groups.sortGroups( new GroupPropertySize(), false );
             for (HitGroup group: groups) {
                 i++;
                 if (i >= searchParam.getInteger("first") && i < searchParam.getInteger("first") + pageSize) {
-                    ds.startItem("word").startMap();
+                    ds.startItem("item").startMap();
                     ds  .entry( "id", i );
-                    ds  .entry("form", group.getIdentity().toString());
-                    ds  .entry("stem", "");
+                    ds  .entry("word", group.getIdentity().toString());
+                    ds  .entry("lemma", "");
                     ds  .entry("pos", "");
-                    ds  .entry("tf", group.size());
+                    ds  .entry("freq", group.size());
                     ds  .entry("corpus", searchParam.getIndexName());
                     ds.endMap().endItem();
                 }

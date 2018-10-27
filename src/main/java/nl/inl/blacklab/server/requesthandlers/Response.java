@@ -1,15 +1,13 @@
 package nl.inl.blacklab.server.requesthandlers;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.datastream.DataStream;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.servlet.http.HttpServletResponse;
 
+@Slf4j
 public class Response {
-	static final Logger logger = LogManager.getLogger(Response.class);
-
 	/**
 	 * Stream a busy response with "check again" advice.
 	 *
@@ -61,20 +59,20 @@ public class Response {
 	// Highest internal error code so far: 32
 
 	public static int internalError(DataStream ds, Exception e, boolean debugMode, int code) {
-		logger.debug("INTERNAL ERROR " + code + ":");
+		log.debug("INTERNAL ERROR " + code + ":");
 		e.printStackTrace();
 		ds.internalError(e, debugMode, code);
 		return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 	}
 
 	public static int internalError(DataStream ds, String message, boolean debugMode, int code) {
-		logger.debug("INTERNAL ERROR " + code + ": " + message);
+		log.debug("INTERNAL ERROR " + code + ": " + message);
 		ds.internalError(message, debugMode, code);
 		return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 	}
 
 	public static int internalError(DataStream ds, int code) {
-		logger.debug("INTERNAL ERROR " + code + " (no message)");
+		log.debug("INTERNAL ERROR " + code + " (no message)");
 		ds.internalError(code);
 		return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 	}

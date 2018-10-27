@@ -1,21 +1,18 @@
 package nl.inl.blacklab.server.index;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.index.DocIndexerFactory;
 import nl.inl.blacklab.index.IndexListener;
 import nl.inl.blacklab.index.IndexListenerDecorator;
 import nl.inl.blacklab.index.Indexer;
 import nl.inl.blacklab.search.indexstructure.IndexStructure;
 import nl.inl.blacklab.server.exceptions.NotAuthorized;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.InputStream;
 
+@Slf4j
 public class IndexTask {
-
-	private static final Logger logger = LogManager.getLogger(IndexTask.class);
-
 	private static final long MAX_TOKEN_COUNT = 500000;
 
 	/** The data we're indexing. We're responsible for closing the stream when
@@ -100,21 +97,21 @@ public class IndexTask {
 					indexer.indexInputStream(name, data, "*.xml", true);
 				} else {
 					// Straight XML data. Read as UTF-8.
-					logger.debug("Starting indexing");
+					log.debug("Starting indexing");
 					indexer.index(name, data);
-					logger.debug("Done indexing");
+					log.debug("Done indexing");
 					if (!anyDocsFound) {
 						indexError = "The file contained no documents in the selected format. Do the corpus and file formats match?";
 					}
 				}
 			} catch (Exception e) {
-				logger.warn("An error occurred while indexing, rolling back changes: " + e.getMessage());
+				log.warn("An error occurred while indexing, rolling back changes: " + e.getMessage());
 				indexer.rollback();
 				indexer = null;
 				throw e;
 			} finally {
 				if (indexError != null) {
-					logger.warn("An error occurred while indexing, rolling back changes: " + indexError);
+					log.warn("An error occurred while indexing, rolling back changes: " + indexError);
 					if (indexer != null) {
                         indexer.rollback();
                     }

@@ -1,10 +1,9 @@
 package nl.inl.blacklab.server.util;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.server.datastream.DataFormat;
 import nl.inl.blacklab.server.exceptions.InternalServerError;
 import nl.inl.util.ExUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -17,9 +16,8 @@ import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
+@Slf4j
 public class ServletUtil {
-	private static final Logger logger = LogManager.getLogger(ServletUtil.class);
-
 	static final Charset DEFAULT_ENCODING = Charset.forName("utf-8");
 
 	/**
@@ -48,7 +46,7 @@ public class ServletUtil {
 		try {
 			return Integer.parseInt(stringToParse);
 		} catch (NumberFormatException e) {
-			logger.info("Could not parse parameter '" + name + "', value '" + stringToParse
+			log.info("Could not parse parameter '" + name + "', value '" + stringToParse
 					+ "'. Using default (" + defaultValue + ")");
 			return defaultValue;
 		}
@@ -74,7 +72,7 @@ public class ServletUtil {
             return false;
         }
 
-		logger.warn("Illegal value '" + value + "' given for boolean parameter '" + name
+		log.warn("Illegal value '" + value + "' given for boolean parameter '" + name
 				+ "'. Using default (" + defStr + ")");
 		return defaultValue;
 	}
@@ -121,7 +119,7 @@ public class ServletUtil {
 
 		// No explicit parameter. Check if the Accept header contains either json or xml
 		String accept = request.getHeader("Accept");
-		//logger.debug("Accept: " + accept);
+		//log.debug("Accept: " + accept);
 		if (accept != null && accept.length() > 0) {
 			if (accept.contains("json")) {
                 return DataFormat.JSON;
@@ -166,7 +164,7 @@ public class ServletUtil {
 		if (typeString.equalsIgnoreCase("json")) {
             return DataFormat.JSON;
         }
-		logger.warn("Onbekend outputtype gevraagd: " + typeString);
+		log.warn("Onbekend outputtype gevraagd: " + typeString);
 		return defaultValue;
 	}
 

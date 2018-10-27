@@ -1,6 +1,8 @@
 package com.hugailei.graduation.corpus.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author HU Gailei
@@ -10,6 +12,8 @@ import lombok.Data;
  * <p/>
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class WordDto {
     private Long id;
 

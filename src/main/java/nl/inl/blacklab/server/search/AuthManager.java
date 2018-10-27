@@ -1,18 +1,15 @@
 package nl.inl.blacklab.server.search;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.jobs.User;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.util.Map;
 
+@Slf4j
 public class AuthManager {
-
-	private static final Logger logger = LogManager.getLogger(AuthManager.class);
-
 	/** The authentication object, giving information about the currently logged-in user
         (or at least a session id) */
 	private Object authObj = null;
@@ -33,9 +30,9 @@ public class AuthManager {
 			} catch (Exception e) {
 				throw new RuntimeException("Error instantiating auth system: " + authClass, e);
 			}
-			logger.info("Auth system initialized: " + authClass);
+			log.info("Auth system initialized: " + authClass);
 		} else {
-			logger.info("No auth system configured");
+			log.info("No auth system configured");
 		}
 	}
 

@@ -1,7 +1,6 @@
 package nl.inl.blacklab.server.search;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 
@@ -9,9 +8,8 @@ import java.lang.Thread.UncaughtExceptionHandler;
  * A thread that regularly calls SearchCache.performLoadManagement(null)
  * to ensure that load management continues even if no new requests are coming in.
  */
+@Slf4j
 class LoadManagerThread extends Thread implements UncaughtExceptionHandler {
-	private static final Logger logger = LogManager.getLogger(LoadManagerThread.class);
-
 	private SearchCache searchCache;
 
 	/**
@@ -20,7 +18,7 @@ class LoadManagerThread extends Thread implements UncaughtExceptionHandler {
 	 * @param searchCache cache of running and completed searches, on which we call load management
 	 */
 	public LoadManagerThread(SearchCache searchCache) {
-		//logger.debug("Creating LOADMGR thread...");
+		//log.debug("Creating LOADMGR thread...");
 		this.searchCache = searchCache;
 		setUncaughtExceptionHandler(this);
 	}
@@ -45,7 +43,7 @@ class LoadManagerThread extends Thread implements UncaughtExceptionHandler {
 
 	@Override
 	public void uncaughtException(Thread t, Throwable e) {
-		logger.error("LoadManagerThread threw an exception!");
+		log.error("LoadManagerThread threw an exception!");
 		e.printStackTrace();
 	}
 

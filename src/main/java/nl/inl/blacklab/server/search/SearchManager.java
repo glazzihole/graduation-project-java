@@ -1,18 +1,16 @@
 package nl.inl.blacklab.server.search;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.exceptions.ConfigurationException;
 import nl.inl.blacklab.server.jobs.Job;
 import nl.inl.blacklab.server.jobs.JobDescription;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.requesthandlers.SearchParameters;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
+@Slf4j
 public class SearchManager {
-
-    private static final Logger logger = LogManager.getLogger(SearchManager.class);
 
     /** Our config */
     private BlsConfig config;
@@ -27,7 +25,7 @@ public class SearchManager {
     private IndexManager indexMan;
 
     public SearchManager(JsonNode properties) throws ConfigurationException {
-        logger.debug("SearchManager created");
+        log.debug("SearchManager created");
 
 //        try {
             // The main config object
