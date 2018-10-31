@@ -5,7 +5,6 @@ import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.requesthandlers.NGramRequestHandler;
 import nl.inl.blacklab.server.requesthandlers.RequestHandler;
-import nl.inl.blacklab.server.requesthandlers.SentenceRequestHandler;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

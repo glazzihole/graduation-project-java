@@ -1,6 +1,7 @@
 package nl.inl.blacklab.server.jobs;
 
 import lombok.extern.slf4j.Slf4j;
+
 import java.lang.Thread.UncaughtExceptionHandler;
 
 /**

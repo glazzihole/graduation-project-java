@@ -9,6 +9,7 @@ import nl.inl.blacklab.server.exceptions.ServiceUnavailable;
 import nl.inl.blacklab.server.search.SearchManager;
 import nl.inl.util.ExUtil;
 import nl.inl.util.ThreadPriority.Level;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashSet;

@@ -1,6 +1,5 @@
 package com.hugailei.graduation.corpus.service;
 
-import com.hugailei.graduation.corpus.dto.DependencyDto;
 import com.hugailei.graduation.corpus.dto.SentenceDto;
 
 import java.util.List;
