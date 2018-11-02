@@ -141,7 +141,7 @@ public class SaveParserResult2 {
             PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO " + WORD_COLL_NAME
                     + "(word, pos, lemma, freq, sentence_ids, corpus) "
                     + " VALUES (?, ?, ?, ?, ?, ?)");
-            preparedStatement.setString(1, word.getWord());
+            preparedStatement.setString(1, word.getForm());
             preparedStatement.setString(2, word.getPos());
             preparedStatement.setString(3, word.getLemma());
             preparedStatement.setInt(4, word.getFreq());

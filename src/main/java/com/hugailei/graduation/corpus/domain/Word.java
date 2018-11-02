@@ -24,8 +24,8 @@ public class Word implements Serializable {
     @Id
     private Long id;
 
-    @Column(name = "word")
-    private String word;
+    @Column(name = "form")
+    private String form;
 
     @Column(name = "pos")
     private String pos;

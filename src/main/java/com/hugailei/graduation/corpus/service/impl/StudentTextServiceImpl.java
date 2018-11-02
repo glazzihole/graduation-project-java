@@ -9,7 +9,6 @@ import com.hugailei.graduation.corpus.domain.StudentText;
 import com.hugailei.graduation.corpus.dto.DependencyDto;
 import com.hugailei.graduation.corpus.dto.StudentTextDto;
 import com.hugailei.graduation.corpus.service.StudentTextService;
-import com.hugailei.graduation.corpus.util.StanfordDependencyUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
@@ -136,7 +135,7 @@ public class StudentTextServiceImpl implements StudentTextService {
         try {
             log.info("getAndSaveDependency | text: {}", text);
             List<DependencyDto> resultList = new ArrayList<>();
-            List<SemanticGraphEdge> semanticGraphEdgeList = StanfordDependencyUtil.getDependency(text);
+            List<SemanticGraphEdge> semanticGraphEdgeList = StanfordParserUtil.getDependency(text);
             int i = 0;
 
             for (SemanticGraphEdge edge : semanticGraphEdgeList) {

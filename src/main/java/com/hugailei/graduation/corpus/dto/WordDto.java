@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 public class WordDto {
     private Long id;
 
-    private String word;
+    private String form;
 
     private String pos;
 

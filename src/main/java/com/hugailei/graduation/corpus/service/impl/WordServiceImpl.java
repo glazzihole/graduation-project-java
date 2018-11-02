@@ -43,7 +43,7 @@ public class WordServiceImpl implements WordService {
             List<WordDto> resultList = new ArrayList<>();
             switch (searchType) {
                 case CorpusConstant.LEMMA:
-                    word.setWord(query);
+                    word.setForm(query);
                     Example<Word> example = Example.of(word);
                     wordDao.findAll(example).forEach(w -> {
                         if (key2Freq.containsKey(w.getLemma())) {
@@ -61,7 +61,7 @@ public class WordServiceImpl implements WordService {
                     }
                     break;
                 case CorpusConstant.POS:
-                    word.setWord(query);
+                    word.setForm(query);
                     example = Example.of(word);
                     wordDao.findAll(example).forEach(w -> {
                         if (key2Freq.containsKey(w.getPos())) {
@@ -79,14 +79,14 @@ public class WordServiceImpl implements WordService {
                     }
                     break;
                 case CorpusConstant.FORM:
-                    word.setLemma(query);
+                    word.setForm(query);
                     example = Example.of(word);
                     wordDao.findAll(example).forEach(w -> {
-                        if (key2Freq.containsKey(w.getWord())) {
-                            int freq = key2Freq.get(w.getWord()) + w.getFreq();
-                            key2Freq.put(w.getWord(), freq);
+                        if (key2Freq.containsKey(w.getForm())) {
+                            int freq = key2Freq.get(w.getForm()) + w.getFreq();
+                            key2Freq.put(w.getForm(), freq);
                         } else {
-                            key2Freq.put(w.getWord(), w.getFreq());
+                            key2Freq.put(w.getForm(), w.getFreq());
                         }
                     });
                     index = 1L;
@@ -120,7 +120,7 @@ public class WordServiceImpl implements WordService {
                     word.setLemma(query);
                     break;
                 case CorpusConstant.FORM:
-                    word.setWord(query);
+                    word.setForm(query);
                     break;
                 default:
                     log.error("searchDetail | wrong queryType");
@@ -166,11 +166,11 @@ public class WordServiceImpl implements WordService {
                     });
                     break;
                 case CorpusConstant.FORM:
-                    word.setWord(query);
+                    word.setForm(query);
                     example = Example.of(word);
                     wordDao.findAll(example).forEach(w -> {
                         WordDto wordDto = new WordDto();
-                        wordDto.setWord(query);
+                        wordDto.setForm(query);
                         wordDto.setCorpus(w.getCorpus());
                         wordDto.setFreq(w.getFreq());
                         if(corpus2WordDto.containsKey(wordDto.getCorpus())) {
