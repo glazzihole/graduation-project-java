@@ -28,3 +28,7 @@ logging:
   level:
     root: info
   #config: logback.xml
+
+api:
+  # 机器翻译api
+  translate-url: http://translate.google.cn/translate_a/single

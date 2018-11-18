@@ -7,8 +7,6 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
-import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
 import org.springframework.util.StringUtils;
 
@@ -25,8 +23,17 @@ import java.util.Properties;
  **/
 public class StanfordParserUtil {
 
+    private static Properties props;
+    private static StanfordCoreNLP  pipeline;
+    static {
+        props = new Properties();
+        // 总共可以有tokenize, ssplit, pos, lemma, parse, ner, dcoref七中属性
+        props.put("annotators", "tokenize, ssplit, pos, lemma, parse");
+        pipeline = new StanfordCoreNLP( props );
+    }
+
     /**
-     * 句法标注，标注单词词性，单词原型
+     * 句法标注
      *
      * @param text
      * @return
@@ -34,14 +41,8 @@ public class StanfordParserUtil {
     public static List<CoreMap> parse( String text ) {
         List<CoreMap> result = new ArrayList<>();
         if( !StringUtils.isEmpty( text.trim() ) ) {
-            Properties props = new Properties();
-
-            //tokenize, ssplit, pos, lemma, ner, parse, dcoref
-            props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
-            StanfordCoreNLP  pipeline = new StanfordCoreNLP( props );
             Annotation document = new Annotation( text );
             pipeline.annotate( document );
-
             result = document.get(CoreAnnotations.SentencesAnnotation.class);
         }
         return result;
@@ -54,9 +55,6 @@ public class StanfordParserUtil {
      * @return
      */
     public static List<SemanticGraphEdge> getDependency(String text) {
-        Properties props = new Properties();
-        props.put("annotators", "tokenize, ssplit, pos, lemma, parse");
-        StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
@@ -71,39 +69,12 @@ public class StanfordParserUtil {
         return dependencyResult;
     }
 
-    /**
-     * 语法树分析
-     *
-     * @param tree
-     * @return
-     */
-    public static void treeAnalysis(Tree tree) {
-        if (tree.isLeaf()) {
-            System.out.println("leaf:" + tree.toString());
-        }
-        else {
-            for (Tree t : tree.children()) {
-                if (t.isLeaf()) {
-                    System.out.println(t.toString());
-                } else {
-                    System.out.println("label: " + t.label());
-                    if (t.label().toString().equals("S")) {
-                        System.out.println(t.toString());
-                    }
-                    treeAnalysis(t);
-                }
-            }
-        }
-    }
-
     public static void main(String[] args) {
-        String text = "it is where i lived three years ago.";
-        List<CoreMap> result = parse(text);
+        String text = "he is thinking of going out to play.";
+        List<CoreMap> result = StanfordParserUtil.parse(text);
         StringBuilder stringBuilder = new StringBuilder();
         // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
         for(CoreMap sentence : result) {
-            Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-            treeAnalysis(tree);
             for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
                 // 获取单词
                 String word = token.get(CoreAnnotations.TextAnnotation.class);
@@ -115,8 +86,15 @@ public class StanfordParserUtil {
                 String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
                 stringBuilder.append("lemma = " + lemma + " " + "\r\n");
             }
+
+
         }
         System.out.println(stringBuilder.toString());
+
+        List<SemanticGraphEdge> semanticGraphEdgeList = getDependency(text);
+        for (SemanticGraphEdge edge : semanticGraphEdgeList) {
+            System.out.println(edge.toString());
+        }
 
     }
 

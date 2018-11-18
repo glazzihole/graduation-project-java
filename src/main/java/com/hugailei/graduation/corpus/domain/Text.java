@@ -34,6 +34,9 @@ public class Text implements Serializable {
     @Column(name = "title")
     private String title;
 
+    /**
+     * 主题类型
+     */
     @Column(name = "type")
     private String type;
 

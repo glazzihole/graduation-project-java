@@ -85,4 +85,188 @@ public class CorpusConstant {
 
     public static final String STOP_WORD_REG = "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？\\\\]";
 
+
+    /**
+     * 常见的系动词，均为原型
+     */
+    public static final HashSet<String> COPULA_LEMMA_SET = new HashSet<String>() {
+        {
+            add("be");
+            add("look");
+            add("sound");
+            add("taste");
+            add("smell");
+            add("feel");
+            add("seem");
+            add("appear");
+            add("become");
+            add("get");
+            add("turn");
+            add("grow");
+            add("make");
+            add("come");
+            add("go");
+            add("fall");
+            add("run");
+            add("remain");
+            add("keep");
+            add("stay");
+            add("continue");
+            add("stand");
+            add("rest");
+            add("lie");
+            add("hold");
+            add("prove");
+        }
+    };
+
+    /**
+     * 常见的同位语从句先行词
+     */
+    public static final HashSet<String> APPOSITIVE_ANTECEDENT_SET = new HashSet<String>() {
+        {
+            add("idea");
+            add("plan");
+            add("fact");
+            add("theory");
+            add("promise");
+            add("hope");
+            add("news");
+            add("doubt");
+            add("truth");
+            add("information");
+            add("suggestion");
+            add("question");
+            add("thought");
+            add("belief");
+            add("conclusion");
+        }
+    };
+
+    /**
+     * 时间状语从句修饰词
+     */
+    public static final HashSet<String>  TEMPORAL_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
+        {
+            add("when");
+            add("while");
+            add("since");
+            add("until");
+            add("till");
+            add("before");
+            add("after");
+        }
+    };
+
+    /**
+     * 时间状语从句修饰短语/词组
+     */
+    public static final HashSet<String>  TEMPORAL_ADVERBIAL_CLAUSE_PHRASE_SET = new HashSet<String>() {
+        {
+            add("as soon as");
+            add("the moment");
+            add("every time");
+            add("each time");
+            add("the minute");
+            add("the instant");
+            add("the day");
+            add("the week");
+            add("the month");
+            add("the year");
+            add("the first time");
+            add("next time");
+            add("any time");
+            add("the last time");
+            add("all the time");
+            add("from the time");
+            add("by the time");
+
+        }
+    };
+
+    /**
+     * 地点状语从句修饰词
+     */
+    public static final HashSet<String>  PLACE_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
+        {
+            add("where");
+            add("wherever");
+            add("anywhere");
+            add("everywhere");
+        }
+    };
+
+    /**
+     * 原因状语从句修饰词
+     */
+    public static final HashSet<String>  CAUSE_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
+        {
+            add("because");
+        }
+    };
+
+    /**
+     * 原因状语从句修饰词组/短语
+     */
+    public static final HashSet<String>  CAUSE_ADVERBIAL_CLAUSE_PHRASE_SET = new HashSet<String>() {
+        {
+            add("seeing that");
+            add("seeing as");
+            add("considering that");
+            add("now that");
+            add("for the reason that");
+        }
+    };
+
+    /**
+     * 条件状语从句修饰词
+     */
+    public static final HashSet<String>  CONDITION_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
+        {
+            add("if");
+            add("whether");
+            add("unless");
+        }
+    };
+
+    /**
+     * 条件状语从句修饰词组/短语
+     */
+    public static final HashSet<String>  CONDITION_ADVERBIAL_CLAUSE_PHRASE_SET = new HashSet<String>() {
+        {
+            add("as long as");
+            add("so long as");
+            add("unless");
+        }
+    };
+
+    /**
+     * 目的状语从句修饰词
+     */
+    public static final HashSet<String>  PURPOSE_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
+        {
+            add("idea");
+            add("plan");
+        }
+    };
+
+    /**
+     * 让步状语从句修饰词
+     */
+    public static final HashSet<String>  CONCESSION_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
+        {
+            add("idea");
+            add("plan");
+        }
+    };
+
+    /**
+     * 方式状语从句修饰词
+     */
+    public static final HashSet<String>  MANNER_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
+        {
+            add("idea");
+            add("plan");
+        }
+    };
 }

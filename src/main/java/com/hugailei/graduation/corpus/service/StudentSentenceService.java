@@ -8,4 +8,5 @@ package com.hugailei.graduation.corpus.service;
  * <p/>
  */
 public interface StudentSentenceService {
+
 }

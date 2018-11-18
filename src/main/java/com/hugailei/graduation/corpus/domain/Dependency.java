@@ -47,4 +47,7 @@ public class Dependency implements Serializable {
 
     @Column(name = "sentence_id", nullable = false)
     private Long sentenceId;
+
+    @Column(name = "corpus", nullable = false)
+    private String corpus;
 }
