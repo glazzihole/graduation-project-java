@@ -25,34 +25,34 @@ public class Collocation implements Serializable {
     private Long id;
 
     /**
-     * 单词
+     * 搭配中的第一个单词
      */
-    @Column(name = "word")
-    private String word;
+    @Column(name = "first_word")
+    private String firstWord;
 
     /**
-     * 词性
+     * 搭配中的第一个单词的词性
      */
-    @Column(name = "pos")
-    private String pos;
+    @Column(name = "first_pos")
+    private String firstPos;
 
     /**
-     * 搭配
+     * 搭配中的第二个单词
      */
-    @Column(name = "collocation")
-    private String collocation;
+    @Column(name = "second_word")
+    private String secondWord;
 
     /**
-     * 搭配词词性
+     * 搭配中的第二个单词的词性
      */
-    @Column(name = "collocation_pos")
-    private String collocationPos;
+    @Column(name = "second_pos")
+    private String secondPos;
 
     /**
-     * 词前搭配/词后搭配，0——词前搭配，1——词后搭配
+     * 该搭配在语料库中出现的频次
      */
-    @Column(name = "position", length = 1)
-    private int position;
+    @Column(name = "freq")
+    private int freq;
 
     /**
      * 句子的id, 每个id之间用空格隔开

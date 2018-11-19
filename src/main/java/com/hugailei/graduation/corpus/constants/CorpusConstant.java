@@ -1,6 +1,8 @@
 package com.hugailei.graduation.corpus.constants;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * @author HU Gailei
@@ -144,129 +146,34 @@ public class CorpusConstant {
     };
 
     /**
-     * 时间状语从句修饰词
+     * 短语标识集合
      */
-    public static final HashSet<String>  TEMPORAL_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
+    public static final HashSet<String> PHRASE_LABEL_SET = new HashSet<String>() {
         {
-            add("when");
-            add("while");
-            add("since");
-            add("until");
-            add("till");
-            add("before");
-            add("after");
+            add("NP");
+            add("VP");
+            add("ADJP");
+            add("ADVP");
+            add("CONJP");
+            add("FRAG");
+            add("LCP");
+            add("PP");
+            add("CP");
+            add("DNP");
+            add("DP");
+            add("QP");
         }
     };
 
     /**
-     * 时间状语从句修饰短语/词组
+     * 词性正则表达式-原型词性
      */
-    public static final HashSet<String>  TEMPORAL_ADVERBIAL_CLAUSE_PHRASE_SET = new HashSet<String>() {
+    public static final Map<String, String> POS_REGEX_TO_LEMMA_POS= new HashMap<String, String>() {
         {
-            add("as soon as");
-            add("the moment");
-            add("every time");
-            add("each time");
-            add("the minute");
-            add("the instant");
-            add("the day");
-            add("the week");
-            add("the month");
-            add("the year");
-            add("the first time");
-            add("next time");
-            add("any time");
-            add("the last time");
-            add("all the time");
-            add("from the time");
-            add("by the time");
-
-        }
-    };
-
-    /**
-     * 地点状语从句修饰词
-     */
-    public static final HashSet<String>  PLACE_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
-        {
-            add("where");
-            add("wherever");
-            add("anywhere");
-            add("everywhere");
-        }
-    };
-
-    /**
-     * 原因状语从句修饰词
-     */
-    public static final HashSet<String>  CAUSE_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
-        {
-            add("because");
-        }
-    };
-
-    /**
-     * 原因状语从句修饰词组/短语
-     */
-    public static final HashSet<String>  CAUSE_ADVERBIAL_CLAUSE_PHRASE_SET = new HashSet<String>() {
-        {
-            add("seeing that");
-            add("seeing as");
-            add("considering that");
-            add("now that");
-            add("for the reason that");
-        }
-    };
-
-    /**
-     * 条件状语从句修饰词
-     */
-    public static final HashSet<String>  CONDITION_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
-        {
-            add("if");
-            add("whether");
-            add("unless");
-        }
-    };
-
-    /**
-     * 条件状语从句修饰词组/短语
-     */
-    public static final HashSet<String>  CONDITION_ADVERBIAL_CLAUSE_PHRASE_SET = new HashSet<String>() {
-        {
-            add("as long as");
-            add("so long as");
-            add("unless");
-        }
-    };
-
-    /**
-     * 目的状语从句修饰词
-     */
-    public static final HashSet<String>  PURPOSE_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
-        {
-            add("idea");
-            add("plan");
-        }
-    };
-
-    /**
-     * 让步状语从句修饰词
-     */
-    public static final HashSet<String>  CONCESSION_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
-        {
-            add("idea");
-            add("plan");
-        }
-    };
-
-    /**
-     * 方式状语从句修饰词
-     */
-    public static final HashSet<String>  MANNER_ADVERBIAL_CLAUSE_WORD_SET = new HashSet<String>() {
-        {
-            add("idea");
-            add("plan");
+            put("VB.*", "VB");
+            put("N[NRT][A-Z]{0,1}", "NN");
+            put("JJ.*", "JJ");
+            put("RB.*", "RB");
         }
     };
 }

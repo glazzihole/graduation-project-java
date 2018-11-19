@@ -70,7 +70,7 @@ public class StanfordParserUtil {
     }
 
     public static void main(String[] args) {
-        String text = "he is thinking of going out to play.";
+        String text = "She loves singing";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         StringBuilder stringBuilder = new StringBuilder();
         // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
@@ -93,7 +93,7 @@ public class StanfordParserUtil {
 
         List<SemanticGraphEdge> semanticGraphEdgeList = getDependency(text);
         for (SemanticGraphEdge edge : semanticGraphEdgeList) {
-            System.out.println(edge.toString());
+            System.out.println(edge.toString() + "  " + edge.getGovernor() + "  " + edge.getGovernor().index());
         }
 
     }

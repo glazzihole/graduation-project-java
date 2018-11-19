@@ -15,8 +15,17 @@ import java.util.List;
 public interface CollocationService {
     /**
      * 查询单词的搭配
+     *
      * @param collocationDto
      * @return
      */
     List<CollocationDto> searchCollocationOfWord(CollocationDto collocationDto);
+
+    /**
+     * 查询同义搭配
+     *
+     * @param collocationDto
+     * @return
+     */
+    List<CollocationDto> searchSynonymousCollocation(CollocationDto collocationDto);
 }

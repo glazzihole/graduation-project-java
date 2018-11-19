@@ -32,9 +32,9 @@ public class SentencePatternUtil {
     public static void matchSubjectClause(CoreMap sentence) {
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
         // 匹配规则
-        TregexPattern patternMW = TregexPattern.compile("SBAR $++ VP");
+        TregexPattern pattern = TregexPattern.compile("SBAR $++ VP");
         // 匹配查找
-        TregexMatcher matcher = patternMW.matcher(tree);
+        TregexMatcher matcher = pattern.matcher(tree);
         // 匹配输出
         while (matcher.findNextMatchingNode()) {
             Tree match = matcher.getMatch();
@@ -52,15 +52,14 @@ public class SentencePatternUtil {
     public static void matchObjectClauseOrPredicativeClause(CoreMap sentence) {
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
         // 匹配规则
-        TregexPattern patternMW = TregexPattern.compile("VP << /^VB.*$/ & << SBAR");
+        TregexPattern pattern = TregexPattern.compile("VP << /^VB.*$/ & << SBAR");
         // 匹配查找
-        TregexMatcher matcher = patternMW.matcher(tree);
+        TregexMatcher matcher = pattern.matcher(tree);
         // 匹配输出
         while (matcher.findNextMatchingNode()) {
             //是否为表语从句的标识
             boolean isPredicativeClause = false;
             Tree match = matcher.getMatch();
-            match.pennPrint();
             // 获取匹配到的树结构的子节点
             Tree[] childrens = match.children();
             // 获取动词
@@ -84,8 +83,6 @@ public class SentencePatternUtil {
             } else {
                 System.out.println("该句为宾语从句");
             }
-
-
         }
     }
 
@@ -97,9 +94,9 @@ public class SentencePatternUtil {
     public static void matchAppositiveClauseOrAttributiveClause(CoreMap sentence) {
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
         // 匹配规则
-        TregexPattern patternMW = TregexPattern.compile("NP $.. SBAR");
+        TregexPattern pattern = TregexPattern.compile("NP $.. SBAR");
         // 匹配查找
-        TregexMatcher matcher = patternMW.matcher(tree);
+        TregexMatcher matcher = pattern.matcher(tree);
         // 匹配输出
         while (matcher.findNextMatchingNode()) {
             boolean isAppositiveClause = false;
@@ -194,13 +191,40 @@ public class SentencePatternUtil {
         }
     }
 
+    /**
+     * 匹配各类短语
+     *
+     * @param sentence
+     */
+    public static void matchPhrase(CoreMap sentence) {
+        Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+        for (String label : CorpusConstant.PHRASE_LABEL_SET) {
+            // 匹配规则
+            TregexPattern pattern = TregexPattern.compile(label);
+            // 匹配查找
+            TregexMatcher matcher = pattern.matcher(tree);
+            // 匹配输出
+            while (matcher.findNextMatchingNode()) {
+                Tree match = matcher.getMatch();
+                StringBuilder phrase = new StringBuilder();
+                // 排除掉单个单词
+                if (match.getLeaves().size() > 1) {
+                    for (Tree leaf : match.getLeaves()) {
+                        phrase.append(leaf.label().value()).append(" ");
+                    }
+                    System.out.println(phrase.toString());
+                }
+            }
+        }
+    }
+
     public static void main(String[] args) {
         String text = "there lies a book on the desk.";
         List<CoreMap> result = StanfordParserUtil.parse(text);
 
         for(CoreMap sentence : result) {
             System.out.println(sentence.get(TreeCoreAnnotations.TreeAnnotation.class));
-            matchPassiveVoice(sentence);
+            matchPhrase(sentence);
         }
     }
 }

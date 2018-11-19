@@ -43,4 +43,21 @@ public class CollocationController {
         }
         return ResponseUtil.success(result);
     }
+
+    /**
+     * 获取同义搭配
+     *
+     * @param collocationDto
+     * @return
+     */
+    @GetMapping("/synonym")
+    @ResponseBody
+    public ResponseVO searchSynonymousCollocation(@RequestBody @Valid CollocationDto collocationDto) {
+        log.info("searchSynonymousCollocation | request to search synonymous collocation");
+        List<CollocationDto> result = collocationService.searchSynonymousCollocation(collocationDto);
+        if (result == null) {
+            ResponseUtil.error();
+        }
+        return ResponseUtil.success(result);
+    }
 }
