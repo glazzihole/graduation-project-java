@@ -8,10 +8,7 @@ import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -46,13 +43,13 @@ public class SaveCollocation {
     private static final Set<String> COLLOCATION_PATT_SET = new HashSet<String>(){
         {
             // 名词-动词
-            add("(N[NRT][A-Z]{0,1})-(VB[A-Z]{0,1})");
+            add("(NN[A-Z]{0,1})-(VB[A-Z]{0,1})");
 
             // 动词-名词
-            add("(VB[A-Z]{0,1})-(N[NRT][A-Z]{0,1})");
+            add("(VB[A-Z]{0,1})-(NN[A-Z]{0,1})");
 
             // 形容词-名词
-            add("(JJ[A-Z]{0,1})-(N[NRT][A-Z]{0,1})");
+            add("(JJ[A-Z]{0,1})-(NN[A-Z]{0,1})");
 
             // 动词-副词
             add("(VB[A-Z]{0,1})-(RB[A-Z{0,1}])");
@@ -106,25 +103,33 @@ public class SaveCollocation {
         }
 
         System.out.println("分析完毕，开始存入数据库");
-        //遍历Map，把结果存入数据库中
-        for (Map.Entry entry : KEY_TO_SENTENCEIDS.entrySet()) {
-            String key = (String)entry.getKey();
-            String[] data = key.split("_");
-            String sentenceIds = (String)KEY_TO_SENTENCEIDS.get(key);
-            int freq = sentenceIds.split(",").length;
-            if (freq >= 2) {
-                PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO tb_collocation"
-                        + "(first_word, first_pos, second_word, second_pos, sentence_ids, corpus, freq) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?)");
-                preparedStatement.setString(1, data[0]);
-                preparedStatement.setString(2, data[1]);
-                preparedStatement.setString(3, data[2]);
-                preparedStatement.setString(4, data[3]);
-                preparedStatement.setString(5, sentenceIds);
-                preparedStatement.setString(6, CORPUS);
-                preparedStatement.setInt(7, freq);
-                preparedStatement.execute();
+        try {
+            //遍历Map，把结果存入数据库中
+            for (Map.Entry entry : KEY_TO_SENTENCEIDS.entrySet()) {
+                String key = (String)entry.getKey();
+                String[] data = key.split("_");
+                String sentenceIds = KEY_TO_SENTENCEIDS.get(key);
+                int freq = sentenceIds.split(",").length;
+                if (freq >= 2) {
+                    PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO tb_collocation"
+                            + "(first_word, first_pos, second_word, second_pos, sentence_ids, corpus, freq) "
+                            + "VALUES (?, ?, ?, ?, ?, ?, ?)");
+                    preparedStatement.setString(1, data[0]);
+                    preparedStatement.setString(2, data[1].toUpperCase());
+                    preparedStatement.setString(3, data[2]);
+                    preparedStatement.setString(4, data[3].toUpperCase());
+                    preparedStatement.setString(5, sentenceIds);
+                    preparedStatement.setString(6, CORPUS);
+                    preparedStatement.setInt(7, freq);
+                    preparedStatement.execute();
+                }
             }
+        } catch (Exception e) {
+            System.out.println("存入数据库失败，开始序列化存入文件");
+            ObjectOutputStream oo = new ObjectOutputStream(new FileOutputStream(
+                    new File("E:\\temp.txt")));
+            oo.writeObject(KEY_TO_SENTENCEIDS);
+            oo.close();
         }
     }
 
@@ -157,23 +162,33 @@ public class SaveCollocation {
                 secondPos = edge.getGovernor().tag();
             }
 
-            if (edge.getRelation().toString().equals("nsubj")) {
-                String regex = "(N[NRT][A-Z]{0,1})-(VB[A-Z]{0,1})";
-                if ((edge.getDependent().tag() + "-" + edge.getGovernor().tag()).matches(regex)) {
-                    firstWord = edge.getDependent().lemma();
-                    secondWord = edge.getGovernor().lemma();
-                    firstPos = edge.getDependent().tag();
-                    secondPos = edge.getGovernor().tag();
-                }
-            } else if (edge.getRelation().toString().equals("dobj") ||
-                    edge.getRelation().toString().equals("iobj ")) {
-                String regex = "(VB[A-Z]{0,1})-(N[NRT][A-Z]{0,1})";
-                if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(regex)) {
+            switch (edge.getRelation().toString()) {
+                case "nsubj":
+                case "top":
+                    String regex = "(JJ[A-Z]{0,1})-(NN[A-Z]{0,1})";
+                    if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(regex)) {
+                        firstWord = edge.getGovernor().lemma();
+                        secondWord = edge.getDependent().lemma();
+                        firstPos = edge.getGovernor().tag();
+                        secondPos = edge.getDependent().tag();
+                    }else{
+                        firstWord = edge.getDependent().lemma();
+                        secondWord = edge.getGovernor().lemma();
+                        firstPos = edge.getDependent().tag();
+                        secondPos = edge.getGovernor().tag();
+                    }
+                    break;
+                case "nsubjpass":
+                case "dobj":
+                case "attr":
+                case "iobj":
                     firstWord = edge.getGovernor().lemma();
                     secondWord = edge.getDependent().lemma();
                     firstPos = edge.getGovernor().tag();
                     secondPos = edge.getDependent().tag();
-                }
+                    break;
+                default:
+                    break;
             }
 
             // 判断搭配形式是否为指定的搭配类型
@@ -184,19 +199,23 @@ public class SaveCollocation {
                     for (Map.Entry entry : CorpusConstant.POS_REGEX_TO_LEMMA_POS.entrySet()) {
                         String posRegex = (String) entry.getKey();
                         String lemmaPos = (String) entry.getValue();
-                        if (firstPos.matches(posRegex) || secondPos.matches(posRegex)) {
-                            if (firstPos.matches(posRegex)) {
-                                firstPos = lemmaPos;
-                            }
-
-                            if (secondPos.matches(posRegex)) {
-                                secondPos = lemmaPos;
-                            }
+                        if (firstPos.matches(posRegex)) {
+                            firstPos = lemmaPos;
                             break;
                         }
                     }
 
-                    String key = firstWord + "_" + firstPos + "_" + secondWord + "_" + secondPos;
+                    // 词性同一存储为该词性下原型的词性
+                    for (Map.Entry entry : CorpusConstant.POS_REGEX_TO_LEMMA_POS.entrySet()) {
+                        String posRegex = (String) entry.getKey();
+                        String lemmaPos = (String) entry.getValue();
+                        if (secondPos.matches(posRegex)) {
+                            secondPos = lemmaPos;
+                            break;
+                        }
+                    }
+
+                    String key = (firstWord + "_" + firstPos + "_" + secondWord + "_" + secondPos).toLowerCase();
 
                     // 更新例句
                     String sentenceIds = sentenceId + ",";

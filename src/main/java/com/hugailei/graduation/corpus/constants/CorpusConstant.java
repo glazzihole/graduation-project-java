@@ -171,7 +171,7 @@ public class CorpusConstant {
     public static final Map<String, String> POS_REGEX_TO_LEMMA_POS= new HashMap<String, String>() {
         {
             put("VB.*", "VB");
-            put("N[NRT][A-Z]{0,1}", "NN");
+            put("NN.*", "NN");
             put("JJ.*", "JJ");
             put("RB.*", "RB");
         }

@@ -1,6 +1,5 @@
 package com.hugailei.graduation.corpus.service;
 
-import com.hugailei.graduation.corpus.domain.Collocation;
 import com.hugailei.graduation.corpus.dto.CollocationDto;
 
 import java.util.List;

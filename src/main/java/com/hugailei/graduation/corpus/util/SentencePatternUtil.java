@@ -1,7 +1,6 @@
-package com.hugailei.graduation.corpus.scripts;
+package com.hugailei.graduation.corpus.util;
 
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.semgraph.SemanticGraph;
@@ -106,7 +105,7 @@ public class SentencePatternUtil {
             String nounReg = "NN.*";
             for (Tree children : childrens) {
                 if (children.label().toString().matches(nounReg)) {
-                    // 获取该名词的index
+                    // 获取该名词的index，从0开始
                     int index = children.getLeaves().get(0).indexLeaves(1, false) - 2;
                     // 通过index获取名词的原型
                     CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(index);
@@ -218,13 +217,112 @@ public class SentencePatternUtil {
         }
     }
 
+    /**
+     * 匹配被从句修饰的词
+     *
+     * @param sentence
+     */
+    public static void matchModificand(CoreMap sentence) {
+        Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+        // 先找出从句（SBAR）
+        TregexPattern pattern = TregexPattern.compile("SBAR");
+        TregexMatcher matcher = pattern.matcher(tree);
+
+        while (matcher.findNextMatchingNode()) {
+            Tree match = matcher.getMatch();
+            // 获取从句起始位置，从0开始计数
+            int clauseIndex = match.getLeaves().get(0).indexLeaves(1, false) - 2;
+            System.out.println(clauseIndex);
+
+            // 获取从句（字符串）
+            String clause = "";
+            for (Tree t: match.getLeaves()) {
+                clause = clause + t.label().value() + " ";
+            }
+            // 获取其父节点
+            Tree parent = match.parent(tree);
+            String parentLabel = parent.label().value();
+            TregexPattern leafPat = null;
+            TregexPattern leafPat2 = null;
+            switch (parentLabel){
+                case "NP":
+                    leafPat = TregexPattern.compile("/^NN.*$/ == /^NN.*$/");
+                    break;
+                case "VP":
+                    leafPat = TregexPattern.compile("/^VB.*$/ == /^VB.*$/");
+                    leafPat2 = TregexPattern.compile("/^RB.*$/ == /^RB.*$/");
+                    break;
+                case "ADJP":
+                    leafPat = TregexPattern.compile("/^JJ.*$/ == /^JJ.*$/");
+                    leafPat2 = TregexPattern.compile("/^RB.*$/ == /^RB.*$/");
+                    break;
+                case "ADVP":
+                    leafPat = TregexPattern.compile("/^RB.*$/ == /^RB.*$/");
+                    break;
+                default:
+                    break;
+            }
+            if (leafPat != null) {
+                String modificand = null, modificand2 = null, lemma = null, lemma2 = null, pos = null, pos2 = null;
+                int modificandIndex = 0, modificand2Index = 0;
+
+                // 匹配被修饰的词和其在句中的位置
+                TregexMatcher leafMatcher = leafPat.matcher(tree);
+                while (leafMatcher.findNextMatchingNode()) {
+                    int tempIndex = leafMatcher.getMatch().getLeaves().get(0).indexLeaves(1, false) - 2;
+                    if (tempIndex >= clauseIndex) {
+                        break;
+                    }
+                    modificand = leafMatcher.getMatch().getLeaves().get(0).label().value();
+                    modificandIndex = tempIndex;
+
+                    // 根据修饰词在句中的位置获取其词性及原型
+                    CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(modificandIndex);
+                    lemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
+                    pos = coreLabel.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+                    // 取词性的基本类型
+
+                }
+
+                if (leafPat2 != null) {
+                    TregexMatcher leafMatcher2 = leafPat2.matcher(tree);
+                    while (leafMatcher2.findNextMatchingNode()) {
+                        int tempIndex = leafMatcher2.getMatch().getLeaves().get(0).indexLeaves(1, false) - 2;
+                        if (tempIndex >= clauseIndex) {
+                            break;
+                        }
+                        modificand2 = leafMatcher2.getMatch().getLeaves().get(0).label().value();
+                        modificand2Index = tempIndex;
+                        CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(modificand2Index);
+                        pos2 = coreLabel.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+                        // 取词性的基本类型
+
+                        lemma2 = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
+                    }
+                }
+
+                System.out.println("从句:" + clause);
+                System.out.println("被修饰词：" + modificand);
+                System.out.println("原型：" + lemma);
+                System.out.println("词性：" + pos);
+
+                System.out.println("被修饰词2：" + modificand2);
+                System.out.println("原型2：" + lemma2);
+                System.out.println("词性2：" + pos2);
+
+            }
+
+        }// while - match
+
+    }
+
     public static void main(String[] args) {
-        String text = "there lies a book on the desk.";
+        String text = "The book that I bought yesterday was written by Lu Xun.";
         List<CoreMap> result = StanfordParserUtil.parse(text);
 
         for(CoreMap sentence : result) {
             System.out.println(sentence.get(TreeCoreAnnotations.TreeAnnotation.class));
-            matchPhrase(sentence);
+            matchModificand(sentence);
         }
     }
 }
