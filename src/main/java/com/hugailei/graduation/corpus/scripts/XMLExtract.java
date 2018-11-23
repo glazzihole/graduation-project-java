@@ -21,7 +21,12 @@ public class XMLExtract {
     private static final String RESULT_FILE_PATH = "E:\\毕业论文相关\\bnc-sample-text\\";
     public static void main(String[] args) {
         List<File> allFile = new ArrayList<>();
-        FileUtil.getFilesUnderPath(XML_FILES_PATH, allFile);
+
+        try {
+            FileUtil.getFilesUnderPath(XML_FILES_PATH, allFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         //对于每个文件，提取主题及标题，输出到分别输出到指定文件夹
         for (File file : allFile) {

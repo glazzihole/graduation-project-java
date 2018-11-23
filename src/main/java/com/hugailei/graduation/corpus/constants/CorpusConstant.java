@@ -105,7 +105,7 @@ public class CorpusConstant {
             add("get");
             add("turn");
             add("grow");
-            add("make");
+//            add("make");
             add("come");
             add("go");
             add("fall");
@@ -146,6 +146,37 @@ public class CorpusConstant {
     };
 
     /**
+     * 双宾语动词集合
+     */
+    public static final HashSet<String> DOUBLE_OBJECT_VERB_SET = new HashSet<String>() {
+        {
+            add("award");
+            add("buy");
+            add("give");
+            add("leave");
+            add("lend");
+            add("offer");
+            add("pay");
+            add("show");
+            add("teach");
+            add("tell");
+            add("bring");
+            add("make");
+            add("pass");
+            add("sell");
+            add("send");
+            add("sing");
+            add("write");
+            add("answer");
+            add("deny");
+            add("envy");
+            add("refuse");
+            add("save");
+            add("spare");
+        }
+    };
+
+    /**
      * 短语标识集合
      */
     public static final HashSet<String> PHRASE_LABEL_SET = new HashSet<String>() {
@@ -162,6 +193,33 @@ public class CorpusConstant {
             add("DNP");
             add("DP");
             add("QP");
+        }
+    };
+
+    /**
+     * 被动语态介词集合
+     */
+    public static final HashSet<String> PASSIVE_PREP_SET = new HashSet<String>() {
+        {
+            add("by");
+            add("to");
+            add("from");
+            add("at");
+            add("for");
+        }
+    };
+
+    /**
+     * 可做单位量词的名词，比如 a cup of，a bottle of等
+     */
+    public static  final  HashSet<String> PARTITIVE_NOUN_SET = new HashSet<String>() {
+        {
+            add("lot");     add("amount");      add("quantity");    add("heap");    add("ton");         add("bit");
+            add("pinch");   add("spot");        add("grain");       add("cup");     add("can");         add("box");
+            add("bag");     add("bowl");        add("bottle");      add("bucket");  add("spoon");       add("glass");
+            add("pack");    add("pot");         add("basket");      add("tube");    add("spoonful");    add("basketful");
+            add("group");   add("gang");        add("troop");       add("flock");   add("swarm");       add("cloud");
+            add("herd");    add("mountain");    add("thread");      add("stream");  add("type");        add("tape");
         }
     };
 

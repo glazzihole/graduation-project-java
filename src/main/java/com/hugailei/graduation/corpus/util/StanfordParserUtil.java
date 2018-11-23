@@ -70,7 +70,7 @@ public class StanfordParserUtil {
     }
 
     public static void main(String[] args) {
-        String text = "i have to run quickly in order to catch the bus.";
+        String text = "The most important thing is to bring convenience to human being.";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         StringBuilder stringBuilder = new StringBuilder();
         // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
@@ -86,8 +86,6 @@ public class StanfordParserUtil {
                 String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
                 stringBuilder.append("lemma = " + lemma + " " + "\r\n");
             }
-
-
         }
         System.out.println(stringBuilder.toString());
 

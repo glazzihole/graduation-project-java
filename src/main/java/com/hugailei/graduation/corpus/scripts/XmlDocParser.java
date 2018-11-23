@@ -96,7 +96,7 @@ public class XmlDocParser {
         fileWriter.close();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception{
         String documentPath = "E:\\corpus\\一些语料\\BNC\\2554\\download\\Texts";
         List<File> allFile = new ArrayList<>();
         List<File> filePathList = FileUtil.getFilesUnderPath(documentPath, allFile);

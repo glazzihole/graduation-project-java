@@ -22,7 +22,7 @@ public class FileUtil {
      * @param fileList
      * @return
      */
-    public static List<File> getFilesUnderPath(String path, List<File> fileList) {
+    public static List<File> getFilesUnderPath(String path, List<File> fileList) throws Exception{
         try {
             File file = new File(path);
             if (file.isDirectory()) {
@@ -38,7 +38,7 @@ public class FileUtil {
                 fileList.add(file);
             }
         } catch (Exception e) {
-            System.out.println("获取文件错误" + e.getStackTrace());
+            throw new Exception("error happens when get files" + e.getStackTrace());
         }
 
         return fileList;
