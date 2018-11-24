@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 例句查询处理类
+ *
  *
  * @author HU Gailei
  */

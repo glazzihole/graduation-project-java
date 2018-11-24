@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,12 +30,13 @@ public class SentencePatternUtil {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    private static class Edge {
+    public static class Edge {
         String word;
         String lemma;
         String pos;
         int index;
     }
+
     /**
      * 匹配句法树中的主语从句
      *
@@ -217,7 +219,8 @@ public class SentencePatternUtil {
      *
      * @param sentence
      */
-    public static void matchPhrase(CoreMap sentence) {
+    public static List<List<Edge>> matchPhrase(CoreMap sentence) {
+        List<List<Edge>> resultList = new ArrayList<>();
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
         for (String label : CorpusConstant.PHRASE_LABEL_SET) {
             // 匹配规则
@@ -230,16 +233,22 @@ public class SentencePatternUtil {
                 StringBuilder phrase = new StringBuilder();
                 // 排除掉单个单词，过长的短语排除掉
                 if (match.getLeaves().size() > 1 && match.getLeaves().size() <= 10) {
+                    List<Edge> edgeList = new ArrayList<>();
                     for (Tree leaf : match.getLeaves()) {
-                        phrase.append(leaf.label().value()).append(" ");
+                        int index = leaf.indexLeaves(1, false) - 2;
+                        // 根据index获取单词的原型、词性
+                        CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(index);
+                        String lemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
+                        String pos = coreLabel.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+                        String word = leaf.label().value();
+                        edgeList.add(new Edge(word, lemma, pos, index));
+
                     }
-                    System.out.println(phrase.toString());
+                    resultList.add(edgeList);
                 }
             }
         }
-
-        // 按照短语长度排序
-        // todo
+        return resultList;
     }
 
     /**
@@ -648,12 +657,12 @@ public class SentencePatternUtil {
 
 
     public static void main(String[] args) {
-        String text = "The most important thing is to bring convenience to human being.";
+        String text = "The new accusations against China made by the United States in the update of the Section 301 investigation disregard the facts and are totally unacceptable.";
         List<CoreMap> result = StanfordParserUtil.parse(text);
 
         for(CoreMap sentence : result) {
 //            System.out.println(sentence.get(TreeCoreAnnotations.TreeAnnotation.class));
-            matchPrincipalClause(sentence);
+            matchPhrase(sentence);
         }
     }
 }

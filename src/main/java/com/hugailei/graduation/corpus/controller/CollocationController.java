@@ -28,7 +28,7 @@ public class CollocationController {
     private CollocationService collocationService;
 
     /**
-     * 单词的搭配查询
+     * 单词的搭配词查询
      *
      * @param collocationDto
      * @return

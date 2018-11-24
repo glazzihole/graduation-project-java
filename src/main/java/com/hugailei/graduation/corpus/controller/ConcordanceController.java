@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
  * description: KWIC
  * </p>
  **/
-@RequestMapping("/corpus")
+@RequestMapping("/corpus/sentence")
 @RestController
 @Slf4j
 public class ConcordanceController {
