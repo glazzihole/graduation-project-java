@@ -62,7 +62,7 @@ public class NGramRequestHandler extends RequestHandler {
             List<NGram> ngramInfo = getNgramInfo(patt);
 
             int totalResults = ngramInfo.size();
-            int totalPages = (int) Math.ceil( (double)totalResults/ (double)pageSize );
+            double totalPages = Math.ceil( (double)totalResults/ (double)pageSize );
 
             ds.startItem("result").startMap();
             ds.entry("status", CorpusConstant.SUCCESS);
@@ -70,17 +70,10 @@ public class NGramRequestHandler extends RequestHandler {
             ds.entry("msg", "");
             ds.entry("error", "");
             ds.startDataEntry("data");
-            ds.startEntry(false,"pageNo").value(pageNo).endEntry();
+            ds.startEntry(false,"pageNumber").value(pageNo).endEntry();
             ds.entry("pageSize", pageSize);
-            ds.entry("orderBy", null);
-            ds.entry("orderDir", null);
-            ds.entry("nextPage", pageNo>=totalPages?totalPages:pageNo+1);
-            ds.entry("prePage", pageNo<=1?1:pageNo-1);
             ds.entry("totalPages", totalPages);
-            ds.entry("totalItems", totalResults);
-            ds.entry("startIndexNo", searchParam.getInteger("first"));
-            ds.entry("hasNextPage", pageNo >= totalPages ? false : true);
-            ds.entry("hasPrePage", pageNo <= 1 ? false : true);
+            ds.entry("totalElements", totalResults);
 
             ds.startEntry("page").startList();
             int i = 1;

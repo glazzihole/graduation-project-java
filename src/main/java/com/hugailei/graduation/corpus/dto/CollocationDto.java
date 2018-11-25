@@ -31,7 +31,7 @@ public class CollocationDto implements Serializable {
 
     private String sentenceIds;
 
-    private int freq;
+    private Integer freq;
 
     @NotNull
     private String corpus;

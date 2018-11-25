@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -41,13 +42,13 @@ public class CollocationServiceImpl implements CollocationService {
             Collocation collocation = new Collocation();
             BeanUtils.copyProperties(collocationDto, collocation);
             Example<Collocation> example = Example.of(collocation);
-            List<CollocationDto> resultList = collocationDao.findAll(example).stream().map(coll -> {
+            Sort sort = new Sort(Sort.Direction.DESC, "freq");
+            List<CollocationDto> resultList = collocationDao.findAll(example, sort).stream().map(coll -> {
                 CollocationDto data = new CollocationDto();
                 BeanUtils.copyProperties(coll, data);
                 return data;
             }).collect(Collectors.toList());
 
-            sortCollocationDtoList(resultList);
             log.info("searchCollocationOfWord | result size: {}", (resultList != null ? resultList.size() : 0));
             return resultList;
         } catch (Exception e) {
@@ -99,11 +100,13 @@ public class CollocationServiceImpl implements CollocationService {
             // 查询数据库，获取待检索词在指定词性下的同义词和相似词
             wordExtension.setRelation("syn");
             Example<WordExtension> example = Example.of(wordExtension);
-            String words = wordExtensionDao.findOne(example).get().getResults();
+            Optional<WordExtension> tempResult = wordExtensionDao.findOne(example);
+            String words = tempResult.isPresent() ? tempResult.get().getResults() : "";
 
             wordExtension.setRelation("sim");
             example = Example.of(wordExtension);
-            words += wordExtensionDao.findOne(example).get().getResults();
+            tempResult = wordExtensionDao.findOne(example);
+            words += tempResult.isPresent() ? tempResult.get().getResults() : "";
 
             // 将每个同义词和相似词和原来的搭配词进行组合，进行搭配查询，看是否存在该搭配f，若存在，则放入结果集中
             Collocation collocation = new Collocation();
@@ -163,12 +166,7 @@ public class CollocationServiceImpl implements CollocationService {
         Collections.sort(collocationDtoList, new Comparator<CollocationDto>() {
             @Override
             public int compare(CollocationDto c1, CollocationDto c2) {
-                if(c1.getFreq()>c2.getFreq()){
-                    return 0;
-                }
-                else {
-                    return 1;
-                }
+                return c2.getFreq() - c1.getFreq();
             }
         });
     }

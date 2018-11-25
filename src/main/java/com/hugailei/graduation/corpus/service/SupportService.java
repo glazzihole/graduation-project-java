@@ -1,6 +1,8 @@
 package com.hugailei.graduation.corpus.service;
 
+import com.alibaba.fastjson.JSONArray;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
@@ -8,6 +10,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import javax.script.Invocable;
@@ -81,7 +85,17 @@ public class SupportService {
             CloseableHttpResponse response = httpClient.execute(httpGet);
             String result = EntityUtils.toString(response.getEntity());
             log.info("translate | result: {}", result);
-            return result;
+
+            JSONArray resultArray = (JSONArray)JSONArray.parse(result);
+            JSONArray array = resultArray.getJSONArray(0);
+            StringBuffer stringBuffer = new StringBuffer();
+            for (int i = 0; i < array.size(); i++) {
+                String sentence = array.getJSONArray(i).getString(0);
+                if (StringUtils.isNotBlank(sentence)) {
+                    stringBuffer.append(sentence);
+                }
+            }
+            return stringBuffer.toString();
         } catch (Exception e) {
             log.error("error: {}", e);
             return null;
@@ -92,7 +106,8 @@ public class SupportService {
         String result = "";
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("js");
         try {
-            FileReader reader = new FileReader("google.js");
+            Resource resource = new ClassPathResource("google.js");
+            FileReader reader = new FileReader(resource.getFile());
             engine.eval(reader);
             if (engine instanceof Invocable) {
                 Invocable invoke = (Invocable)engine;

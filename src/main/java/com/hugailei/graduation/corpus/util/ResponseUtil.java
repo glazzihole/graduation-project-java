@@ -3,6 +3,10 @@ package com.hugailei.graduation.corpus.util;
 
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import com.hugailei.graduation.corpus.vo.ResponseVO;
+import org.springframework.data.domain.Pageable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author HU Gailei
@@ -45,4 +49,37 @@ public class ResponseUtil {
                             null);
     }
 
+    public static ResponseVO createPageResponse(List list, Pageable pageable) {
+        if (list == null) {
+            return error();
+        }
+        List<Object> page = new ArrayList<>();
+
+        int pageSize = pageable.getPageSize();
+        int pageNumber = pageable.getPageNumber();
+        int totalElements = list.size();
+        int totalPages = doubleToInt(Math.ceil((double) totalElements / (double) pageSize));
+        int startNumber = (pageNumber - 1) * pageSize;
+        int endNumber = pageNumber * pageSize;
+        int i = 1;
+        for (Object object : list) {
+            if (i > startNumber && i <= endNumber) {
+                page.add(object);
+            }
+            i ++;
+        }
+
+        ResponseVO.PageInfo pageInfo = new ResponseVO.PageInfo(pageNumber, pageSize, totalPages, totalElements, page);
+        return new ResponseVO(CorpusConstant.SUCCESS,
+                CorpusConstant.SUCCESS_CODE,
+                CorpusConstant.SUCCESS,
+                "",
+                pageInfo);
+    }
+
+    private static int doubleToInt (double d) {
+        String numStr = String.valueOf(d).split("\\.")[0];
+        int num = Integer.valueOf(numStr);
+        return num;
+    }
 }

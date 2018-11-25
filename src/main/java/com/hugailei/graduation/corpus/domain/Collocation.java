@@ -52,7 +52,7 @@ public class Collocation implements Serializable {
      * 该搭配在语料库中出现的频次
      */
     @Column(name = "freq")
-    private int freq;
+    private Integer freq;
 
     /**
      * 句子的id, 每个id之间用空格隔开

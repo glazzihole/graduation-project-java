@@ -44,10 +44,10 @@ public class PhraseController {
      */
     @GetMapping("")
     public void searchPhrase (Pageable pageable,
-                                HttpServletRequest request,
-                                HttpServletResponse response,
-                                @RequestParam String corpus,
-                                @RequestParam String patt) {
+                              HttpServletRequest request,
+                              HttpServletResponse response,
+                              @RequestParam String corpus,
+                              @RequestParam String patt) {
         log.info("searchPhrase | request to search phrase, patt: {}, corpus: {}", patt, INDEX_PREFIX + corpus);
         User user = User.loggedIn("admin", "1");
         handler.checkConfig(request, response, blackLabServer);

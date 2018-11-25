@@ -6,6 +6,7 @@ import com.hugailei.graduation.corpus.util.ResponseUtil;
 import com.hugailei.graduation.corpus.vo.ResponseVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -33,15 +34,16 @@ public class CollocationController {
      * @param collocationDto
      * @return
      */
-    @GetMapping("/word")
+    @PostMapping("/word")
     @ResponseBody
-    public ResponseVO searchCollocationOfWord(@RequestBody @Valid CollocationDto collocationDto) {
+    public ResponseVO searchCollocationOfWord(@RequestBody @Valid CollocationDto collocationDto,
+                                              Pageable pageable) {
         log.info("searchCollocationOfWord | request to search collocation of word, {}", collocationDto.toString());
         List<CollocationDto> result = collocationService.searchCollocationOfWord(collocationDto);
         if (result == null) {
             ResponseUtil.error();
         }
-        return ResponseUtil.success(result);
+        return ResponseUtil.createPageResponse(result, pageable);
     }
 
     /**
@@ -50,7 +52,7 @@ public class CollocationController {
      * @param collocationDto
      * @return
      */
-    @GetMapping("/synonym")
+    @PostMapping("/synonym")
     @ResponseBody
     public ResponseVO searchSynonymousCollocation(@RequestBody @Valid CollocationDto collocationDto) {
         log.info("searchSynonymousCollocation | request to search synonymous collocation");

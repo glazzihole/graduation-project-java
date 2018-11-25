@@ -47,7 +47,7 @@ public class WordRequestHandler extends RequestHandler {
             int pageNo = (searchParam.getInteger("first")/searchParam.getInteger("number")) + 1 ;
             int pageSize =  searchParam.getInteger("number") < 0 || searchParam.getInteger("number") > searchMan.config().maxPageSize() ? searchMan.config().defaultPageSize() : searchParam.getInteger("number");
             int totalItems = (groups == null) ? 0 : groups.getGroups().size();
-            int totalPages = (int) Math.ceil( (double)totalItems/ (double)pageSize );
+            double totalPages = Math.ceil( (double)totalItems/ (double)pageSize );
 
             ds.startItem("result").startMap();
             ds.entry("status", CorpusConstant.SUCCESS);
@@ -55,17 +55,10 @@ public class WordRequestHandler extends RequestHandler {
             ds.entry("msg", "");
             ds.entry("error", "");
             ds.startDataEntry("data");
-            ds.entry("pageNo", pageNo);
+            ds.entry("pageNumber", pageNo);
             ds.entry("pageSize", pageSize);
-            ds.entry("orderBy", null);
-            ds.entry("orderDir", null);
-            ds.entry("nextPage", pageNo>=totalPages?totalPages:pageNo+1);
-            ds.entry("prePage", pageNo<=1?1:pageNo-1);
             ds.entry("totalPages", totalPages);
-            ds.entry("totalItems", totalItems);
-            ds.entry("startIndexNo", searchParam.getInteger("first"));
-            ds.entry("hasNextPage", pageNo>=totalPages?false:true);
-            ds.entry("hasPrePage", pageNo<=1?false:true);
+            ds.entry("totalElements", totalItems);
 
             ds.startEntry("page").startList();
             int i = 0;

@@ -143,7 +143,7 @@ public class SentenceRequestHandler extends RequestHandler {
             }
             int pageNo = (searchParam.getInteger("first")/searchParam.getInteger("number")) + 1 ;
             int pageSize =  searchParam.getInteger("number") < 0 || searchParam.getInteger("number") > searchMan.config().maxPageSize() ? searchMan.config().defaultPageSize() : searchParam.getInteger("number");
-            int totalPages = (int) Math.ceil( (double)totalHits/ (double)pageSize );
+            double totalPages = Math.ceil( (double)totalHits/ (double)pageSize );
 
             ds.startItem("result").startMap();
             ds.entry("status", CorpusConstant.SUCCESS);
@@ -151,17 +151,10 @@ public class SentenceRequestHandler extends RequestHandler {
             ds.entry("msg", "");
             ds.entry("error", "");
             ds.startDataEntry("data");
-            ds.startEntry(false,"pageNo").value(pageNo).endEntry();
+            ds.startEntry(false,"pageNumber").value(pageNo).endEntry();
             ds.entry("pageSize", pageSize);
-            ds.entry("orderBy", null);
-            ds.entry("orderDir", null);
-            ds.entry("nextPage", pageNo>=totalPages?totalPages:pageNo+1);
-            ds.entry("prePage", pageNo<=1?1:pageNo-1);
             ds.entry("totalPages", totalPages);
-            ds.entry("totalItems", totalHits);
-            ds.entry("startIndexNo", searchParam.getInteger("first"));
-            ds.entry("hasNextPage", pageNo>=totalPages?false:true);
-            ds.entry("hasPrePage", pageNo<=1?false:true);
+            ds.entry("totalElements", totalHits);
 
             ds.startEntry("page").startList();
             Map<Integer, String> pids = new HashMap<>();
