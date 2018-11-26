@@ -3,6 +3,7 @@ package com.hugailei.graduation.corpus.constants;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author HU Gailei
@@ -232,6 +233,37 @@ public class CorpusConstant {
             put("NN.*", "NN");
             put("JJ.*", "JJ");
             put("RB.*", "RB");
+        }
+    };
+
+    /**
+     * 搭配的词性组合
+     */
+    public static final Set<String> COLLOCATION_PATT_SET = new HashSet<String>(){
+        {
+            // 名词-动词
+            add("(NN[A-Z]{0,1})-(VB[A-Z]{0,1})");
+
+            // 动词-名词
+            add("(VB[A-Z]{0,1})-(NN[A-Z]{0,1})");
+
+            // 形容词-名词
+            add("(JJ[A-Z]{0,1})-(NN[A-Z]{0,1})");
+
+            // 动词-副词
+            add("(VB[A-Z]{0,1})-(RB[A-Z{0,1}])");
+
+            // 副词-动词
+            add("(RB[A-Z{0,1}])-(VB[A-Z]{0,1})");
+
+            // 动词-介词
+            add("(VB[A-Z]{0,1})-IN");
+
+            // 动词-小品词
+            add("(VB[A-Z]{0,1})-RP");
+
+            // 副词-形容词
+            add("(RB[A-Z{0,1}])-(JJ[A-Z]{0,1})");
         }
     };
 }

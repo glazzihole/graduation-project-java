@@ -162,7 +162,7 @@ public class CollocationServiceImpl implements CollocationService {
      *
      * @param collocationDtoList
      */
-    private void sortCollocationDtoList(List<CollocationDto> collocationDtoList) {
+    static void sortCollocationDtoList(List<CollocationDto> collocationDtoList) {
         Collections.sort(collocationDtoList, new Comparator<CollocationDto>() {
             @Override
             public int compare(CollocationDto c1, CollocationDto c2) {
