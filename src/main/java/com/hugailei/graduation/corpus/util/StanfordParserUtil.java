@@ -28,7 +28,7 @@ public class StanfordParserUtil {
     static {
         props = new Properties();
         // 总共可以有tokenize, ssplit, pos, lemma, parse, ner, dcoref七中属性
-        props.put("annotators", "tokenize, ssplit, pos, lemma, parse");
+        props.put("annotators", "tokenize, ssplit, parse, pos, lemma");
         pipeline = new StanfordCoreNLP( props );
     }
 
@@ -70,7 +70,7 @@ public class StanfordParserUtil {
     }
 
     public static void main(String[] args) {
-        String text = "she was hit by a car.";
+        String text = "she bought me a book.";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         StringBuilder stringBuilder = new StringBuilder();
         // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
