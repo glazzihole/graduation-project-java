@@ -19,9 +19,9 @@ public enum SentencePatternType {
     OBJECT_CLAUSE("objectClause", 2),
 
     /**
-     * 定语从句
+     * 定语从句或同位语从句
      */
-    ATTRIBUTIVE_CLAUSE("attributiveClause", 3),
+    ATTRIBUTIVE_CLAUSE_OR_APPOSITIVE_CLAUSE("attributiveClause", 3),
 
     /**
      * 表语从句
@@ -34,19 +34,14 @@ public enum SentencePatternType {
     ADVERBIAL_CLAUSE("adverbialClause", 5),
 
     /**
-     * 同位语从句
-     */
-    APPOSITIVE_CLAUSE("appositiveClause", 6),
-
-    /**
      * 被动句
      */
-    PASSIVE_VOICE("passiveVoice", 7),
+    PASSIVE_VOICE("passiveVoice", 6),
 
     /**
      * 双宾语句
      */
-    DOUBLE_OBJECT("doubleObject", 8);
+    DOUBLE_OBJECT("doubleObject", 7);
 
     /**
      * 句子类型的名称
@@ -71,6 +66,10 @@ public enum SentencePatternType {
 
     public int getType() {
         return type;
+    }
+
+    private String getTypeName() {
+        return typeName;
     }
 
 }

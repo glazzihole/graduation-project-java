@@ -29,7 +29,7 @@ public class StudentCollocationController {
     @ResponseBody
     public ResponseVO getCollocationInText(@RequestParam String text) {
         log.info("getCollocationInText | request to get collocation in student's text");
-        List<CollocationDto> result = studentCollocationService.getCollocationInText(text);
+        CollocationDto.CollocationInfo result = studentCollocationService.getCollocationInText(text);
         if (result == null) {
             return ResponseUtil.error();
         }

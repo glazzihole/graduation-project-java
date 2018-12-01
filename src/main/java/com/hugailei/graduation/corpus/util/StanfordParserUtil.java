@@ -1,5 +1,6 @@
 package com.hugailei.graduation.corpus.util;
 
+import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -12,6 +13,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -69,8 +71,24 @@ public class StanfordParserUtil {
         return dependencyResult;
     }
 
+    /**
+     * 获取基本词性，如VBZ还原为VB
+     * @param pos
+     * @return
+     */
+    public static String getBasePos(String pos) {
+        for (Map.Entry entry : CorpusConstant.POS_REGEX_TO_LEMMA_POS.entrySet()) {
+            String posRegex = (String) entry.getKey();
+            String basePos = (String) entry.getValue();
+            if (pos.matches(posRegex)) {
+                return basePos;
+            }
+        }
+        return pos;
+    }
+
     public static void main(String[] args) {
-        String text = "she bought me a book.";
+        String text = "she gave me a book, and the book looks useful.";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         StringBuilder stringBuilder = new StringBuilder();
         // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。

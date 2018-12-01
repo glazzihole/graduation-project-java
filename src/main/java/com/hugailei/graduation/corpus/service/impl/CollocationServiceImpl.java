@@ -8,6 +8,9 @@ import com.hugailei.graduation.corpus.domain.Collocation;
 import com.hugailei.graduation.corpus.domain.WordExtension;
 import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.service.CollocationService;
+import com.hugailei.graduation.corpus.util.StanfordParserUtil;
+import com.hugailei.graduation.corpus.vendor.SupportService;
+import com.hugailei.graduation.corpus.vendor.response.YoudaoOpenApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,13 +66,18 @@ public class CollocationServiceImpl implements CollocationService {
             log.info("searchSynonymousCollocation | collocationDto: {}", collocationDto.toString());
             // 对各单词的词性进行基本类型还原
             if (!StringUtils.isBlank(collocationDto.getFirstPos())) {
-                String basePos = getBasePos(collocationDto.getFirstPos());
+                String basePos = StanfordParserUtil.getBasePos(collocationDto.getFirstPos());
                 collocationDto.setFirstPos(basePos);
             }
 
             if (!StringUtils.isBlank(collocationDto.getSecondPos())) {
-                String basePos = getBasePos(collocationDto.getSecondPos());
+                String basePos = StanfordParserUtil.getBasePos(collocationDto.getSecondPos());
                 collocationDto.setSecondPos(basePos);
+            }
+
+            if (!StringUtils.isBlank(collocationDto.getThirdPos())) {
+                String basePos = StanfordParserUtil.getBasePos(collocationDto.getThirdPos());
+                collocationDto.setThirdPos(basePos);
             }
 
             // 设置查询所需的数据
@@ -77,22 +85,35 @@ public class CollocationServiceImpl implements CollocationService {
             switch(collocationDto.getPosition()) {
                 case 1:
                     if (StringUtils.isBlank(collocationDto.getFirstWord()) ||
-                            StringUtils.isBlank(collocationDto.getFirstPos()) ||
-                            StringUtils.isBlank(collocationDto.getSecondWord())) {
+                        StringUtils.isBlank(collocationDto.getFirstPos()) ||
+                        StringUtils.isBlank(collocationDto.getSecondWord())) {
                         throw new Exception("information for search is not complete");
                     }
                     wordExtension.setWord(collocationDto.getFirstWord());
                     wordExtension.setPos(collocationDto.getFirstPos());
                     break;
+
                 case 2:
                     if (StringUtils.isBlank(collocationDto.getSecondWord()) ||
-                            StringUtils.isBlank(collocationDto.getSecondPos()) ||
-                            StringUtils.isBlank(collocationDto.getFirstWord())) {
+                        StringUtils.isBlank(collocationDto.getSecondPos()) ||
+                        StringUtils.isBlank(collocationDto.getFirstWord())) {
                         throw new Exception("information for search is not complete");
                     }
                     wordExtension.setWord(collocationDto.getSecondWord());
                     wordExtension.setPos(collocationDto.getSecondPos());
                     break;
+
+                case 3:
+                    if (StringUtils.isBlank(collocationDto.getThirdPos()) ||
+                        StringUtils.isBlank(collocationDto.getThirdWord()) ||
+                        StringUtils.isBlank(collocationDto.getFirstWord()) ||
+                        StringUtils.isBlank(collocationDto.getSecondWord())) {
+                        throw new Exception("information for search is not complete");
+                    }
+                    wordExtension.setWord(collocationDto.getThirdWord());
+                    wordExtension.setPos(collocationDto.getThirdPos());
+                    break;
+
                 default:
                     throw new Exception("wrong position num");
             }
@@ -103,11 +124,6 @@ public class CollocationServiceImpl implements CollocationService {
             Optional<WordExtension> tempResult = wordExtensionDao.findOne(example);
             String words = tempResult.isPresent() ? tempResult.get().getResults() : "";
 
-            wordExtension.setRelation("sim");
-            example = Example.of(wordExtension);
-            tempResult = wordExtensionDao.findOne(example);
-            words += tempResult.isPresent() ? tempResult.get().getResults() : "";
-
             // 将每个同义词和相似词和原来的搭配词进行组合，进行搭配查询，看是否存在该搭配f，若存在，则放入结果集中
             Collocation collocation = new Collocation();
             BeanUtils.copyProperties(collocationDto, collocation);
@@ -115,8 +131,10 @@ public class CollocationServiceImpl implements CollocationService {
             for (String word : words.split(",")) {
                 if (collocationDto.getPosition() == 1) {
                     collocation.setFirstWord(word);
-                } else {
+                } else if (collocationDto.getPosition() == 2) {
                     collocation.setSecondWord(word);
+                } else {
+                    collocation.setThirdWord(word);
                 }
                 Example<Collocation> collocationExample = Example.of(collocation);
 
@@ -138,23 +156,6 @@ public class CollocationServiceImpl implements CollocationService {
             log.error("searchSynonymousCollocation | error: {}", e);
             return null;
         }
-    }
-
-    /**
-     * 获取基本词性，如VBZ还原为VB
-     * @param pos
-     * @return
-     */
-    private String getBasePos(String pos) {
-        for (Map.Entry entry : CorpusConstant.POS_REGEX_TO_LEMMA_POS.entrySet()) {
-            String posRegex = (String) entry.getKey();
-            String basePos = (String) entry.getValue();
-            if (pos.matches(posRegex)) {
-                return basePos;
-            }
-        }
-
-        return pos;
     }
 
     /**

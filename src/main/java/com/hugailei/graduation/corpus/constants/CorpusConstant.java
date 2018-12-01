@@ -143,6 +143,12 @@ public class CorpusConstant {
             add("thought");
             add("belief");
             add("conclusion");
+            add("demand");
+            add("statement");
+            add("wish");
+            add("resolution");
+            add("eagerness");
+            add("impression");
         }
     };
 
@@ -174,6 +180,7 @@ public class CorpusConstant {
             add("refuse");
             add("save");
             add("spare");
+            add("fetch");
         }
     };
 
@@ -264,6 +271,66 @@ public class CorpusConstant {
 
             // 副词-形容词
             add("(RB[A-Z{0,1}])-(JJ[A-Z]{0,1})");
+
+            // 形容词-副词
+            add("(JJ[A-Z{0,1}])-(RB[A-Z]{0,1})");
+
+            // 动词-形容词 如：get angry
+            add("(VB[A-Z]{0,1})-(JJ[A-Z]{0,1})");
+
+            // 名词-介词 如：bottle of
+            add("(NN[A-Z]{0,1})-IN");
+
+            // 形容词-介词 如: angry with
+            add("(JJ[A-Z{0,1}])-(NN[A-Z]{0,1})");
+        }
+    };
+
+    /**
+     * 搭配的依赖关系组合
+     */
+    public static final Set<String> COLLOCATION_DEPENDENCY_RELATION_SET = new HashSet<String>() {
+        {
+            add("nsubj");
+            add("dobj");
+            add("idobj");
+            add("csubj");
+            add("amod");
+            add("advmod");
+            add("nsubjpass");
+            add("nmod:agent");
+            add("compound:prt");
+            add("xcomp");
+        }
+    };
+
+    /**
+     * 搭配的依赖关系组合
+     */
+    public static final Set<String> COLLOCATION_NOMD_RELATION_SET = new HashSet<String>() {
+        {
+            add("nmod:to");
+            add("nmod:into");
+            add("nmod:with");
+            add("nmod:of");
+            add("nmod:on");
+            add("nmod:from");
+            add("nmod:across");
+            add("nmod:without");
+            add("nmod:by");
+            add("nmod:for");
+            add("nmod:at");
+            add("nmod:about");
+            add("nmod:under");
+            add("nmod:onto");
+            add("nmod:within");
+            add("nmod:throughout");
+            add("nmod:inside");
+            add("nmod:outside");
+            add("nmod:after");
+            add("nmod:before");
+            add("nmod:behind");
+            add("nmod:among");
         }
     };
 }

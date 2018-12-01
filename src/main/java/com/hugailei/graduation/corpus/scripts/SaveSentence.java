@@ -83,8 +83,8 @@ public class SaveSentence {
             }
 
             // 存储文章
-            String title = "";
-            String type = "";
+            String title;
+            String type;
             String fileName = file.getName();
 
             FileReader fileReader = new FileReader(new File(TITLE_FILE_PATH + fileName));

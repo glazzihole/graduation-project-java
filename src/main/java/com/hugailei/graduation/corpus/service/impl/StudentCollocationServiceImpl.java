@@ -1,10 +1,15 @@
 package com.hugailei.graduation.corpus.service.impl;
 
+import com.bfsuolframework.core.utils.StringUtils;
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.service.StudentCollocationService;
+import com.hugailei.graduation.corpus.util.SentencePatternUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
+import edu.stanford.nlp.util.CoreMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -25,112 +30,387 @@ import static com.hugailei.graduation.corpus.service.impl.CollocationServiceImpl
 @Service
 @Slf4j
 public class StudentCollocationServiceImpl implements StudentCollocationService {
+
+    private final static String NOT_IMPORTANT = "notsoimportant";
+
     @Override
-    public List<CollocationDto> getCollocationInText(String text) {
+    public CollocationDto.CollocationInfo getCollocationInText(String text) {
         try {
             log.info("getCollocationInText | text: {}", text);
-            List<SemanticGraphEdge> dependencyList = StanfordParserUtil.getDependency(text);
-            Map<String, Integer> key2Freq = new HashMap<>();
+            Map<String, Integer> lemmaCollocationKey2Freq = new HashMap<>();
+            Map<String, Integer> posCollocationKey2Freq = new HashMap<>();
+            List<CoreMap> sentences = StanfordParserUtil.parse(text);
+            for (CoreMap sentence : sentences) {
+                SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
+                for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
+                    String relation = edge.getRelation().toString();
+                    int govIndex = edge.getGovernor().index();
+                    int depIndex = edge.getDependent().index();
+                    boolean found = false;
+                    String firstWord = null, secondWord = null, firstPos = null, secondPos = null, thirdWord = null, thirdPos = null;
+                    if (CorpusConstant.COLLOCATION_DEPENDENCY_RELATION_SET.contains(relation)) {
+                        switch (relation) {
+                            case "nsubj":
+                            case "nmod:agent":
+                                String adjNounRegex = "(JJ[A-Z]{0,1})-(NN[A-Z]{0,1})";
+                                String nounverbRegex = "((NN[A-Z]{0,1})|(PRP))-(VB[A-Z]{0,1})";
+                                SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), dependency);
+                                if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(adjNounRegex)) {
+                                    firstWord = edge.getGovernor().lemma();
+                                    secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
+                                    firstPos = edge.getGovernor().tag();
+                                    secondPos = edge.getDependent().tag();
+                                    found = true;
+                                } else if ((edge.getDependent().tag() + "-" + edge.getGovernor().tag()).matches(nounverbRegex)) {
+                                    firstWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
+                                    secondWord = edge.getGovernor().lemma();
+                                    firstPos = edge.getDependent().tag();
+                                    secondPos = edge.getGovernor().tag();
+                                    found = true;
+                                }
+                                break;
 
-            for (SemanticGraphEdge edge : dependencyList) {
-                String firstWord, secondWord, firstPos, secondPos;
-                // 根据单词在句子中的位置调整在搭配中的先后顺序
-                int govIndex = edge.getGovernor().index();
-                int depIndex = edge.getDependent().index();
+                            case "dobj":
+                            // 暂时先不考虑间接宾语
+                            // case "idobj":
+                            case "nsubjpass":
+                                String verbNounRegex = "(VB[A-Z]{0,1})-((NN[A-Z]{0,1})|(PRP))";
+                                temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), dependency);
+                                if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbNounRegex)) {
+                                    firstWord = edge.getGovernor().lemma();
+                                    firstPos = edge.getGovernor().tag();
+                                    secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
+                                    secondPos = edge.getDependent().tag();
+                                    found = true;
+                                }
+                                break;
 
-                if (govIndex < depIndex) {
-                    firstWord = edge.getGovernor().lemma();
-                    secondWord = edge.getDependent().lemma();
-                    firstPos = edge.getGovernor().tag();
-                    secondPos = edge.getDependent().tag();
-                } else {
-                    firstWord = edge.getDependent().lemma();
-                    secondWord = edge.getGovernor().lemma();
-                    firstPos = edge.getDependent().tag();
-                    secondPos = edge.getGovernor().tag();
-                }
+                            case "csubj":
+                                verbNounRegex = "(VB[A-Z]{0,1})-((NN[A-Z]{0,1})|(PRP))";
+                                temp = SentencePatternUtil.getRealNounEdge(edge.getGovernor().index(), dependency);
+                                if ((edge.getDependent().tag() + "-" + edge.getGovernor().tag()).matches(verbNounRegex)) {
+                                    firstWord = edge.getDependent().lemma();
+                                    secondWord = (temp == null ? edge.getGovernor().lemma() : temp.getLemma());
+                                    firstPos = edge.getDependent().tag();
+                                    secondPos = edge.getGovernor().tag();
+                                    found = true;
+                                }
+                                break;
 
-                switch (edge.getRelation().toString()) {
-                    case "nsubj": case "top":
-                        String regex = "(JJ[A-Z]{0,1})-(NN[A-Z]{0,1})";
-                        if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(regex)) {
-                            firstWord = edge.getGovernor().lemma();
-                            secondWord = edge.getDependent().lemma();
-                            firstPos = edge.getGovernor().tag();
-                            secondPos = edge.getDependent().tag();
-                        }else{
-                            firstWord = edge.getDependent().lemma();
-                            secondWord = edge.getGovernor().lemma();
-                            firstPos = edge.getDependent().tag();
-                            secondPos = edge.getGovernor().tag();
+                            case "amod":
+                                adjNounRegex = "(JJ[A-Z]{0,1})-(NN[A-Z]{0,1})";
+                                temp = SentencePatternUtil.getRealNounEdge(edge.getGovernor().index(), dependency);
+                                if ((edge.getDependent().tag() + "-" + edge.getGovernor().tag()).matches(adjNounRegex)) {
+                                    firstWord = edge.getDependent().lemma();
+                                    firstPos = edge.getDependent().tag();
+                                    secondWord = (temp == null ? edge.getGovernor().lemma() : temp.getLemma());
+                                    secondPos = edge.getGovernor().tag();
+                                    found = true;
+                                }
+                                break;
+
+                            case "advmod":
+                                String verbAdvRegex = "(VB[A-Z]{0,1})-(RB[A-Z]{0,1})";
+                                String adjAdvRegex = "(JJ[A-Z]{0,1})-(RB[A-Z]{0,1})";
+                                if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbAdvRegex) ||
+                                        (edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(adjAdvRegex)) {
+                                    // 根据单词在句子中的位置调整在搭配中的先后顺序
+                                    if (govIndex < depIndex) {
+                                        firstWord = edge.getGovernor().lemma();
+                                        firstPos = edge.getGovernor().tag();
+                                        secondWord = edge.getDependent().lemma();
+                                        secondPos = edge.getDependent().tag();
+                                    } else {
+                                        firstWord = edge.getDependent().lemma();
+                                        secondWord = edge.getGovernor().lemma();
+                                        firstPos = edge.getDependent().tag();
+                                        secondPos = edge.getGovernor().tag();
+                                    }
+                                    found = true;
+                                }
+                                break;
+
+                            case "compound:prt" :
+                                firstWord = edge.getGovernor().lemma();
+                                firstPos = edge.getGovernor().tag();
+                                secondWord = edge.getDependent().lemma();
+                                secondPos = edge.getDependent().tag();
+                                found = true;
+                                break;
+
+                            case "xcomp" :
+                                String verbAdjRegex = "(VB[A-Z]{0,1})-(JJ[A-Z]{0,1})";
+                                verbNounRegex = "(VB[A-Z]{0,1})-((NN[A-Z]{0,1})|(PRP))";
+                                if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbAdjRegex) ||
+                                    (edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbNounRegex)) {
+                                    temp = null;
+                                    if (edge.getDependent().tag().startsWith("NN")) {
+                                        temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), dependency);
+                                    }
+                                    firstWord = edge.getGovernor().lemma();
+                                    secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
+                                    secondPos = edge.getDependent().tag();
+                                    firstPos = edge.getGovernor().tag();
+                                    found = true;
+                                }
+
+                                // 当第二个词为形容词是，判断动词是否为系统词，若是，则后面的形容词也可以修饰该动词的主语
+                                if (edge.getDependent().tag().matches("JJ[A-Z]{0,1}")) {
+                                    if (CorpusConstant.COPULA_LEMMA_SET.contains(edge.getGovernor().lemma())) {
+                                        int verbIndex = edge.getGovernor().index();
+                                        for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
+                                            if (semanticGraphEdge.getRelation().toString().equals("nsubj") ||
+                                                    semanticGraphEdge.getGovernor().index() == verbIndex) {
+                                                int subjectIndex = semanticGraphEdge.getDependent().index();
+                                                SentencePatternUtil.Edge subjectTemp = SentencePatternUtil.getRealNounEdge(subjectIndex, dependency);
+                                                String subject = (subjectTemp == null ? semanticGraphEdge.getDependent().lemma() : subjectTemp.getLemma());
+
+                                                // 存储到Map中
+                                                String lemmaCollocationKey = (edge.getDependent().lemma() + "_JJ_" + subject + "_NN").toLowerCase();
+                                                int freq = 1;
+                                                if (lemmaCollocationKey2Freq.containsKey(lemmaCollocationKey)) {
+                                                    freq = lemmaCollocationKey2Freq.get(lemmaCollocationKey) + 1;
+                                                }
+                                                lemmaCollocationKey2Freq.put(lemmaCollocationKey, freq);
+
+                                                String posCollocationKey = (edge.getDependent().lemma() + "_JJ_" + NOT_IMPORTANT + "_NN").toLowerCase();
+                                                freq = 1;
+                                                if (posCollocationKey2Freq.containsKey(posCollocationKey)) {
+                                                    freq = posCollocationKey2Freq.get(posCollocationKey) + 1;
+                                                }
+                                                posCollocationKey2Freq.put(posCollocationKey, freq);
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+
+                            default:
+                                break;
                         }
-                        break;
-                    case "nsubjpass": case "dobj": case "attr": case "iobj":
+
+                    } else if (CorpusConstant.COLLOCATION_NOMD_RELATION_SET.contains(relation)) {
                         firstWord = edge.getGovernor().lemma();
-                        secondWord = edge.getDependent().lemma();
                         firstPos = edge.getGovernor().tag();
-                        secondPos = edge.getDependent().tag();
-                        break;
-                    default:
-                        break;
-                }
-
-                // 判断搭配形式是否为指定的搭配类型
-                for (String regex : CorpusConstant.COLLOCATION_PATT_SET) {
-                    // 若满足，放入结果Map中
-                    if ((firstPos + "-" + secondPos).matches(regex)) {
-                        // 词性同一存储为该词性下原型的词性
-                        for (Map.Entry entry : CorpusConstant.POS_REGEX_TO_LEMMA_POS.entrySet()) {
-                            String posRegex = (String) entry.getKey();
-                            String lemmaPos = (String) entry.getValue();
-                            if (firstPos.matches(posRegex)) {
-                                firstPos = lemmaPos;
-                                break;
+                        secondWord = relation.split(":")[1];
+                        secondPos = "IN";
+                        thirdWord = edge.getDependent().lemma();
+                        thirdPos = edge.getDependent().tag();
+                        if (thirdPos.startsWith("NN")) {
+                            SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), dependency);
+                            if (temp != null) {
+                                thirdWord = temp.getLemma();
                             }
                         }
-
-                        // 词性同一存储为该词性下原型的词性
-                        for (Map.Entry entry : CorpusConstant.POS_REGEX_TO_LEMMA_POS.entrySet()) {
-                            String posRegex = (String) entry.getKey();
-                            String lemmaPos = (String) entry.getValue();
-                            if (secondPos.matches(posRegex)) {
-                                secondPos = lemmaPos;
-                                break;
-                            }
-                        }
-
-                        String key = (firstWord + "_" + firstPos + "_" + secondWord + "_" + secondPos).toLowerCase();
-
-                        // 更新频次
-                        int freq = 1;
-                        if (key2Freq.containsKey(key)) {
-                            freq = key2Freq.get(key) + 1;
-                        }
-                        key2Freq.put(key, freq);
-                        break;
+                        found = true;
                     }
-                }
-            } // for (SemanticGraphEdge edge : dependency.edgeListSorted())
 
-            // 遍历map， 获取搭配频次，填充返回结果
-            List<CollocationDto> resultList = new ArrayList<>();
-            for (Map.Entry entry : key2Freq.entrySet()) {
-                CollocationDto collocationDto = new CollocationDto();
-                String key = (String)entry.getKey();
-                int freq = (Integer) entry.getValue();
-                collocationDto.setFirstWord(key.split("_")[0]);
-                collocationDto.setFirstPos(key.split("_")[1].toUpperCase());
-                collocationDto.setSecondWord(key.split("_")[2]);
-                collocationDto.setSecondPos(key.split("_")[3].toUpperCase());
-                collocationDto.setFreq(freq);
-                resultList.add(collocationDto);
-            }
+                    if (found) {
+                        // 词性同一存储为该词性下原型的词性
+                        firstPos = StanfordParserUtil.getBasePos(firstPos);
+                        secondPos = StanfordParserUtil.getBasePos(secondPos);
 
-            sortCollocationDtoList(resultList);
-            return resultList;
+                        if (!StringUtils.isBlank(thirdWord)) {
+                            thirdPos = StanfordParserUtil.getBasePos(thirdPos);
+                        }
+
+                        // 原型搭配情况统计
+                        fillLemmaCollocationKey2Freq(firstWord, firstPos, secondWord, secondPos, thirdWord, thirdPos, lemmaCollocationKey2Freq);
+                        // 词性搭配情况统计
+                        fillPosCollocationKey2Freq(firstWord, firstPos, secondWord, secondPos, thirdWord, thirdPos, posCollocationKey2Freq);
+                    }
+
+                } // for (SemanticGraphEdge edge : dependency.edgeListSorted())
+            } // for (CoreMap sentence : sentences)
+
+            // 遍历map，获取搭配频次，填充返回结果
+            List<CollocationDto> lemmaCollocationList = getLemmaCollocationList(lemmaCollocationKey2Freq);
+            sortCollocationDtoList(lemmaCollocationList);
+
+            List<CollocationDto> posCollocationList = getPosCollocationList(posCollocationKey2Freq);
+            sortCollocationDtoList(posCollocationList);
+
+            CollocationDto.CollocationInfo collocationInfo = new CollocationDto.CollocationInfo();
+            collocationInfo.setWordCollocationList(lemmaCollocationList);
+            collocationInfo.setPosCollocationList(posCollocationList);
+            return collocationInfo;
         } catch (Exception e) {
             log.error("getCollocationInText | error: {}", e);
             return null;
         }
+    }
+
+    /**
+     * 原型搭配情况统计
+     *
+     * @param firstWord
+     * @param firstPos
+     * @param secondWord
+     * @param secondPos
+     * @param thirdWord
+     * @param thirdPos
+     * @param key2FreqMap
+     */
+    private void fillLemmaCollocationKey2Freq (String firstWord,
+                                               String firstPos,
+                                               String secondWord,
+                                               String secondPos,
+                                               String thirdWord,
+                                               String thirdPos,
+                                               Map<String, Integer> key2FreqMap) {
+        String lemmaCollocationKey = (firstWord + "_" + firstPos + "_" + secondWord + "_" + secondPos).toLowerCase();
+        int freq = 1;
+        if (key2FreqMap.containsKey(lemmaCollocationKey)) {
+            freq = key2FreqMap.get(lemmaCollocationKey) + 1;
+        }
+        key2FreqMap.put(lemmaCollocationKey, freq);
+
+        if (!StringUtils.isBlank(thirdWord)) {
+            freq = 1;
+            lemmaCollocationKey = (firstWord + "_" + firstPos + "_" + secondWord + "_" + secondPos + "_" + thirdWord + "_" + thirdPos).toLowerCase();
+            if (key2FreqMap.containsKey(lemmaCollocationKey)) {
+                freq = key2FreqMap.get(lemmaCollocationKey) + 1;
+            }
+            key2FreqMap.put(lemmaCollocationKey, freq);
+        }
+    }
+
+    /**
+     * 词性搭配情况统计，在一些搭配中，忽略不重要的信息，只关注词性。
+     * 如动名词的搭配中，可以忽略名词具体是哪个单词，只关注这个动词和名词词性搭配了多少次
+     *
+     * @param firstWord
+     * @param firstPos
+     * @param secondWord
+     * @param secondPos
+     * @param thirdWord
+     * @param thirdPos
+     * @param key2FreqMap
+     */
+    private void fillPosCollocationKey2Freq (String firstWord,
+                                             String firstPos,
+                                             String secondWord,
+                                             String secondPos,
+                                             String thirdWord,
+                                             String thirdPos,
+                                             Map<String, Integer> key2FreqMap) {
+        String posCollocationKey;
+        int freq = 1;
+
+        // 将所有的代词词性视为名词词性
+        String posPair = firstPos + "-" + secondPos.replace("PRP", "NN");
+        switch (posPair){
+            case "NN-VB":
+                posCollocationKey = (NOT_IMPORTANT + "_" + firstPos + "_" + secondWord + "_" + secondPos).toLowerCase();
+                if (key2FreqMap.containsKey(posCollocationKey)) {
+                    freq = key2FreqMap.get(posCollocationKey) + 1;
+                }
+                key2FreqMap.put(posCollocationKey, freq);
+                break;
+
+            case "VB-NN":
+            case "JJ-NN":
+            case "VB-IN":
+            case "VB-RP":
+            case "NN-IN":
+            case "JJ-IN":
+                posCollocationKey = (firstWord + "_" + firstPos + "_" + NOT_IMPORTANT + "_" + secondPos).toLowerCase();
+                if (key2FreqMap.containsKey(posCollocationKey)) {
+                    freq = key2FreqMap.get(posCollocationKey) + 1;
+                }
+                key2FreqMap.put(posCollocationKey, freq);
+                break;
+
+            case "VB-RB":
+            case "RB-VB":
+            case "JJ-RB":
+            case "RB-JJ":
+            case "VB-JJ":
+                posCollocationKey = (firstWord + "_" + firstPos + "_" + NOT_IMPORTANT + "_" + secondPos).toLowerCase();
+                if (key2FreqMap.containsKey(posCollocationKey)) {
+                    freq = key2FreqMap.get(posCollocationKey) + 1;
+                }
+                key2FreqMap.put(posCollocationKey, freq);
+
+                posCollocationKey = (NOT_IMPORTANT + "_" + firstPos + "_" + secondWord + "_" + secondPos).toLowerCase();
+                if (key2FreqMap.containsKey(posCollocationKey)) {
+                    freq = key2FreqMap.get(posCollocationKey) + 1;
+                }
+                key2FreqMap.put(posCollocationKey, freq);
+                break;
+
+            default:
+                break;
+        }// switch
+
+        if (!StringUtils.isBlank(thirdWord)) {
+            freq = 1;
+            posCollocationKey = (firstWord + "_" + firstPos + "_" + secondWord + "_" + secondPos + "_" + NOT_IMPORTANT + "_" + thirdPos).toLowerCase();
+            if (key2FreqMap.containsKey(posCollocationKey)) {
+                freq = key2FreqMap.get(posCollocationKey) + 1;
+            }
+            key2FreqMap.put(posCollocationKey, freq);
+        }
+    }
+
+    /**
+     * 获取原型搭配列表
+     *
+     * @param key2Freq
+     * @return
+     */
+    private List<CollocationDto> getLemmaCollocationList(Map<String, Integer> key2Freq) {
+        List<CollocationDto> lemmaCollocationList = new ArrayList<>();
+        for (Map.Entry entry : key2Freq.entrySet()) {
+            CollocationDto collocationDto = new CollocationDto();
+            String key = (String)entry.getKey();
+            int freq = (Integer) entry.getValue();
+            collocationDto.setFirstWord(key.split("_")[0]);
+            collocationDto.setFirstPos(key.split("_")[1].toUpperCase());
+            collocationDto.setSecondWord(key.split("_")[2]);
+            collocationDto.setSecondPos(key.split("_")[3].toUpperCase());
+            collocationDto.setFreq(freq);
+            if (key.split("_").length == 4) {
+                lemmaCollocationList.add(collocationDto);
+            } else if (key.split("_").length == 6) {
+                collocationDto.setThirdWord(key.split("_")[4]);
+                collocationDto.setThirdPos(key.split("_")[5].toUpperCase());
+                lemmaCollocationList.add(collocationDto);
+            }
+        }
+
+        return lemmaCollocationList;
+    }
+
+    /**
+     * 获取词性搭配列表
+     *
+     * @param key2Freq
+     * @return
+     */
+    private List<CollocationDto> getPosCollocationList(Map<String, Integer> key2Freq) {
+        List<CollocationDto> posCollocationList = new ArrayList<>();
+        for (Map.Entry entry : key2Freq.entrySet()) {
+            CollocationDto collocationDto = new CollocationDto();
+            String key = (String)entry.getKey();
+            int freq = (Integer) entry.getValue();
+            if (!NOT_IMPORTANT.equals(key.split("_")[0])) {
+                collocationDto.setFirstWord(key.split("_")[0]);
+            }
+            collocationDto.setFirstPos(key.split("_")[1].toUpperCase());
+            if (!NOT_IMPORTANT.equals(key.split("_")[2])) {
+                collocationDto.setSecondWord(key.split("_")[2]);
+            }
+            collocationDto.setSecondPos(key.split("_")[3].toUpperCase());
+            collocationDto.setFreq(freq);
+            if (key.split("_").length == 4) {
+                posCollocationList.add(collocationDto);
+            } else if (key.split("_").length == 6) {
+                collocationDto.setThirdPos(key.split("_")[5].toUpperCase());
+                posCollocationList.add(collocationDto);
+            }
+        }
+
+        return posCollocationList;
     }
 }

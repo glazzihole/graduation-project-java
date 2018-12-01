@@ -38,7 +38,7 @@ public class CollocationController {
     @ResponseBody
     public ResponseVO searchCollocationOfWord(@RequestBody @Valid CollocationDto collocationDto,
                                               Pageable pageable) {
-        log.info("searchCollocationOfWord | request to search collocation of word, {}", collocationDto.toString());
+        log.info("searchCollocationOfWord | request to search collocation of word");
         List<CollocationDto> result = collocationService.searchCollocationOfWord(collocationDto);
         if (result == null) {
             ResponseUtil.error();

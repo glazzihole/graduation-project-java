@@ -18,5 +18,5 @@ public interface StudentCollocationService {
      * @param text
      * @return
      */
-    List<CollocationDto> getCollocationInText(String text);
+    CollocationDto.CollocationInfo getCollocationInText(String text);
 }

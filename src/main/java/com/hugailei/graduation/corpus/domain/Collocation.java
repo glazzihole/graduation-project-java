@@ -49,6 +49,18 @@ public class Collocation implements Serializable {
     private String secondPos;
 
     /**
+     * 搭配中的第三个单词
+     */
+    @Column(name = "third_word")
+    private String thirdWord;
+
+    /**
+     * 搭配中的第三个单词的词性
+     */
+    @Column(name = "third_pos")
+    private String thirdPos;
+
+    /**
      * 该搭配在语料库中出现的频次
      */
     @Column(name = "freq")
