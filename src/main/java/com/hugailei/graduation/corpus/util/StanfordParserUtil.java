@@ -1,8 +1,12 @@
 package com.hugailei.graduation.corpus.util;
 
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
+import edu.stanford.nlp.ie.machinereading.structure.MachineReadingAnnotations;
+import edu.stanford.nlp.ie.machinereading.structure.RelationMention;
+import edu.stanford.nlp.ie.util.RelationTriple;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
@@ -11,10 +15,7 @@ import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * @author HU Gailei
@@ -27,6 +28,7 @@ public class StanfordParserUtil {
 
     private static Properties props;
     private static StanfordCoreNLP  pipeline;
+    private static StanfordCoreNLP relationPipeline;
     static {
         props = new Properties();
         // 总共可以有tokenize, ssplit, pos, lemma, parse, ner, dcoref七中属性
@@ -87,8 +89,29 @@ public class StanfordParserUtil {
         return pos;
     }
 
+    /**
+     * 包含关系抽取的句法分析
+     *
+     * @param text
+     * @return
+     */
+    public static List<CoreMap> relationParse(String text) {
+        if (relationPipeline == null) {
+            props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, depparse, natlog, openie, dcoref, relation");
+            relationPipeline = new StanfordCoreNLP( props );
+        }
+        List<CoreMap> result = new ArrayList<>();
+        if( !StringUtils.isEmpty( text.trim() ) ) {
+            Annotation document = new Annotation( text );
+            relationPipeline.annotate( document );
+            result = document.get(CoreAnnotations.SentencesAnnotation.class);
+        }
+        return result;
+    }
+
+
     public static void main(String[] args) {
-        String text = "she gave me a book, and the book looks useful.";
+        String text = "These real difficulties of man-power utilisation are such as to force many organisations to become larger and larger if they are to remain economic.";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         StringBuilder stringBuilder = new StringBuilder();
         // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
@@ -111,6 +134,15 @@ public class StanfordParserUtil {
         for (SemanticGraphEdge edge : semanticGraphEdgeList) {
             System.out.println(edge.toString() + "  " + edge.getGovernor() + "  " + edge.getGovernor().index());
         }
+
+//        result = relationParse(text);
+//        for (CoreMap sentence : result) {
+//            Collection<RelationTriple> realtions = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
+////            List<RelationMention> realtions = sentence.get(MachineReadingAnnotations.RelationMentionsAnnotation.class);
+//            for (RelationTriple relation : realtions) {
+//                System.out.println(relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss());
+//            }
+//        }
 
     }
 

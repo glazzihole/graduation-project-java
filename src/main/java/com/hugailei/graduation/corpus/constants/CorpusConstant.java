@@ -310,20 +310,23 @@ public class CorpusConstant {
     public static final Set<String> COLLOCATION_NOMD_RELATION_SET = new HashSet<String>() {
         {
             add("nmod:to");
+            add("nmod:in");
+            add("nmod:out");
             add("nmod:into");
+            add("nmod:onto");
             add("nmod:with");
+            add("nmod:without");
+            add("nmod:within");
             add("nmod:of");
             add("nmod:on");
             add("nmod:from");
             add("nmod:across");
-            add("nmod:without");
             add("nmod:by");
             add("nmod:for");
             add("nmod:at");
             add("nmod:about");
+            add("nmod:up");
             add("nmod:under");
-            add("nmod:onto");
-            add("nmod:within");
             add("nmod:throughout");
             add("nmod:inside");
             add("nmod:outside");
