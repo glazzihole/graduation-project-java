@@ -41,7 +41,12 @@ public enum SentencePatternType {
     /**
      * 双宾语句
      */
-    DOUBLE_OBJECT("doubleObject", 7);
+    DOUBLE_OBJECT("doubleObject", 7),
+
+    /**
+     * so/such that句型
+     */
+    S_THAT("sThat", 8);
 
     /**
      * 句子类型的名称
@@ -50,7 +55,7 @@ public enum SentencePatternType {
 
     /**
      * 句子类型标号
-     * 1——主语从句；2——宾语从句；3——定语从句；4——表语从句；5——状语从句；6——同位语从句；7——被动句；8——双宾语句
+     * 1——主语从句；2——宾语从句；3——定语从句/同位语从句；4——表语从句；5——状语从句；6——被动句；7——双宾语句；8——so/such that句型
      */
     private int type;
 

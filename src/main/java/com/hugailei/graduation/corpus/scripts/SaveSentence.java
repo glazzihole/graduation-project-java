@@ -21,7 +21,7 @@ import java.util.List;
  **/
 public class SaveSentence {
 
-    private static final String TEXT_FILE_PATH = "E:\\毕业论文相关\\bnc-sample-text";
+    private static final String TEXT_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\chinadaily-text";
 
     private static final String TYPE_FILE_PATH = "E:\\毕业论文相关\\bnc-type\\";
 
@@ -37,7 +37,7 @@ public class SaveSentence {
 
     private static final String USER_PASSWORD="123456";
 
-    private static final String CORPUS = "bnc";
+    private static final String CORPUS = "chinadaily";
 
     public static void main(String[] args) throws Exception{
         //连接mysql数据库
@@ -53,8 +53,8 @@ public class SaveSentence {
         List<File> fileList = new ArrayList<>();
         fileList = FileUtil.getFilesUnderPath(TEXT_FILE_PATH, fileList);
 
-        Long textId = 1L;
-        Long sentenceId = 1L;
+        Long textId = 183L;
+        Long sentenceId = 335607L;
         for (File file : fileList) {
             System.out.println("开始分析" + file.getCanonicalPath());
             FileInputStream fileInputStream = new FileInputStream(file);
@@ -83,17 +83,17 @@ public class SaveSentence {
             }
 
             // 存储文章
-            String title;
-            String type;
-            String fileName = file.getName();
-
-            FileReader fileReader = new FileReader(new File(TITLE_FILE_PATH + fileName));
-            BufferedReader bufferedReader1 = new BufferedReader(fileReader);
-            title = bufferedReader1.readLine();
-
-            fileReader = new FileReader(new File(TYPE_FILE_PATH + fileName));
-            bufferedReader1 = new BufferedReader(fileReader);
-            type = bufferedReader1.readLine();
+            String title = "";
+            String type = "";
+//            String fileName = file.getName();
+//
+//            FileReader fileReader = new FileReader(new File(TITLE_FILE_PATH + fileName));
+//            BufferedReader bufferedReader1 = new BufferedReader(fileReader);
+//            title = bufferedReader1.readLine();
+//
+//            fileReader = new FileReader(new File(TYPE_FILE_PATH + fileName));
+//            bufferedReader1 = new BufferedReader(fileReader);
+//            type = bufferedReader1.readLine();
 
             PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO tb_text"
                     + "(id, corpus, sentence_count, text, title, type) "

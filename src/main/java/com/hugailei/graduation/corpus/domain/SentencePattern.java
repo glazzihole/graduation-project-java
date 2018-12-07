@@ -47,6 +47,7 @@ public class SentencePattern implements Serializable {
      * 从句内容
      */
     @Column(name = "clause_content")
+    @Lob
     private String clauseContent;
 
     /**

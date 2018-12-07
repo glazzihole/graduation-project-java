@@ -336,4 +336,24 @@ public class CorpusConstant {
             add("nmod:among");
         }
     };
+
+    /**
+     * 搭配的依赖关系组合
+     */
+    public static final Set<String> INVERTED_STRUCTURE_SET = new HashSet<String>() {
+        {
+            add(" neither do ");
+            add(" so do ");
+            add(" nor do ");
+            add(" neither will ");
+            add(" so will ");
+            add(" nor will ");
+            add(" neither can ");
+            add(" so can ");
+            add(" nor can ");
+            add(" neither be ");
+            add(" so be ");
+            add(" nor be ");
+        }
+    };
 }

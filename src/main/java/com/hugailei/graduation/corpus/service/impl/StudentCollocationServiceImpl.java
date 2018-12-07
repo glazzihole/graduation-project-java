@@ -11,12 +11,15 @@ import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 import static com.hugailei.graduation.corpus.service.impl.CollocationServiceImpl.sortCollocationDtoList;
 
@@ -121,7 +124,7 @@ public class StudentCollocationServiceImpl implements StudentCollocationService 
                                 found = true;
                             }
                         }
-                        else if ("compound:prt".equals(relation)) {
+                        else if ("compound:prt".equals(relation) || "nmod".equals(relation)) {
                             firstWord = edge.getGovernor().lemma();
                             firstPos = edge.getGovernor().tag();
                             secondWord = edge.getDependent().lemma();
@@ -132,7 +135,7 @@ public class StudentCollocationServiceImpl implements StudentCollocationService 
                             String verbAdjRegex = "(VB[A-Z]{0,1})-(JJ[A-Z]{0,1})";
                             String verbNounRegex = "(VB[A-Z]{0,1})-((NN[A-Z]{0,1})|(PRP))";
                             if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbAdjRegex) ||
-                                (edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbNounRegex)) {
+                                    (edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbNounRegex)) {
                                 SentencePatternUtil.Edge temp = null;
                                 if (edge.getDependent().tag().startsWith("NN")) {
                                     temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), dependency);
@@ -172,6 +175,19 @@ public class StudentCollocationServiceImpl implements StudentCollocationService 
                                             posCollocationKey2Freq.put(posCollocationKey, freq);
                                         }
                                     }
+                                }
+                            }
+                        }
+                        else if ("dep".equals(relation)) {
+                            if (edge.getGovernor().tag().matches("VB[A-Z]{0,1}")) {
+                                found = true;
+                                firstWord = edge.getGovernor().lemma();
+                                firstPos = edge.getGovernor().tag();
+                                secondWord = edge.getDependent().lemma();
+                                secondPos = edge.getDependent().tag();
+                                if (edge.getDependent().tag().startsWith("NN")) {
+                                    SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), dependency);
+                                    secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
                                 }
                             }
                         }

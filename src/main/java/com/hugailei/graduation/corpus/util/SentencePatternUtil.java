@@ -17,8 +17,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.awt.print.Pageable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author HU Gailei
@@ -122,23 +125,28 @@ public class SentencePatternUtil {
      * @param sentence 句法分析结果
      */
     public static List<SentencePattern> matchObjectClauseOrPredicativeClause(CoreMap sentence) {
+        // 先判断句中有没有so that句，若有，则需排除that后的从句，否则会识别为定语从句。
+        Set<Integer> thatIndexSet = getSoThatClauseIndex(sentence);
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
         List<SentencePattern> sentencePatternList = new ArrayList<>();
         SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
-        TregexPattern pattern = TregexPattern.compile("PP << SBAR");
+        TregexPattern pattern = TregexPattern.compile("/^P.*$/ << SBAR");
         TregexMatcher matcher = pattern.matcher(tree);
         while (matcher.findNextMatchingNode()) {
             // 匹配SBAR，得出从句内容
             TregexMatcher clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(matcher.getMatch());
             StringBuilder clauseContent = new StringBuilder();
             if (clauseMatcher.findNextMatchingNode()) {
+                int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+                if (thatIndexSet != null && thatIndexSet.contains(clauseStartIndex)) {
+                    break;
+                }
                 for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
                     clauseContent.append(leaf.label().value()).append(" ");
                 }
                 sentencePatternList.add(new SentencePattern(2, null, null, clauseContent.toString(), null, null, null, null));
             }
         }
-
         pattern = TregexPattern.compile("VP << (/^VB.*$/ [$++ SBAR | $++ S])");
         matcher = pattern.matcher(tree);
         while (matcher.findNextMatchingNode()) {
@@ -219,6 +227,8 @@ public class SentencePatternUtil {
      * @param sentence 句法分析结果
      */
     public static List<SentencePattern> matchAppositiveClauseOrAttributiveClause(CoreMap sentence) {
+        // 先判断句中有没有so that句，若有，则需排除that后的从句，否则会识别为定语从句。
+        Set<Integer> thatIndexSet = getSoThatClauseIndex(sentence);
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
         SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
         TregexPattern pattern = TregexPattern.compile("NP $.. SBAR");
@@ -227,7 +237,6 @@ public class SentencePatternUtil {
         while (matcher.findNextMatchingNode()) {
             // 是否找到
             boolean found = false;
-
             Tree match = matcher.getMatch();
             Tree[] childrens = match.children();
             // 获取从句所修饰的名词
@@ -236,7 +245,6 @@ public class SentencePatternUtil {
                 if (children.label().toString().matches(nounReg)) {
                     // 获取该名词的index，从0开始
                     int index = children.getLeaves().get(0).indexLeaves(1, false) - 2;
-
                     // 通过index获取名词的原型
                     CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(index);
                     String lemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
@@ -261,12 +269,15 @@ public class SentencePatternUtil {
                     if (found) {
                         int type;
                         type = SentencePatternType.ATTRIBUTIVE_CLAUSE_OR_APPOSITIVE_CLAUSE.getType();
-
                         // 匹配SBAR，得出从句内容
                         Tree parent = match.parent(tree);
                         TregexMatcher clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(parent);
                         StringBuilder clauseContent = new StringBuilder();
                         if (clauseMatcher.findNextMatchingNode()) {
+                            int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+                            if (thatIndexSet != null && thatIndexSet.contains(clauseStartIndex)) {
+                                break;
+                            }
                             for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
                                 clauseContent.append(leaf.label().value()).append(" ");
                             }
@@ -467,6 +478,267 @@ public class SentencePatternUtil {
     }
 
     /**
+     * 匹配是否包含so that/such that句型
+     *
+     * @param sentence 句法分析结果 句法分析结果
+     */
+    public static boolean hasSoThat(CoreMap sentence) {
+        // 获取依存关系
+        SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
+        // 找so或such 及其所修饰的词
+        for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
+            if (edge.getDependent().word().toLowerCase().equals("so") ||
+                edge.getDependent().word().toLowerCase().equals("such")) {
+                int afterSoIndex = edge.getGovernor().index();
+
+                // 查找that所修饰的词
+                for (SemanticGraphEdge s : dependency.edgeListSorted()) {
+                    if (s.getRelation().toString().startsWith("mark") &&
+                        s.getDependent().word().toLowerCase().equals("that") &&
+                        s.getDependent().tag().equals("IN")) {
+                        int afterThatIndex = s.getGovernor().index();
+                        // 看so所修饰的词和that所修饰的词之间是否存在依存关系
+                        for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                            if ((e.getRelation().toString().startsWith("dep") || e.getRelation().toString().startsWith("ccomp") &&
+                                 e.getGovernor().index() == afterSoIndex &&
+                                 e.getDependent().index() == afterThatIndex)) {
+                                return true;
+                            }
+                        }
+
+                        // 若so所修饰的词和that所修饰的词之间不存在直接的依存关系，则先查找与that所修饰的词存在依存关系的词A
+                        for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                            if (e.getDependent().index() == afterThatIndex &&
+                                (e.getRelation().toString().startsWith("cop") ||
+                                 e.getRelation().toString().startsWith("ccomp") ||
+                                 e.getRelation().toString().startsWith("dep") )) {
+                                int tempAIndex = e.getGovernor().index();
+                                // 查找A与so所修饰的词是否存在指定关系
+                                for (SemanticGraphEdge se : dependency.edgeListSorted()) {
+                                    if (se.getDependent().index() == afterSoIndex &&
+                                        se.getGovernor().index() == tempAIndex) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 匹配是否包含so that/such that句型，返回that的所有位置（从0开始计数）
+     *
+     * @param sentence 句法分析结果
+     */
+    public static Set<Integer> getSoThatClauseIndex(CoreMap sentence) {
+        // 获取依存关系
+        SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
+        Set<Integer> indexSet = new HashSet<>();
+        // 找so或such 及其所修饰的词
+        for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
+            boolean found = false;
+            if (edge.getDependent().word().toLowerCase().equals("so") ||
+                edge.getDependent().word().toLowerCase().equals("such")) {
+                int afterSoIndex = edge.getGovernor().index();
+                // 查找that所修饰的词
+                for (SemanticGraphEdge s : dependency.edgeListSorted()) {
+                    if (s.getRelation().toString().startsWith("mark") &&
+                        s.getDependent().word().toLowerCase().equals("that") &&
+                        s.getDependent().tag().equals("IN")) {
+                        int afterThatIndex = s.getGovernor().index();
+                        int thatIndex = s.getDependent().index();
+                        // 看so所修饰的词和that所修饰的词之间是否存在依存关系
+                        for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                            if ((e.getRelation().toString().startsWith("dep") || e.getRelation().toString().startsWith("ccomp") &&
+                                e.getGovernor().index() == afterSoIndex &&
+                                e.getDependent().index() == afterThatIndex)) {
+                                indexSet.add(thatIndex - 1);
+                            }
+                        }
+                        if (!found) {
+                            // 若so所修饰的词和that所修饰的词之间不存在直接的依存关系，则先查找与that所修饰的词存在依存关系的词A
+                            for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                                if (e.getDependent().index() == afterThatIndex &&
+                                        (e.getRelation().toString().startsWith("cop") ||
+                                        e.getRelation().toString().startsWith("ccomp") ||
+                                        e.getRelation().toString().startsWith("dep") )) {
+                                    int tempAIndex = e.getGovernor().index();
+                                    // 查找A与so所修饰的词是否存在指定关系
+                                    for (SemanticGraphEdge se : dependency.edgeListSorted()) {
+                                        if (se.getDependent().index() == afterSoIndex &&
+                                                se.getGovernor().index() == tempAIndex) {
+                                            indexSet.add(thatIndex - 1);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (indexSet.isEmpty()) {
+            return null;
+        }
+        return indexSet;
+    }
+
+    /**
+     * 是否包含 too to句型
+     *
+     * @param sentence
+     * @return
+     */
+    public static boolean hasTooTo (CoreMap sentence) {
+        // 获取依存关系
+        SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
+        // 找too及其所修饰的词
+        for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
+            boolean found = false;
+            if (edge.getDependent().word().equals("too")) {
+                int afterTooIndex = edge.getGovernor().index();
+
+                // 查找to所修饰的词
+                for (SemanticGraphEdge s : dependency.edgeListSorted()) {
+                    if (s.getRelation().toString().startsWith("mark") &&
+                        s.getDependent().word().equals("to")) {
+                        int afterToIndex = s.getGovernor().index();
+                        // 看so所修饰的词和that所修饰的词之间是否存在依存关系
+                        for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                            if ((e.getRelation().toString().startsWith("dep") || e.getRelation().toString().startsWith("xcomp") &&
+                                 e.getGovernor().index() == afterTooIndex &&
+                                 e.getDependent().index() == afterToIndex)) {
+                               return true;
+                            }
+                        }
+                        if (!found) {
+                            // 若too所修饰的词和to所修饰的词之间不存在直接的依存关系，则先查找与to所修饰的词存在依存关系的词A
+                            for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                                if (e.getDependent().index() == afterToIndex &&
+                                    e.getRelation().toString().startsWith("xcomp")) {
+                                    int tempAIndex = e.getGovernor().index();
+                                    // 查找A与so所修饰的词是否存在指定关系
+                                    for (SemanticGraphEdge se : dependency.edgeListSorted()) {
+                                        if (se.getDependent().index() == afterToIndex &&
+                                            se.getGovernor().index() == tempAIndex) {
+                                            return true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 匹配是否包含倒装结构
+     *
+     * @param sentence
+     * @return
+     */
+    public static boolean hasInvertedStructure(CoreMap sentence) {
+        SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
+        // 判断句子是否是疑问句
+        int sentenceWordCount = sentence.get(CoreAnnotations.TokensAnnotation.class).size();
+        String punct = sentence.get(CoreAnnotations.TokensAnnotation.class).get(sentenceWordCount - 1).lemma();
+        boolean isQuestion = false;
+        if (punct.equals("?")) {
+            isQuestion = true;
+        }
+        // 判断句子中是否包含情态动词 + 代词 + 动词的结构
+        StringBuilder posString = new StringBuilder();
+        StringBuilder lemmaString = new StringBuilder();
+        for (CoreLabel label : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
+            posString.append(StanfordParserUtil.getBasePos(label.tag())).append(" ");
+            lemmaString.append(label.lemma()).append(" ");
+        }
+        if (posString.toString().contains(" MD PRP VB") && !isQuestion) {
+            return true;
+        }
+        // 判断是否包含 neither do I 这样的结构
+        for (String structure : CorpusConstant.INVERTED_STRUCTURE_SET) {
+            if (lemmaString.toString().contains(structure)) {
+                return true;
+            }
+        }
+        for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
+            if (edge.getRelation().toString().equals("advmod")) {
+                String posPair = edge.getGovernor() + "-" + edge.getDependent();
+                if (posPair.matches("(VB[A-Z]{0,1})-(RB[A-Z]{0,1})")) {
+                    if (edge.getDependent().index() < edge.getGovernor().index()) {
+                        // 判断副词后跟的是as或though
+                        String word = sentence.get(CoreAnnotations.TokensAnnotation.class).get(edge.getDependent().index()).lemma();
+                        if (word.equals("as") || word.equals("though")) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            if (edge.getRelation().toString().equals("nsubj")) {
+                String posPair = edge.getGovernor() + "-" + edge.getDependent();
+                // here comes the bus
+                if (posPair.matches("(VB[A-Z]{0,1})-(NN[A-Z]{0,1})") &&
+                    edge.getGovernor().index() < edge.getDependent().index()) {
+                    return true;
+                }
+                // away went the crowd
+                else if (posPair.matches("(VB[A-Z]{0,1})-(RB[A-Z]{0,1})") &&
+                           edge.getDependent().index() < edge.getGovernor().index()) {
+                    return true;
+                }
+                if (edge.getGovernor().tag().startsWith("VB")  &&
+                    (edge.getDependent().tag().matches("NN.*") || edge.getDependent().tag().equals("PRP"))) {
+                    int verbIndex = edge.getGovernor().index();
+                    // 看情态动词是否在主语之前
+                    for (SemanticGraphEdge s : dependency.edgeListSorted()) {
+                        if (s.getGovernor().index() == verbIndex &&
+                            s.getDependent().tag().equals("MD")) {
+                            if (s.getDependent().index() < edge.getDependent().index() && !isQuestion) {
+                                return true;
+                            }
+                        }
+                    }
+                    // well do I remember the day, many a time have I seen her
+                    for (SemanticGraphEdge s : dependency.edgeListSorted()) {
+                        if (s.getRelation().toString().equals("ccomp") && s.getDependent().index() == verbIndex) {
+                            if (s.getGovernor().lemma().equals("do") ||
+                                s.getGovernor().lemma().equals("have") ||
+                                s.getGovernor().tag().equals("MD")) {
+                                if (s.getGovernor().index() < edge.getDependent().index()) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    // the harder you work, ..
+                    for (SemanticGraphEdge s : dependency.edgeListSorted()) {
+                        if (s.getRelation().toString().equals("dep") && s.getGovernor().index() == verbIndex) {
+                            if (s.getDependent().tag().matches("RB.*") &&
+                                s.getDependent().index() < edge.getDependent().index()) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            if (edge.getRelation().toString().equals("cop")) {
+                if (edge.getGovernor().index() > edge.getDependent().index() && !isQuestion) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * 匹配各类短语
      *
      * @param sentence 句法分析结果
@@ -482,7 +754,6 @@ public class SentencePatternUtil {
             // 匹配输出
             while (matcher.findNextMatchingNode()) {
                 Tree match = matcher.getMatch();
-                StringBuilder phrase = new StringBuilder();
                 // 排除掉单个单词，过长的短语排除掉
                 if (match.getLeaves().size() > 1 && match.getLeaves().size() <= 10) {
                     List<Edge> edgeList = new ArrayList<>();
@@ -970,17 +1241,17 @@ public class SentencePatternUtil {
     }
 
     public static void main(String[] args) {
-        String text = "Reformed offenders can tell young people about how they became involved in crime, the dangers of a criminal lifestyle, and what life in prison is really like.";
+        String text = "Not a single word of English can he speak. So excited was he that he could not say a word. ";
         List<CoreMap> result = StanfordParserUtil.parse(text);
 
         for(CoreMap sentence : result) {
             getPrincipalClause(sentence);
+            System.out.println(hasSoThat(sentence));
+            System.out.println(hasInvertedStructure(sentence));
             sentence.get(TreeCoreAnnotations.TreeAnnotation.class).pennPrint();
             for (SentencePattern sp : findAllSpecialSentencePattern(sentence)) {
                 System.out.println(sp.toString());
             }
         }
-
-
     }
 }

@@ -221,7 +221,7 @@ public class SaveCollocation {
                         }
                     }
                 }
-                else if ("compound:prt".equals(relation)) {
+                else if ("compound:prt".equals(relation) || "nmod".equals(relation)) {
                     found = true;
                     firstWord = edge.getGovernor().lemma();
                     firstPos = edge.getGovernor().tag();
@@ -266,6 +266,19 @@ public class SaveCollocation {
                                     KEY_TO_SENTENCEIDS.put(key, sentenceIds);
                                 }
                             }
+                        }
+                    }
+                }
+                else if ("dep".equals(relation)) {
+                    if (edge.getGovernor().tag().matches("VB[A-Z]{0,1}")) {
+                        found = true;
+                        firstWord = edge.getGovernor().lemma();
+                        firstPos = edge.getGovernor().tag();
+                        secondWord = edge.getDependent().lemma();
+                        secondPos = edge.getDependent().tag();
+                        if (edge.getDependent().tag().startsWith("NN")) {
+                            SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), dependency);
+                            secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
                         }
                     }
                 }

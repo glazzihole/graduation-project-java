@@ -1,7 +1,7 @@
 package nl.inl.blacklab.server.requesthandlers;
 
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.hugailei.graduation.corpus.domain.NGram;
+import com.hugailei.graduation.corpus.dto.NgramDto;
 import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.search.Hits;
 import nl.inl.blacklab.search.Searcher;
@@ -59,7 +59,7 @@ public class NGramRequestHandler extends RequestHandler {
             int pageSize = windowSettings.size() < 0 || windowSettings.size() > searchMan.config().maxPageSize() ? searchMan.config().defaultPageSize() : windowSettings.size();
 
 
-            List<NGram> ngramInfo = getNgramInfo(patt);
+            List<NgramDto> ngramInfo = getNgramInfo(patt);
 
             int totalResults = ngramInfo.size();
             double totalPages = Math.ceil( (double)totalResults/ (double)pageSize );
@@ -77,7 +77,7 @@ public class NGramRequestHandler extends RequestHandler {
 
             ds.startEntry("page").startList();
             int i = 1;
-            for (NGram ngram : ngramInfo) {
+            for (NgramDto ngram : ngramInfo) {
                 if (i > first && i <= first + pageSize) {
                     ds.startItem("chunk").startMap();
                     ds  .entry("id", ngram.getId());
@@ -109,7 +109,7 @@ public class NGramRequestHandler extends RequestHandler {
      * @return
      * @throws BlsException
      */
-    private List<NGram> getNgramInfo(String patt) throws BlsException {
+    private List<NgramDto> getNgramInfo(String patt) throws BlsException {
         IndexManager indexManager = searchMan.getIndexManager();
         Searcher searcher = indexManager.getSearcher(indexName);
         patt = "[]{2,5}containing" + patt;
@@ -120,7 +120,7 @@ public class NGramRequestHandler extends RequestHandler {
         HitGroups groups = hits.groupedBy(groupProp);
         groups.sortGroups( GroupProperty.size(), false );
 
-        List<NGram> ngramInfo = new ArrayList<>();
+        List<NgramDto> ngramInfo = new ArrayList<>();
         for (HitGroup group: groups) {
             //只取频率大于2的ngram
             if( group.size() > 2 ) {
@@ -129,7 +129,7 @@ public class NGramRequestHandler extends RequestHandler {
                 Matcher matcher = p.matcher(ngramStr);
                 //只取不包含特殊字符等符号的ngram
                 if(!matcher.find()) {
-                    ngramInfo.add(new NGram(group.hashCode(), ngramStr, ngramStr.split( " " ).length, group.size()) );
+                    ngramInfo.add(new NgramDto(group.hashCode(), ngramStr, ngramStr.split( " " ).length, group.size()) );
                 }
             }
         }

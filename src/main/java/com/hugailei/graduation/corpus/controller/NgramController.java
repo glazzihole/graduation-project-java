@@ -1,18 +1,21 @@
 package com.hugailei.graduation.corpus.controller;
 
+import com.hugailei.graduation.corpus.dto.NgramDto;
+import com.hugailei.graduation.corpus.service.NgramService;
+import com.hugailei.graduation.corpus.util.ResponseUtil;
+import com.hugailei.graduation.corpus.vo.ResponseVO;
 import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.server.BlackLabServer;
 import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.requesthandlers.NGramRequestHandler;
 import nl.inl.blacklab.server.requesthandlers.RequestHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * @author HU Gailei
@@ -28,6 +31,9 @@ public class NgramController {
 
     private Handler handler = new Handler();
     private BlackLabServer blackLabServer = new BlackLabServer();
+
+    @Autowired
+    private NgramService ngramService;
 
     /**
      * 按表达式查询包含指定形式的ngram
@@ -49,5 +55,26 @@ public class NgramController {
         handler.checkConfig(request, response, blackLabServer);
         RequestHandler requestHandler = new NGramRequestHandler(blackLabServer, request, user, corpus, patt, null, null);
         handler.checkAndHandler(pageable, corpus, blackLabServer, request, response, requestHandler);
+    }
+
+    /**
+     * 查找指定语料库中N为指定值的ngram
+     *
+     * @param corpus
+     * @param nValue
+     * @param pageable
+     * @return
+     */
+    @GetMapping("/list")
+    @ResponseBody
+    public ResponseVO ngramList(@RequestParam String corpus,
+                                @RequestParam int nValue,
+                                Pageable pageable) {
+        log.info("ngramList | request to get ngram list of corpus: {}", corpus);
+        List<NgramDto> result = ngramService.ngramList(corpus, nValue);
+        if (result == null) {
+            ResponseUtil.error();
+        }
+        return ResponseUtil.createPageResponse(result, pageable);
     }
 }
