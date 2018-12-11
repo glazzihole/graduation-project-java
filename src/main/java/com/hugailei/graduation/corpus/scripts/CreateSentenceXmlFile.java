@@ -22,8 +22,8 @@ import java.util.List;
  * </p>
  **/
 public class CreateSentenceXmlFile {
-    private static final String INPUT_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\youdao-text";
-    private static final String OUTPUT_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\youdao-xml";
+    private static final String INPUT_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\chinadaily-text";
+    private static final String OUTPUT_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\chinadaily-xml";
 
     public static void main(String[] args) throws Exception{
         //读取语料

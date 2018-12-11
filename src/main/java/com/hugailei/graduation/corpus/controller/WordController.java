@@ -47,7 +47,7 @@ public class WordController {
     @ResponseBody
     public ResponseVO searchAllLemma(@RequestParam String word,
                                      @RequestParam String corpus) {
-        log.info("searchAllLemma | request to search all lemma of word {} in corpus {}", word, corpus);
+        log.info("searchAllLemma | request to search all lemma of word in corpus ");
         List<WordDto> result = wordService.searchAll(word, corpus, CorpusConstant.LEMMA);
         if (result == null) {
             ResponseUtil.error();
@@ -66,7 +66,7 @@ public class WordController {
     @ResponseBody
     public ResponseVO searchAllPos(@RequestParam String word,
                                    @RequestParam String corpus) {
-        log.info("searchAllPos | request to search all pos of word {} in corpus {}", word, corpus);
+        log.info("searchAllPos | request to search all pos of word in corpus");
         List<WordDto> result = wordService.searchAll(word, corpus, CorpusConstant.POS);
         if (result == null) {
             ResponseUtil.error();
@@ -85,7 +85,7 @@ public class WordController {
     @ResponseBody
     public ResponseVO searchAllForm(@RequestParam String lemma,
                                     @RequestParam String corpus) {
-        log.info("searchAllForm | request to search all form of lemma {} in corpus {}", lemma, corpus);
+        log.info("searchAllForm | request to search all form of lemma in corpus");
         List<WordDto> result = wordService.searchAll(lemma, corpus, CorpusConstant.FORM);
         if (result == null) {
             ResponseUtil.error();
@@ -106,7 +106,7 @@ public class WordController {
     public ResponseVO searchWordDetail(@RequestParam String query,
                                        @RequestParam String corpus,
                                        @RequestParam("query_type") String queryType) {
-        log.info("searchWordDetail | request to search detail of {}={} in corpus {}", queryType, query, corpus);
+        log.info("searchWordDetail | request to search word detail in corpus");
         List<WordDto> result = wordService.searchDetail(query, corpus, queryType);
         if (result == null) {
             return ResponseUtil.error();

@@ -56,7 +56,7 @@ public class WordServiceImpl implements WordService {
                     long index = 1L;
                     for(Map.Entry<String, Integer> entry : key2Freq.entrySet()){
                         resultList.add(
-                                new WordDto(index++, query, null, entry.getKey(), entry.getValue(),null, corpus)
+                                new WordDto(index++, query, null, entry.getKey(), entry.getValue(),null, corpus, null, null)
                         );
                     }
                     break;
@@ -74,7 +74,7 @@ public class WordServiceImpl implements WordService {
                     index = 1L;
                     for(Map.Entry<String, Integer> entry : key2Freq.entrySet()){
                         resultList.add(
-                                new WordDto(index++, query, entry.getKey(), null, entry.getValue(),null, corpus)
+                                new WordDto(index++, query, entry.getKey(), null, entry.getValue(),null, corpus, null, null)
                         );
                     }
                     break;
@@ -92,7 +92,7 @@ public class WordServiceImpl implements WordService {
                     index = 1L;
                     for(Map.Entry<String, Integer> entry : key2Freq.entrySet()){
                         resultList.add(
-                                new WordDto(index++, entry.getKey(), null, query, entry.getValue(),null, corpus)
+                                new WordDto(index++, entry.getKey(), null, query, entry.getValue(),null, corpus, null, null)
                         );
                     }
                     break;

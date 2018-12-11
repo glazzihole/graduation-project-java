@@ -23,6 +23,16 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: update
+  data:
+    elasticsearch:
+      repositories:
+        enabled: true
+      cluster-name: elasticsearch
+      cluster-nodes: localhost:9300
+      properties:
+        path:
+          logs: target/elasticsearch/log
+          data: target/elasticsearch/data
 
 logging:
   level:

@@ -68,7 +68,7 @@ public class NgramController {
     @GetMapping("/list")
     @ResponseBody
     public ResponseVO ngramList(@RequestParam String corpus,
-                                @RequestParam int nValue,
+                                @RequestParam("n_value") int nValue,
                                 Pageable pageable) {
         log.info("ngramList | request to get ngram list of corpus: {}", corpus);
         List<NgramDto> result = ngramService.ngramList(corpus, nValue);

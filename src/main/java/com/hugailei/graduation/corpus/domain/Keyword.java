@@ -4,10 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.io.Serializable;
 
 /**
@@ -22,11 +19,26 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Entity
 @Table(name = "tb_keyword")
-public class Keyword implements Serializable {
-    //@GeneratedValue(strategy = GenerationType.IDENTITY)
+public class KeyWord implements Serializable {
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
 
     @Column(name = "word", nullable = false)
     private String word;
+
+    @Column(name = "lemma")
+    private String lemma;
+
+    @Column(name = "pos")
+    private String pos;
+
+    @Column(name = "corpus", nullable = false)
+    private String corpus;
+
+    @Column(name = "ref_corpus", nullable = false)
+    private String refCorpus;
+
+    @Column(name = "keyness", nullable = false)
+    private Double keyness;
 }

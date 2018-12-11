@@ -23,7 +23,7 @@ import java.util.Set;
 @Table(name = "tb_text")
 public class Text implements Serializable {
 
-    //@GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
 
@@ -46,7 +46,7 @@ public class Text implements Serializable {
             joinColumns = {@JoinColumn(name = "text_id", referencedColumnName = "id")},
             inverseJoinColumns = {@JoinColumn(name = "keyword_id", referencedColumnName = "id")}
     )
-    private Set<Keyword> keywords = new HashSet<>();
+    private Set<KeyWord> keywords = new HashSet<>();
 
     @Column(name = "sentence_count")
     private Integer sentenceCount;

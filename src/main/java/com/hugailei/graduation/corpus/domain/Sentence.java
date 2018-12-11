@@ -3,6 +3,10 @@ package com.hugailei.graduation.corpus.domain;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.Mapping;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -16,12 +20,14 @@ import java.io.Serializable;
  **/
 @Entity
 @Table(name = "tb_sentence")
+@Document(indexName = "sentence", type = "sentence")
+@Mapping(mappingPath = "com/hugailei/graduation/corpus/elasticsearch/mapping/SentenceMapping.json")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Sentence implements Serializable {
 
-    //@GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
 
@@ -34,4 +40,7 @@ public class Sentence implements Serializable {
 
     @Column(name = "word_count")
     private Integer wordCount;
+
+    @Column(name = "corpus")
+    private String corpus;
 }

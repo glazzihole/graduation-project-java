@@ -35,15 +35,15 @@ import java.util.regex.Pattern;
  * </p>
  **/
 public class SaveNgram {
-    private static String[] CORPUS_NAME_ARRAY = { "bnc", "chinadaily"};
+    private static String[] CORPUS_NAME_ARRAY = { "bnc-sample", "chinadaily"};
 
     private static Searcher SEARCHER = null;
 
-    private static String CORPUS_PATH = "D:\\someProject\\corpus-new\\data\\corpus\\";
+    private static String CORPUS_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\indexData\\";
 
     
-    private static String REGEX = "[\\(-llb-\\)\\(-lrb-\\)\\(-rrb-\\)\\(-rlb-\\)"
-            + "`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？\\\\]";
+    private static String REGEX = "[(\\-llb\\-)(\\-lrb\\-)(\\-rrb\\-)(\\-rlb\\-)"
+            + "`/~!@#$%^&*\\(\\)+=|{}':;,\\[\\]\\.<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
 
     //数据库主机地址
     private static final String DB_HOST = "192.168.99.100";
@@ -143,18 +143,18 @@ public class SaveNgram {
             HitGroups groups = hits.groupedBy(groupProp);
             //遍历hitgroups,得到该单词的所有ngram和频率
             for (HitGroup group: groups) {
-                if( group.size() > 2 && group.getIdentity().toString().split( " / " ).length==2 ) {
-                    String ngramStr = group.getIdentity().toString().split( " / " )[0].toLowerCase();
+                if( group.size() > 2) {
+                    String ngramStr = group.getIdentity().toString();
                     Pattern p = Pattern.compile(REGEX);
                     Matcher matcher = p.matcher(ngramStr);
                     if( !matcher.find() ) {
-                        int nValue = ngramStr.split( " " ).length;
+                        int nValue = ngramStr.split( " +" ).length;
                         int freq = group.size();
                         System.out.println(ngramStr);
                         // 存入数据库
                         try {
                             PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO " + COLL_NAME
-                                    + "(ngramStr, nValue, freq, corpus) "
+                                    + "(ngram_str, n_value, freq, corpus) "
                                     + " VALUES (?, ?, ?, ?)");
                             preparedStatement.setString(1, ngramStr.toLowerCase());
                             preparedStatement.setInt(2, nValue);

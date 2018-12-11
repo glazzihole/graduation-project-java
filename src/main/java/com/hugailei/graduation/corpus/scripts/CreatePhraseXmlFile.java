@@ -21,8 +21,8 @@ import java.util.List;
  * </p>
  **/
 public class CreatePhraseXmlFile {
-    private static final String INPUT_FILE_PATH = "E:\\毕业论文相关\\bnc-sample-text";
-    private static final String OUTPUT_FILE_PATH = "E:\\毕业论文相关\\bnc-phrase-xml";
+    private static final String INPUT_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\chinadaily-text";
+    private static final String OUTPUT_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\chinadaily-phrase-xml";
 
     public static void main(String[] args) throws Exception{
         //读取语料

@@ -28,4 +28,11 @@ public class WordDto {
     private String sentenceIds;
 
     private String corpus;
+
+    private String refCorpus;
+
+    /**
+     * keyword中的关键性值
+     */
+    private Double keyness;
 }

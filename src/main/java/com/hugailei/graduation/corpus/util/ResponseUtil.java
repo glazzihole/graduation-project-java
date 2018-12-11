@@ -59,8 +59,8 @@ public class ResponseUtil {
         int pageNumber = pageable.getPageNumber();
         int totalElements = list.size();
         int totalPages = doubleToInt(Math.ceil((double) totalElements / (double) pageSize));
-        int startNumber = (pageNumber - 1) * pageSize;
-        int endNumber = pageNumber * pageSize;
+        int startNumber = pageNumber * pageSize;
+        int endNumber = (pageNumber + 1) * pageSize;
         int i = 1;
         for (Object object : list) {
             if (i > startNumber && i <= endNumber) {

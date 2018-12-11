@@ -1,5 +1,8 @@
 package com.hugailei.graduation.corpus.dto;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.io.Serializable;
 
 /**
@@ -9,9 +12,11 @@ import java.io.Serializable;
  * description:
  * </p>
  **/
+@Data
+@NoArgsConstructor
 public class SentenceDto implements Serializable {
     private Long id;
-    private String setence;
+    private String sentence;
     private Long textId;
     private Integer wordCount;
 

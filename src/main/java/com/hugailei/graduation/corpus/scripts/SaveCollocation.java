@@ -2,7 +2,6 @@ package com.hugailei.graduation.corpus.scripts;
 
 import com.bfsuolframework.core.utils.StringUtils;
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.hugailei.graduation.corpus.util.FileUtil;
 import com.hugailei.graduation.corpus.util.SentencePatternUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import edu.stanford.nlp.semgraph.SemanticGraph;
@@ -14,7 +13,10 @@ import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.util.*;
+import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author HU Gailei
@@ -25,9 +27,9 @@ import java.util.*;
  **/
 public class SaveCollocation {
 
-    private static final String FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\bnc-sample-text";
+    private static final String CORPUS = "chinadaily";
 
-    private static final String TEMP_FILE_PATH = "E:\\temp.txt";
+    private static final String TEMP_FILE_PATH = "E:\\chinadaily-collocation-temp.txt";
 
     private static final String DB_HOST = "192.168.99.100";
 
@@ -38,8 +40,6 @@ public class SaveCollocation {
     private static final String USER_NAME="root";
 
     private static final String USER_PASSWORD="123456";
-
-    private static final String CORPUS = "bnc";
 
     private static Map<String, String> KEY_TO_SENTENCEIDS;
 
@@ -62,25 +62,17 @@ public class SaveCollocation {
             System.out.println("序列化文件无法加载，开始重新分析");
         }
         if (KEY_TO_SENTENCEIDS.isEmpty()) {
-            // 读取语料
-            List<File> fileList = new ArrayList<>();
-            fileList = FileUtil.getFilesUnderPath(FILE_PATH, fileList);
-            Long sentenceId = 1L;
-            for (File file : fileList) {
-                System.out.println("开始分析" + file.getCanonicalPath());
-                FileInputStream fileInputStream = new FileInputStream(file);
-                InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                String line;
-
-                StringBuilder text = new StringBuilder();
-                while ((line = bufferedReader.readLine()) != null) {
-                    System.out.println("line: " + line);
-                    text.append(line.replace("\r", "").replace("\n", ""));
-                    List<CoreMap> sentences = StanfordParserUtil.parse(line);
-                    for (CoreMap sentence : sentences) {
-                        getCollocation(sentence, sentenceId++);
-                    }
+            // 先从数据库中读取句子
+            PreparedStatement preparedStatement = con.prepareStatement("SELECT id, sentence FROM tb_sentence where corpus = '" + CORPUS + "'");
+            // 遍历并分析句子
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String sentence = resultSet.getString("sentence");
+                System.out.println("sentence: " + sentence);
+                Long sentenceId = resultSet.getLong("id");
+                List<CoreMap> sentences = StanfordParserUtil.parse(sentence);
+                for (CoreMap text : sentences) {
+                    getCollocation(text, sentenceId);
                 }
             }
         }

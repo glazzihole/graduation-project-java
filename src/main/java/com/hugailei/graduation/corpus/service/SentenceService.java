@@ -1,6 +1,7 @@
 package com.hugailei.graduation.corpus.service;
 
 import com.hugailei.graduation.corpus.dto.SentenceDto;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -13,9 +14,11 @@ import java.util.List;
  **/
 public interface SentenceService {
     /**
-     * 从数据库中查询句子
+     * es查询，查询数据库中指定语料库里包含与指定内容相关的例句
      *
+     * @param content   待查询内容
+     * @param corpus    语料库
      * @return
      */
-    List<SentenceDto> searchSentenceFromDataBase();
+    List<SentenceDto> sentenceElasticSearch(String content, String corpus);
 }

@@ -30,9 +30,6 @@ public class SentenceController {
     private Handler handler = new Handler();
     private BlackLabServer blackLabServer = new BlackLabServer();
 
-    @Autowired
-    private SentenceService sentenceService;
-
     /**
      * 句子检索
      *
@@ -42,7 +39,7 @@ public class SentenceController {
      * @param corpus
      * @param patt
      */
-    @GetMapping("")
+    @GetMapping
     public void searchSentence (Pageable pageable,
                                 HttpServletRequest request,
                                 HttpServletResponse response,

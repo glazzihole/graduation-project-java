@@ -21,7 +21,7 @@ import java.util.List;
  **/
 public class SaveSentence {
 
-    private static final String TEXT_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\chinadaily-text";
+    private static final String TEXT_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\bnc-sample-text";
 
     private static final String TYPE_FILE_PATH = "E:\\毕业论文相关\\bnc-type\\";
 
@@ -53,8 +53,8 @@ public class SaveSentence {
         List<File> fileList = new ArrayList<>();
         fileList = FileUtil.getFilesUnderPath(TEXT_FILE_PATH, fileList);
 
-        Long textId = 183L;
-        Long sentenceId = 335607L;
+        Long textId = 1L;
+        Long sentenceId = 1L;
         for (File file : fileList) {
             System.out.println("开始分析" + file.getCanonicalPath());
             FileInputStream fileInputStream = new FileInputStream(file);

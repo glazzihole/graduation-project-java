@@ -1,0 +1,13 @@
+{
+  "article": {
+    "properties": {
+      "sentence": {
+        "type": "text",
+        "index_options": "docs",
+        "norms": {
+          "enabled": false
+        }
+      }
+    }
+  }
+}

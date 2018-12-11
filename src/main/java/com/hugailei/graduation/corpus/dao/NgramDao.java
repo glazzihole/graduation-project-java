@@ -22,5 +22,5 @@ public interface NgramDao extends JpaRepository<Ngram, Long> {
      * @param nValue
      * @return
      */
-    List<Ngram> findByCorpusAndNValue(String corpus, int nValue);
+    List<Ngram> findByCorpusAndNValueOrderByFreqDesc(String corpus, int nValue);
 }
