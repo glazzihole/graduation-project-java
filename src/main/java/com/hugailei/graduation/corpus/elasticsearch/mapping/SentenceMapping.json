@@ -3,10 +3,10 @@
     "properties": {
       "sentence": {
         "type": "text",
-        "index_options": "docs",
-        "norms": {
-          "enabled": false
-        }
+        "index_options": "docs"s
+//        "norms": {
+//          "enabled": false
+//        }
       }
     }
   }

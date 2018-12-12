@@ -16,9 +16,27 @@ public interface SentenceService {
     /**
      * es查询，查询数据库中指定语料库里包含与指定内容相关的例句
      *
-     * @param content   待查询内容
+     * @param keyword   待查询内容
      * @param corpus    语料库
      * @return
      */
-    List<SentenceDto> sentenceElasticSearch(String content, String corpus);
+    List<SentenceDto> sentenceElasticSearch(String keyword, String corpus);
+
+    /**
+     * 按照句子ID进行查询
+     *
+     * @param sentenceIdList
+     * @return
+     */
+    List<SentenceDto> searchSentenceById(List<Long> sentenceIdList);
+
+    /**
+     * 句子过滤，只保留包含指定关键字的例句
+     *
+     * @param keyword           关键字
+     * @param sentenceIdList    句子ID列表
+     * @param corpus            语料库名称
+     * @return
+     */
+    List<SentenceDto> filterSentence(String keyword, List<Long> sentenceIdList, String corpus);
 }
