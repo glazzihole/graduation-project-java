@@ -34,7 +34,7 @@ public class CollocationController {
      * @param collocationDto
      * @return
      */
-    @PostMapping("/word")
+    @PostMapping
     @ResponseBody
     public ResponseVO searchCollocationOfWord(@RequestBody @Valid CollocationDto collocationDto,
                                               Pageable pageable) {
