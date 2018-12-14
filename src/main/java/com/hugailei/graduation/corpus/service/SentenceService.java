@@ -17,7 +17,7 @@ public interface SentenceService {
      * es查询，查询数据库中指定语料库里包含与指定内容相关的例句
      *
      * @param keyword   待查询内容
-     * @param corpus    语料库
+     * @param corpus    语料库名称
      * @return
      */
     List<SentenceDto> sentenceElasticSearch(String keyword, String corpus);
@@ -39,4 +39,12 @@ public interface SentenceService {
      * @return
      */
     List<SentenceDto> filterSentence(String keyword, List<Long> sentenceIdList, String corpus);
+
+    /**
+     * 更新es索引，更新成功返回true，否则返回false
+     *
+     * @param corpus
+     * @return
+     */
+    boolean updateSentenceElasticSearch(String corpus);
 }

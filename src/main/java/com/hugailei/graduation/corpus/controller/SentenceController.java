@@ -79,7 +79,7 @@ public class SentenceController {
      * @param pageable
      * @return
      */
-    @GetMapping("/filter")
+    @PostMapping("/filter")
     @ResponseBody
     public ResponseVO filterSentence(@RequestParam String keyword,
                                      @RequestParam("sentence_ids") String sentenceIds,
@@ -92,5 +92,21 @@ public class SentenceController {
             return ResponseUtil.error();
         }
         return ResponseUtil.createPageResponse(result, pageable);
+    }
+
+    /**
+     * 建立/更新句子的es索引信息
+     *
+     * @return
+     */
+    @PostMapping("/es")
+    @ResponseBody
+    public ResponseVO updateSentenceElasticSearch(@RequestParam(required = false) String corpus) {
+        log.info("updateSentenceElasticSearch | request to update sentence es index");
+        boolean result = sentenceService.updateSentenceElasticSearch(corpus);
+        if (!result) {
+            return ResponseUtil.error();
+        }
+        return ResponseUtil.success();
     }
 }

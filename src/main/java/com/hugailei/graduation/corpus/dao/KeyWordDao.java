@@ -2,6 +2,7 @@ package com.hugailei.graduation.corpus.dao;
 
 import com.hugailei.graduation.corpus.domain.KeyWord;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 

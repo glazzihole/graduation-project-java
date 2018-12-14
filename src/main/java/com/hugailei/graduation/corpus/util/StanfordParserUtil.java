@@ -82,7 +82,7 @@ public class StanfordParserUtil {
         for (Map.Entry entry : CorpusConstant.POS_REGEX_TO_LEMMA_POS.entrySet()) {
             String posRegex = (String) entry.getKey();
             String basePos = (String) entry.getValue();
-            if (pos.matches(posRegex)) {
+            if (pos !=null && pos.matches(posRegex)) {
                 return basePos;
             }
         }
@@ -111,7 +111,7 @@ public class StanfordParserUtil {
 
 
     public static void main(String[] args) {
-        String text = "These real difficulties of man-power utilisation are such as to force many organisations to become larger and larger if they are to remain economic.";
+        String text = " Not a single word of English can he speak. So excited was he that he could not say a word. ";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         StringBuilder stringBuilder = new StringBuilder();
         // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
@@ -135,14 +135,14 @@ public class StanfordParserUtil {
             System.out.println(edge.toString() + "  " + edge.getGovernor() + "  " + edge.getGovernor().index());
         }
 
-//        result = relationParse(text);
-//        for (CoreMap sentence : result) {
-//            Collection<RelationTriple> realtions = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
-////            List<RelationMention> realtions = sentence.get(MachineReadingAnnotations.RelationMentionsAnnotation.class);
-//            for (RelationTriple relation : realtions) {
-//                System.out.println(relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss());
-//            }
-//        }
+        result = relationParse(text);
+        for (CoreMap sentence : result) {
+            Collection<RelationTriple> realtions = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
+//            List<RelationMention> realtions = sentence.get(MachineReadingAnnotations.RelationMentionsAnnotation.class);
+            for (RelationTriple relation : realtions) {
+                System.out.println(relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss());
+            }
+        }
 
     }
 

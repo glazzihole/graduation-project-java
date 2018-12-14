@@ -67,7 +67,7 @@ public class SaveParserResult2 {
 
         if (wordLemmaPos2Word.isEmpty()) {
             // 先从数据库中读取句子
-            PreparedStatement preparedStatement = con.prepareStatement("SELECT id, sentence FROM tb_sentence where id >= 335607");
+            PreparedStatement preparedStatement = con.prepareStatement("SELECT id, sentence FROM tb_sentence where corpus = '"+ CORPUS_NAME +"'");
             // 遍历并分析句子
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {

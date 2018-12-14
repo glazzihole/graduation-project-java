@@ -1,6 +1,9 @@
 package com.hugailei.graduation.corpus.service.impl;
 
+import com.bfsuolframework.core.utils.StringUtils;
+import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import com.hugailei.graduation.corpus.dao.SentenceDao;
+import com.hugailei.graduation.corpus.domain.Sentence;
 import com.hugailei.graduation.corpus.dto.SentenceDto;
 import com.hugailei.graduation.corpus.elasticsearch.SentenceElasticSearch;
 import com.hugailei.graduation.corpus.service.SentenceService;
@@ -9,12 +12,17 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 
 /**
  * @author HU Gailei
@@ -38,20 +46,17 @@ public class SentenceServiceImpl implements SentenceService  {
         try {
             log.info("sentenceElasticSearch | keyword: {}, corpus: {}", keyword, corpus);
             // 查询条件
-            QueryBuilder queryBuilder = QueryBuilders.disMaxQuery()
-                    .add(QueryBuilders.termQuery("sentence", keyword))
-                    .add(QueryBuilders.termQuery("corpus", corpus));
-            NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
-                    .withQuery(queryBuilder)
-                    .withFields("id","sentence")
-                    .build();
+            QueryBuilder queryBuilder = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchPhraseQuery("sentence", keyword))
+                    .must(QueryBuilders.termQuery("corpus", corpus));
 
-            List<SentenceDto> resultList = sentenceElasticSearch.search(nativeSearchQuery).stream().map(s -> {
+            List<SentenceDto> resultList = new ArrayList<>();
+            sentenceElasticSearch.search(queryBuilder).forEach(s -> {
                 SentenceDto sentenceDto = new SentenceDto();
                 sentenceDto.setId(s.getId());
                 sentenceDto.setSentence(s.getSentence());
-                return sentenceDto;
-            }).collect(Collectors.toList());
+                resultList.add(sentenceDto);
+            });
 
             return resultList;
         } catch (Exception e) {
@@ -80,9 +85,10 @@ public class SentenceServiceImpl implements SentenceService  {
     public List<SentenceDto> filterSentence(String keyword, List<Long> sentenceIdList, String corpus) {
         try {
             log.info("filterSentence | keyword: {}, sentence size: {}, corpus: {}", keyword, sentenceIdList.size(), corpus);
-            List<Long> elasticSearchIdList = sentenceElasticSearch(keyword, corpus).stream().map(sentenceDto -> {
-                return sentenceDto.getId();
-            }).collect(Collectors.toList());
+            List<Long> elasticSearchIdList = sentenceElasticSearch(keyword, corpus)
+                    .stream()
+                    .map(sentenceDto -> sentenceDto.getId())
+                    .collect(Collectors.toList());
             Set<Long> elasticSearchSentenceIdSet = new LinkedHashSet<>(elasticSearchIdList);
             Set<Long> sentenceIdSet = new LinkedHashSet<>(sentenceIdList);
             // 求两个集合中的并集
@@ -98,6 +104,32 @@ public class SentenceServiceImpl implements SentenceService  {
         } catch (Exception e) {
             log.error("filterSentence | error: {}", e);
             return null;
+        }
+    }
+
+    @Override
+    public boolean updateSentenceElasticSearch(String corpus) {
+        try {
+            log.info("updateSentenceElasticSearch | corpus: {}", corpus);
+            List<Sentence> sentenceList;
+            if (StringUtils.isBlank(corpus)) {
+                sentenceList = sentenceDao.findAll().stream().map(s -> {
+                    Sentence sentence = new Sentence();
+                    sentence.setCorpus(s.getCorpus());
+                    sentence.setSentence(s.getSentence());
+                    sentence.setId(s.getId());
+                    return sentence;
+                }).collect(Collectors.toList());
+            } else {
+                sentenceList = sentenceDao.selectByCorpus(corpus);
+            }
+            if (!CollectionUtils.isEmpty(sentenceList)) {
+                log.info("updateSentenceElasticSearch | update sentence es index start, sentence list size: {}", sentenceList.size());
+                sentenceElasticSearch.saveAll(sentenceList);
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 }

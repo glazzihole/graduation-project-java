@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Mapping;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -21,7 +20,7 @@ import java.io.Serializable;
 @Entity
 @Table(name = "tb_sentence")
 @Document(indexName = "sentence", type = "sentence")
-@Mapping(mappingPath = "com/hugailei/graduation/corpus/elasticsearch/mapping/SentenceMapping.json")
+//@Mapping(mappingPath = "com/hugailei/graduation/corpus/elasticsearch/mapping/SentenceMapping.json")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -33,6 +32,7 @@ public class Sentence implements Serializable {
 
     @Column(name = "sentence")
     @Lob
+    @Field(type = FieldType.Text)
     private String sentence;
 
     @Column(name = "text_id")
@@ -42,5 +42,6 @@ public class Sentence implements Serializable {
     private Integer wordCount;
 
     @Column(name = "corpus")
+    @Field(type = FieldType.Text)
     private String corpus;
 }

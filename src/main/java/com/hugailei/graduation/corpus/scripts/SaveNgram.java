@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  * </p>
  **/
 public class SaveNgram {
-    private static String[] CORPUS_NAME_ARRAY = { "bnc-sample", "chinadaily"};
+    private static String[] CORPUS_NAME_ARRAY = { "bnc", "chinadaily"};
 
     private static Searcher SEARCHER = null;
 

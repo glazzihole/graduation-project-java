@@ -21,7 +21,7 @@ import java.util.List;
  **/
 public class SaveSentence {
 
-    private static final String TEXT_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\bnc-sample-text";
+    private static final String TEXT_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\chinadaily-text";
 
     private static final String TYPE_FILE_PATH = "E:\\毕业论文相关\\bnc-type\\";
 
@@ -53,8 +53,8 @@ public class SaveSentence {
         List<File> fileList = new ArrayList<>();
         fileList = FileUtil.getFilesUnderPath(TEXT_FILE_PATH, fileList);
 
-        Long textId = 1L;
-        Long sentenceId = 1L;
+        Long textId = 183L;
+        Long sentenceId = 335607L;
         for (File file : fileList) {
             System.out.println("开始分析" + file.getCanonicalPath());
             FileInputStream fileInputStream = new FileInputStream(file);
@@ -72,12 +72,13 @@ public class SaveSentence {
                     sentenceCount ++;
                     int wordCount = sentence.get(CoreAnnotations.TokensAnnotation.class).size();
                     PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO tb_sentence"
-                            + "(sentence, text_id, word_count, id) "
-                            + "VALUES (?, ?, ?, ?)");
+                            + "(sentence, text_id, word_count, id, corpus) "
+                            + "VALUES (?, ?, ?, ?, ?)");
                     preparedStatement.setString(1, sentence.toString());
                     preparedStatement.setLong(2, textId);
                     preparedStatement.setInt(3, wordCount);
                     preparedStatement.setLong(4, sentenceId ++);
+                    preparedStatement.setString(5, CORPUS);
                     preparedStatement.execute();
                 }
             }

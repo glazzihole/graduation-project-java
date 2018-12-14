@@ -6,6 +6,7 @@ import com.hugailei.graduation.corpus.service.KeyWordService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -31,11 +32,14 @@ public class KeyWordServiceImpl implements KeyWordService {
     public List<WordDto> keyWordList(String corpus, String refCorpus) {
         try {
             log.info("keyWordList | corpus: {}, refCorpus: {}", corpus, refCorpus);
-            List<WordDto> wordDtoList = keyWordDao.findByCorpusAndRefCorpusOrderByKeynessDesc(corpus, refCorpus).stream().map(w -> {
-                WordDto wordDto = new WordDto();
-                BeanUtils.copyProperties(w, wordDto);
-                return wordDto;
-            }).collect(Collectors.toList());
+            List<WordDto> wordDtoList = keyWordDao.findByCorpusAndRefCorpusOrderByKeynessDesc(corpus, refCorpus)
+                    .stream()
+                    .map(w -> {
+                        WordDto wordDto = new WordDto();
+                        BeanUtils.copyProperties(w, wordDto);
+                        return wordDto;
+                    })
+                    .collect(Collectors.toList());
 
             return wordDtoList;
         } catch (Exception e) {
