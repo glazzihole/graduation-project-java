@@ -11,42 +11,57 @@ public enum SentencePatternType {
     /**
      * 主语从句
      */
-    SUBJECT_CLAUSE("subjectClause", 1),
+    SUBJECT_CLAUSE("主语从句", 1),
 
     /**
      * 宾语从句
      */
-    OBJECT_CLAUSE("objectClause", 2),
+    OBJECT_CLAUSE("宾语从句", 2),
 
     /**
      * 定语从句或同位语从句
      */
-    ATTRIBUTIVE_CLAUSE_OR_APPOSITIVE_CLAUSE("attributiveClause", 3),
+    ATTRIBUTIVE_CLAUSE_OR_APPOSITIVE_CLAUSE("定语从句或同位语从句", 3),
 
     /**
      * 表语从句
      */
-    PREDICATIVE_CLAUSE("predicativeClause", 4),
+    PREDICATIVE_CLAUSE("表语从句", 4),
 
     /**
      * 状语从句
      */
-    ADVERBIAL_CLAUSE("adverbialClause", 5),
+    ADVERBIAL_CLAUSE("状语从句", 5),
 
     /**
      * 被动句
      */
-    PASSIVE_VOICE("passiveVoice", 6),
+    PASSIVE_VOICE("被动句", 6),
 
     /**
      * 双宾语句
      */
-    DOUBLE_OBJECT("doubleObject", 7),
+    DOUBLE_OBJECT("双宾语句", 7),
 
     /**
      * so/such that句型
      */
-    S_THAT("sThat", 8);
+    S_THAT("so/such that句型", 8),
+
+    /**
+     * too to句型
+     */
+    TOO_TO("too to句型", 9),
+
+    /**
+     * 倒装句型
+     */
+    INVERTED_STRUCTURE("倒装句型", 10),
+
+    /**
+     * 强调句型
+     */
+    EMPHATIC_STRUCTURE("强调句型", 11);
 
     /**
      * 句子类型的名称
@@ -73,7 +88,7 @@ public enum SentencePatternType {
         return type;
     }
 
-    private String getTypeName() {
+    public String getTypeName() {
         return typeName;
     }
 

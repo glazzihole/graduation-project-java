@@ -1,17 +1,14 @@
 package com.hugailei.graduation.corpus.service.impl;
 
 import com.hugailei.graduation.corpus.dao.NgramDao;
-import com.hugailei.graduation.corpus.domain.Ngram;
 import com.hugailei.graduation.corpus.dto.NgramDto;
 import com.hugailei.graduation.corpus.service.NgramService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +21,7 @@ import java.util.stream.Collectors;
  **/
 @Slf4j
 @Service
+@Transactional(readOnly = true, rollbackFor = Exception.class)
 public class NgramServiceImpl implements NgramService {
 
     @Autowired

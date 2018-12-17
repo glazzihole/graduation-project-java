@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
  **/
 @Service
 @Slf4j
+@Transactional(rollbackFor = Exception.class)
 public class CollocationServiceImpl implements CollocationService {
 
     @Autowired
@@ -39,6 +41,7 @@ public class CollocationServiceImpl implements CollocationService {
     private WordExtensionDao wordExtensionDao;
 
     @Override
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public List<CollocationDto> searchCollocationOfWord(CollocationDto collocationDto) {
         try {
             log.info("searchCollocationOfWord | collocationDto:{}", collocationDto.toString());
@@ -61,6 +64,7 @@ public class CollocationServiceImpl implements CollocationService {
     }
 
     @Override
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public List<CollocationDto> searchSynonymousCollocation(CollocationDto collocationDto) {
         try {
             log.info("searchSynonymousCollocation | collocationDto: {}", collocationDto.toString());

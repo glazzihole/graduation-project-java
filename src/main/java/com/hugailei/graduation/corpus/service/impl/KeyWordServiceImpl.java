@@ -6,11 +6,9 @@ import com.hugailei.graduation.corpus.service.KeyWordService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,12 +21,14 @@ import java.util.stream.Collectors;
  **/
 @Slf4j
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class KeyWordServiceImpl implements KeyWordService {
 
     @Autowired
     private KeyWordDao keyWordDao;
 
     @Override
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public List<WordDto> keyWordList(String corpus, String refCorpus) {
         try {
             log.info("keyWordList | corpus: {}, refCorpus: {}", corpus, refCorpus);

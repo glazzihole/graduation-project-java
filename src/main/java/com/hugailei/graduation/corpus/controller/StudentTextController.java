@@ -1,8 +1,7 @@
 package com.hugailei.graduation.corpus.controller;
 
-import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.hugailei.graduation.corpus.domain.StudentDependency;
-import com.hugailei.graduation.corpus.dto.DependencyDto;
+import com.hugailei.graduation.corpus.dto.CollocationDto;
+import com.hugailei.graduation.corpus.dto.SentencePatternDto;
 import com.hugailei.graduation.corpus.dto.StudentTextDto;
 import com.hugailei.graduation.corpus.service.StudentTextService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;
@@ -17,7 +16,7 @@ import java.util.List;
  * @author HU Gailei
  * @date 2018/10/6
  * <p>
- * description: 对学生作文进行存储、检索
+ * description: 对学生作文进行分析，存储、检索
  * <p/>
  */
 @RestController
@@ -34,7 +33,7 @@ public class StudentTextController {
      * @param studentTextDto
      * @return
      */
-    @PostMapping("")
+    @PostMapping
     @ResponseBody
     public ResponseVO saveStudentText(@RequestBody StudentTextDto studentTextDto) {
         log.info("saveStudentText | request to save student text");
@@ -51,7 +50,7 @@ public class StudentTextController {
      * @param studentTextDto
      * @return
      */
-    @PutMapping("")
+    @PutMapping
     @ResponseBody
     public ResponseVO updateStudentText(@RequestBody StudentTextDto studentTextDto) {
         log.info("saveStudentText | request to update student text");
@@ -72,7 +71,7 @@ public class StudentTextController {
      * @param textId
      * @return
      */
-    @GetMapping("")
+    @GetMapping
     @ResponseBody
     public ResponseVO getStudentText(@RequestParam Long textId) {
         log.info("getStudentText | request to get student text by id: {}", textId);
@@ -83,37 +82,25 @@ public class StudentTextController {
         return ResponseUtil.success(result);
     }
 
-    /**
-     *  获取篇章并存储一个篇章中的句法依存关系
-     *
-     * @param textId    作文id
-     * @return
-     */
-    @GetMapping("/dependency")
+    @PostMapping("/collocation")
     @ResponseBody
-    public ResponseVO getAndSaveDependency(@RequestParam Long textId) {
-        log.info("getAndSaveDependency | request to get syntactic dependency of text");
-        List<StudentDependency> result = studentTextService.getAndSaveDependency(textId);
+    public ResponseVO getCollocationInText(@RequestParam String text) {
+        log.info("getCollocationInText | request to get collocation in student's text");
+        CollocationDto.CollocationInfo result = studentTextService.getCollocationInText(text);
         if (result == null) {
             return ResponseUtil.error();
         }
         return ResponseUtil.success(result);
     }
 
-    /**
-     * 获取一段文本中的句法关系
-     *
-     * @param text
-     * @return
-     */
-    @PostMapping("/dependency")
+    @PostMapping("/sentence-pattern")
     @ResponseBody
-    public ResponseVO getDependency(@RequestParam String text) {
-        log.info("getDependency | request to get dependency");
-        List<DependencyDto> dependencyList = studentTextService.getDependency(text);
-        if (dependencyList == null) {
-            return ResponseUtil.error(CorpusConstant.FAILED, "something wrong with parsing");
+    public ResponseVO getSentencePatternInText(@RequestParam String text) {
+        log.info("getSentencePatternInText | request to get sentence pattern in student's text");
+        List<SentencePatternDto> result = studentTextService.getSentencePatternInText(text);
+        if (result == null) {
+            return ResponseUtil.error();
         }
-        return ResponseUtil.success(dependencyList);
+        return ResponseUtil.success(result);
     }
 }

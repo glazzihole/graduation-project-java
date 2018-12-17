@@ -12,7 +12,7 @@ import java.util.List;
  * @author HU Gailei
  * @date 2018/11/18
  * <p>
- * description:
+ * description: 搭配信息
  * </p>
  **/
 @Data

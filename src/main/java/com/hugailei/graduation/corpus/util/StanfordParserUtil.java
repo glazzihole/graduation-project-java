@@ -109,9 +109,8 @@ public class StanfordParserUtil {
         return result;
     }
 
-
     public static void main(String[] args) {
-        String text = " Not a single word of English can he speak. So excited was he that he could not say a word. ";
+        String text = "I do remember the day I met you.";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         StringBuilder stringBuilder = new StringBuilder();
         // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
@@ -135,14 +134,14 @@ public class StanfordParserUtil {
             System.out.println(edge.toString() + "  " + edge.getGovernor() + "  " + edge.getGovernor().index());
         }
 
-        result = relationParse(text);
-        for (CoreMap sentence : result) {
-            Collection<RelationTriple> realtions = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
-//            List<RelationMention> realtions = sentence.get(MachineReadingAnnotations.RelationMentionsAnnotation.class);
-            for (RelationTriple relation : realtions) {
-                System.out.println(relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss());
-            }
-        }
+//        result = relationParse(text);
+//        for (CoreMap sentence : result) {
+//            Collection<RelationTriple> realtions = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
+////            List<RelationMention> realtions = sentence.get(MachineReadingAnnotations.RelationMentionsAnnotation.class);
+//            for (RelationTriple relation : realtions) {
+//                System.out.println(relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss());
+//            }
+//        }
 
     }
 

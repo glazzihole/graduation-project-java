@@ -30,7 +30,7 @@ public class SaveModificandAndClause {
 
     private static final String USER_PASSWORD="123456";
 
-    private static final String CORPUS = "bnc";
+    private static final String CORPUS = "chinadaily";
 
     private static final String SENTENCE_PATTERN_COLLOCATION = "tb_sentence_pattern";
 
@@ -38,9 +38,9 @@ public class SaveModificandAndClause {
 
     private static Map<String, String> KEY_TO_SENTENCE_IDS = new HashMap<>();
 
-    private static final String TEMP_FILE1_PATH = "E:\\temp1.txt";
+    private static final String TEMP_FILE1_PATH = "E:\\temp3.txt";
 
-    private static final String TEMP_FILE2_PATH = "E:\\temp2.txt";
+    private static final String TEMP_FILE2_PATH = "E:\\temp4.txt";
 
     public static void main(String[] args) throws Exception{
         //连接mysql数据库
@@ -72,8 +72,7 @@ public class SaveModificandAndClause {
         }
         if (KEY_TO_FREQ.isEmpty() || KEY_TO_SENTENCE_IDS.isEmpty()) {
             // 先从数据库中读取句子
-            PreparedStatement preparedStatement = con.prepareStatement("SELECT tb_sentence.id, sentence FROM tb_sentence, tb_text WHERE tb_text.corpus = '" + CORPUS + "' and " +
-                    "tb_sentence.text_id = tb_text.id");
+            PreparedStatement preparedStatement = con.prepareStatement("SELECT id, sentence FROM tb_sentence WHERE corpus = '" + CORPUS + "'");
             // 遍历并分析句子
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()){

@@ -80,6 +80,34 @@ public class SentencePatternUtil {
             sentencePatternList.addAll(tempList);
         }
 
+        if (SentencePatternUtil.hasSoThat(sentence)) {
+            int type = SentencePatternType.S_THAT.getType();
+            SentencePattern sentencePattern = new SentencePattern();
+            sentencePattern.setType(type);
+            sentencePatternList.add(sentencePattern);
+        }
+
+        if (SentencePatternUtil.hasTooTo(sentence)) {
+            int type = SentencePatternType.TOO_TO.getType();
+            SentencePattern sentencePattern = new SentencePattern();
+            sentencePattern.setType(type);
+            sentencePatternList.add(sentencePattern);
+        }
+
+        if (SentencePatternUtil.hasInvertedStructure(sentence)) {
+            int type = SentencePatternType.INVERTED_STRUCTURE.getType();
+            SentencePattern sentencePattern = new SentencePattern();
+            sentencePattern.setType(type);
+            sentencePatternList.add(sentencePattern);
+        }
+
+        if (SentencePatternUtil.hasEmphaticStructure(sentence)) {
+            int type = SentencePatternType.EMPHATIC_STRUCTURE.getType();
+            SentencePattern sentencePattern = new SentencePattern();
+            sentencePattern.setType(type);
+            sentencePatternList.add(sentencePattern);
+        }
+
         if (sentencePatternList == null) {
             return null;
         }
@@ -124,8 +152,11 @@ public class SentencePatternUtil {
      * @param sentence 句法分析结果
      */
     public static List<SentencePattern> matchObjectClauseOrPredicativeClause(CoreMap sentence) {
-        // 先判断句中有没有so that句，若有，则需排除that后的从句，否则会识别为定语从句。
-        Set<Integer> thatIndexSet = getSoThatClauseIndex(sentence);
+        // 先判断句中有没有so that句，若有，则需排除that后的从句
+        Set<Integer> soThatIndexSet = getSoThatClauseIndex(sentence);
+        // 排除掉it is XX that强调句的句型
+        Set<Integer> emphaticIndexSet = getEmphaticStructure(sentence);
+
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
         List<SentencePattern> sentencePatternList = new ArrayList<>();
         SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
@@ -137,22 +168,36 @@ public class SentencePatternUtil {
             StringBuilder clauseContent = new StringBuilder();
             if (clauseMatcher.findNextMatchingNode()) {
                 int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
-                if (thatIndexSet != null && thatIndexSet.contains(clauseStartIndex)) {
-                    break;
+                if (soThatIndexSet != null && soThatIndexSet.contains(clauseStartIndex)) {
+                    continue;
+                } else if (emphaticIndexSet != null && emphaticIndexSet.contains(clauseStartIndex)) {
+                    continue;
                 }
+
                 for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
                     clauseContent.append(leaf.label().value()).append(" ");
                 }
-                sentencePatternList.add(new SentencePattern(2, null, null, clauseContent.toString(), null, null, null, null));
+                sentencePatternList.add(new SentencePattern(SentencePatternType.OBJECT_CLAUSE.getType(), null, null, clauseContent.toString(), null, null, null, null));
             }
         }
         pattern = TregexPattern.compile("VP << (/^VB.*$/ [$++ SBAR | $++ S])");
         matcher = pattern.matcher(tree);
         while (matcher.findNextMatchingNode()) {
+            Tree match = matcher.getMatch();
+            // 排除从句为so that 句型和it is that的强调句型
+            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(matcher.getMatch());
+            if (clauseMatcher.findNextMatchingNode()) {
+                int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+                if (soThatIndexSet != null && soThatIndexSet.contains(clauseStartIndex)) {
+                    continue;
+                } else if (emphaticIndexSet != null && emphaticIndexSet.contains(clauseStartIndex)) {
+                    continue;
+                }
+            }
+
             boolean found = false;
             //是否为表语从句的标识
             boolean isPredicativeClause = false;
-            Tree match = matcher.getMatch();
             // 获取匹配到的树结构的子节点
             Tree[] childrens = match.children();
             // 获取动词
@@ -160,7 +205,7 @@ public class SentencePatternUtil {
             for (Tree children : childrens) {
                 if (children.label().toString().matches(verbReg)) {
                     // 获取当前单词在句子中是第几个单词（从0开始）
-                    int index = children.getLeaves().get(0).indexLeaves(1, false) - 2;
+                    int index = children.getLeaves().get(0).indexLeaves(0, false) - 2;
                     // 根据index获取动词的原型
                     CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(index);
                     String lemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
@@ -200,7 +245,7 @@ public class SentencePatternUtil {
                         }
 
                         // 匹配SBAR，得出从句内容
-                        TregexMatcher clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(match);
+                        clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(match);
                         StringBuilder clauseContent = new StringBuilder();
                         if (clauseMatcher.findNextMatchingNode()) {
                             for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
@@ -228,6 +273,9 @@ public class SentencePatternUtil {
     public static List<SentencePattern> matchAppositiveClauseOrAttributiveClause(CoreMap sentence) {
         // 先判断句中有没有so that句，若有，则需排除that后的从句，否则会识别为定语从句。
         Set<Integer> thatIndexSet = getSoThatClauseIndex(sentence);
+        // 排除掉it is XX that强调句的句型
+        Set<Integer> emphaticIndexSet = getEmphaticStructure(sentence);
+
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
         SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
         TregexPattern pattern = TregexPattern.compile("NP $.. SBAR");
@@ -243,7 +291,7 @@ public class SentencePatternUtil {
             for (Tree children : childrens) {
                 if (children.label().toString().matches(nounReg)) {
                     // 获取该名词的index，从0开始
-                    int index = children.getLeaves().get(0).indexLeaves(1, false) - 2;
+                    int index = children.getLeaves().get(0).indexLeaves(0, false) - 2;
                     // 通过index获取名词的原型
                     CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(index);
                     String lemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
@@ -275,8 +323,11 @@ public class SentencePatternUtil {
                         if (clauseMatcher.findNextMatchingNode()) {
                             int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
                             if (thatIndexSet != null && thatIndexSet.contains(clauseStartIndex)) {
-                                break;
+                                continue;
+                            } else if (emphaticIndexSet != null && emphaticIndexSet.contains(clauseStartIndex)) {
+                                continue;
                             }
+
                             for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
                                 clauseContent.append(leaf.label().value()).append(" ");
                             }
@@ -355,8 +406,6 @@ public class SentencePatternUtil {
         }
         return sentencePatternList;
     }
-
-
 
     /**
      * 匹配被动语态
@@ -449,7 +498,7 @@ public class SentencePatternUtil {
                     for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
                         if ((semanticGraphEdge.getRelation().toString().equals("nsubj") ||
                              semanticGraphEdge.getRelation().toString().equals("discourse"))&&
-                            semanticGraphEdge.getGovernor().index() == verbIndex) {
+                             semanticGraphEdge.getGovernor().index() == verbIndex) {
 
                             // 寻找nsubj依存关系，找出间接宾语
                             for (SemanticGraphEdge se : dependency.edgeListSorted()) {
@@ -720,8 +769,9 @@ public class SentencePatternUtil {
                     // the harder you work, ..
                     for (SemanticGraphEdge s : dependency.edgeListSorted()) {
                         if (s.getRelation().toString().equals("dep") && s.getGovernor().index() == verbIndex) {
-                            if (s.getDependent().tag().matches("RB.*") &&
-                                s.getDependent().index() < edge.getDependent().index()) {
+                            if ((s.getDependent().tag().matches("RB.*") || s.getDependent().tag().matches("JJ.*")) &&
+                                s.getDependent().index() < edge.getDependent().index() &&
+                                !s.getDependent().lemma().equals("not")) {
                                 return true;
                             }
                         }
@@ -729,12 +779,145 @@ public class SentencePatternUtil {
                 }
             }
             if (edge.getRelation().toString().equals("cop")) {
-                if (edge.getGovernor().index() > edge.getDependent().index() && !isQuestion) {
+                if (edge.getGovernor().index() < edge.getDependent().index() && !isQuestion) {
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    /**
+     * 判断句中是否有强调句句型
+     *
+     * @param sentence
+     * @return
+     */
+    public static boolean hasEmphaticStructure(CoreMap sentence) {
+        // 匹配句中是否有助动词do/ does或did强调谓语动词的结构
+        List<CoreLabel> coreLabelList = sentence.get(CoreAnnotations.TokensAnnotation.class);
+        int wordCount = coreLabelList.size();
+        for (int i = 0; i <= wordCount - 2; i++) {
+            CoreLabel label = coreLabelList.get(i);
+            if ("do".equals(label.lemma()) && label.tag().startsWith("VB")) {
+                CoreLabel nextLabel = coreLabelList.get(i + 1);
+                if (nextLabel.tag().startsWith("VB")) {
+                    return true;
+                }
+            }
+        }
+
+        // 匹配简单的强调句句型  it is XXX that/who
+        SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
+        for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
+            if (edge.getRelation().toString().equals("nsubj") &&
+                edge.getDependent().lemma().equals("it")) {
+                int emphasizedSubjectIndex = edge.getGovernor().index();
+                for (SemanticGraphEdge s : dependency.edgeListSorted()) {
+                    if (s.getRelation().toString().equals("cop") &&
+                        s.getGovernor().index() == emphasizedSubjectIndex) {
+                        for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                            if (e.getRelation().toString().equals("ref") &&
+                                e.getGovernor().index() == emphasizedSubjectIndex &&
+                                (e.getDependent().lemma().equals("who") || e.getDependent().lemma().equals("that"))) {
+                                    return true;
+                            }
+                        }
+
+                        for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                            if (e.getRelation().toString().equals("mark") &&
+                                e.getDependent().lemma().equals("that")) {
+                                int ccompIndex = e.getGovernor().index();
+                                for (SemanticGraphEdge se : dependency.edgeListSorted()) {
+                                    if (se.getRelation().toString().equals("ccomp") &&
+                                        se.getGovernor().index() == emphasizedSubjectIndex &&
+                                        se.getDependent().index() == ccompIndex) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 匹配it is + 从句 + that/who 形式的强调句型
+        Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+        TregexMatcher matcher = TregexPattern.compile("it .. (was >> (VP << (SBAR << (SBAR [<< that | << who]))))").matcher(tree);
+        if (matcher.findNextMatchingNode()) {
+            return true;
+        }
+        matcher = TregexPattern.compile("it .. (is >> (VP << (SBAR << (SBAR [<< that | << who]))))").matcher(tree);
+        if (matcher.findNextMatchingNode()) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 获取强调句中的that/who等词在句子中的位置，从0开始计数
+     *
+     * @param sentence
+     * @return
+     */
+    public static Set<Integer> getEmphaticStructure(CoreMap sentence) {
+        Set<Integer> indexSet = new HashSet<>();
+
+        // 匹配简单的强调句句型  it is XXX that/who
+        SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
+        for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
+            if (edge.getRelation().toString().equals("nsubj") &&
+                edge.getDependent().lemma().equals("it")) {
+                int emphasizedSubjectIndex = edge.getGovernor().index();
+                for (SemanticGraphEdge s : dependency.edgeListSorted()) {
+                    if (s.getRelation().toString().equals("cop") &&
+                        s.getGovernor().index() == emphasizedSubjectIndex) {
+                        for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                            if (e.getRelation().toString().equals("ref") &&
+                                e.getGovernor().index() == emphasizedSubjectIndex &&
+                                (e.getDependent().lemma().equals("who") || e.getDependent().lemma().equals("that"))) {
+                                indexSet.add(e.getDependent().index());
+                            }
+                        }
+
+                        for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                            if (e.getRelation().toString().equals("mark") &&
+                                (e.getDependent().lemma().equals("that") || e.getDependent().lemma().equals("who"))) {
+                                int ccompIndex = e.getGovernor().index();
+                                for (SemanticGraphEdge se : dependency.edgeListSorted()) {
+                                    if (se.getRelation().toString().equals("ccomp") &&
+                                        se.getGovernor().index() == emphasizedSubjectIndex &&
+                                        se.getDependent().index() == ccompIndex) {
+                                        indexSet.add(e.getDependent().index());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 匹配it is + 从句 + that/who 形式的强调句型
+        Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+        TregexMatcher matcher = TregexPattern.compile("(was >> (VP << (SBAR << (SBAR [<< that | << who])))) ,, it").matcher(tree);
+        while (matcher.findNextMatchingNode()) {
+            Tree subTree = matcher.getMatch();
+            Tree parentTree = subTree.parent(tree).parent(tree);
+            int temp = parentTree.getLeaves().get(1).indexLeaves(0, false) - 2;
+            indexSet.add(temp);
+            for (Tree t : parentTree.getLeaves()) {
+                if ("that".equals(t.label().value()) || "who".equals(t.label().value())) {
+                    indexSet.add(t.indexLeaves(0, false) - 2);
+                }
+            }
+        }
+
+        if (indexSet.isEmpty()) {
+            return null;
+        }
+        return indexSet;
     }
 
     /**
@@ -757,7 +940,7 @@ public class SentencePatternUtil {
                 if (match.getLeaves().size() > 1 && match.getLeaves().size() <= 10) {
                     List<Edge> edgeList = new ArrayList<>();
                     for (Tree leaf : match.getLeaves()) {
-                        int index = leaf.indexLeaves(1, false) - 2;
+                        int index = leaf.indexLeaves(0, false) - 2;
                         // 根据index获取单词的原型、词性
                         CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(index);
                         String lemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
@@ -787,7 +970,7 @@ public class SentencePatternUtil {
         for (Tree match : tree.subTreeList()) {
             if (match.equals(clauseTree)) {
                 // 获取从句起始位置，从0开始计数
-                int clauseIndex = match.getLeaves().get(0).indexLeaves(1, false) - 2;
+                int clauseIndex = match.getLeaves().get(0).indexLeaves(0, false) - 2;
                 // 获取从句（字符串）
                 StringBuilder clause = new StringBuilder();
                 for (Tree t : match.getLeaves()) {
@@ -826,7 +1009,7 @@ public class SentencePatternUtil {
                     // 匹配被修饰的词和其在句中的位置，从0开始计数
                     TregexMatcher leafMatcher = leafPat.matcher(tree);
                     while (leafMatcher.findNextMatchingNode()) {
-                        int tempIndex = leafMatcher.getMatch().getLeaves().get(0).indexLeaves(1, false) - 2;
+                        int tempIndex = leafMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
                         if (tempIndex >= clauseIndex) {
                             break;
                         }
@@ -839,7 +1022,7 @@ public class SentencePatternUtil {
                     if (adverbLeafPat != null) {
                         TregexMatcher adverbLeafMatcher = adverbLeafPat.matcher(tree);
                         while (adverbLeafMatcher.findNextMatchingNode()) {
-                            int tempIndex = adverbLeafMatcher.getMatch().getLeaves().get(0).indexLeaves(1, false) - 2;
+                            int tempIndex = adverbLeafMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
                             if (tempIndex >= clauseIndex) {
                                 break;
                             }
@@ -1240,13 +1423,14 @@ public class SentencePatternUtil {
     }
 
     public static void main(String[] args) {
-        String text = "Not a single word of English can he speak. So excited was he that he could not say a word. ";
-        List<CoreMap> result = StanfordParserUtil.parse(text);
+        String text = "It was not until his wife came back that he went to bed.";
+        List<CoreMap> result = StanfordParserUtil.parse(text.toLowerCase());
 
         for(CoreMap sentence : result) {
             getPrincipalClause(sentence);
             System.out.println(hasSoThat(sentence));
             System.out.println(hasInvertedStructure(sentence));
+            System.out.println(getEmphaticStructure(sentence));
             sentence.get(TreeCoreAnnotations.TreeAnnotation.class).pennPrint();
             for (SentencePattern sp : findAllSpecialSentencePattern(sentence)) {
                 System.out.println(sp.toString());

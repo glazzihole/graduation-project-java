@@ -4,9 +4,14 @@ import com.bfsuolframework.core.utils.StringUtils;
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import com.hugailei.graduation.corpus.dao.SentenceDao;
 import com.hugailei.graduation.corpus.domain.Sentence;
+import com.hugailei.graduation.corpus.domain.SentencePattern;
 import com.hugailei.graduation.corpus.dto.SentenceDto;
+import com.hugailei.graduation.corpus.dto.SentencePatternDto;
 import com.hugailei.graduation.corpus.elasticsearch.SentenceElasticSearch;
 import com.hugailei.graduation.corpus.service.SentenceService;
+import com.hugailei.graduation.corpus.util.SentencePatternUtil;
+import com.hugailei.graduation.corpus.util.StanfordParserUtil;
+import edu.stanford.nlp.util.CoreMap;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -14,6 +19,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -33,6 +39,7 @@ import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
  **/
 @Service
 @Slf4j
+@Transactional(rollbackFor = Exception.class)
 public class SentenceServiceImpl implements SentenceService  {
 
     @Autowired
@@ -66,6 +73,7 @@ public class SentenceServiceImpl implements SentenceService  {
     }
 
     @Override
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public List<SentenceDto> searchSentenceById(List<Long> sentenceIdList) {
         try {
             log.info("searchSentenceById | sentence id list: {}", sentenceIdList.toString());
@@ -130,6 +138,19 @@ public class SentenceServiceImpl implements SentenceService  {
             return true;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    @Override
+    public List<SentencePattern> getSentencePattern(String sentence) {
+        try {
+            log.info("getSentencePattern | sentence: {}", sentence);
+            List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
+            List<SentencePattern> result = SentencePatternUtil.findAllSpecialSentencePattern(coreMapList.get(0));
+            return result;
+        } catch (Exception e) {
+            log.error("getSentencePattern | error: {}", e);
+            return null;
         }
     }
 }

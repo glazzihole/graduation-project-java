@@ -1,7 +1,7 @@
 package com.hugailei.graduation.corpus.service;
 
-import com.hugailei.graduation.corpus.domain.StudentDependency;
-import com.hugailei.graduation.corpus.dto.DependencyDto;
+import com.hugailei.graduation.corpus.dto.CollocationDto;
+import com.hugailei.graduation.corpus.dto.SentencePatternDto;
 import com.hugailei.graduation.corpus.dto.StudentTextDto;
 
 import java.util.List;
@@ -33,18 +33,18 @@ public interface StudentTextService {
     StudentTextDto getStudentText(Long textId);
 
     /**
-     * 获取指定id文章的所有依存关系，并存储到数据库中
-     *
-     * @param textId
-     * @return
-     */
-    List<StudentDependency> getAndSaveDependency(Long textId);
-
-    /**
-     * 获取一段文本中的所有依存关系
+     * 获取文章中的所有搭配信息
      *
      * @param text
      * @return
      */
-    List<DependencyDto> getDependency(String text);
+    CollocationDto.CollocationInfo getCollocationInText(String text);
+
+    /**
+     * 获取文章中的所有句型信息
+     *
+     * @param text
+     * @return
+     */
+    List<SentencePatternDto> getSentencePatternInText(String text);
 }

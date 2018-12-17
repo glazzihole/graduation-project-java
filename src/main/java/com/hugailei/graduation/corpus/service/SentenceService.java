@@ -1,7 +1,7 @@
 package com.hugailei.graduation.corpus.service;
 
+import com.hugailei.graduation.corpus.domain.SentencePattern;
 import com.hugailei.graduation.corpus.dto.SentenceDto;
-import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -47,4 +47,12 @@ public interface SentenceService {
      * @return
      */
     boolean updateSentenceElasticSearch(String corpus);
+
+    /**
+     * 获取句子的所有句型信息
+     *
+     * @param sentence
+     * @return
+     */
+    List<SentencePattern> getSentencePattern(String sentence);
 }

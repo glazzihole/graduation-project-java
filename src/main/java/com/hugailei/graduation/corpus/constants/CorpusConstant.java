@@ -345,12 +345,15 @@ public class CorpusConstant {
             add(" neither do ");
             add(" so do ");
             add(" nor do ");
+            add(" not do ");
             add(" neither will ");
             add(" so will ");
             add(" nor will ");
+            add(" not will ");
             add(" neither can ");
             add(" so can ");
             add(" nor can ");
+            add(" not can ");
             add(" neither be ");
             add(" so be ");
             add(" nor be ");

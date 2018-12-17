@@ -1,5 +1,6 @@
 package com.hugailei.graduation.corpus.controller;
 
+import com.hugailei.graduation.corpus.domain.SentencePattern;
 import com.hugailei.graduation.corpus.dto.SentenceDto;
 import com.hugailei.graduation.corpus.service.SentenceService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;
@@ -99,7 +100,7 @@ public class SentenceController {
      *
      * @return
      */
-    @PostMapping("/es")
+    @PostMapping("/elasticsearch")
     @ResponseBody
     public ResponseVO updateSentenceElasticSearch(@RequestParam(required = false) String corpus) {
         log.info("updateSentenceElasticSearch | request to update sentence es index");
@@ -108,5 +109,22 @@ public class SentenceController {
             return ResponseUtil.error();
         }
         return ResponseUtil.success();
+    }
+
+    /**
+     * 获取句型分析结果
+     *
+     * @param sentence
+     * @return
+     */
+    @PostMapping("/pattern")
+    @ResponseBody
+    public ResponseVO sentencePattern(@RequestParam String sentence) {
+        log.info("sentencePattern | request to get sentence pattern");
+        List<SentencePattern> result = sentenceService.getSentencePattern(sentence);
+        if (result != null) {
+            return ResponseUtil.error();
+        }
+        return ResponseUtil.success(result);
     }
 }
