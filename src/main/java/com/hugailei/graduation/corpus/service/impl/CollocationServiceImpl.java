@@ -1,7 +1,6 @@
 package com.hugailei.graduation.corpus.service.impl;
 
 import com.bfsuolframework.core.utils.StringUtils;
-import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import com.hugailei.graduation.corpus.dao.CollocationDao;
 import com.hugailei.graduation.corpus.dao.WordExtensionDao;
 import com.hugailei.graduation.corpus.domain.Collocation;
@@ -9,8 +8,6 @@ import com.hugailei.graduation.corpus.domain.WordExtension;
 import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.service.CollocationService;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
-import com.hugailei.graduation.corpus.vendor.SupportService;
-import com.hugailei.graduation.corpus.vendor.response.YoudaoOpenApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;

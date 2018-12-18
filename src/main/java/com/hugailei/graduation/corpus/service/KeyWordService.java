@@ -1,7 +1,6 @@
 package com.hugailei.graduation.corpus.service;
 
 import com.hugailei.graduation.corpus.dto.WordDto;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
