@@ -262,6 +262,13 @@
             <version>5.6.10</version>
         </dependency>
 
+        <!-- fast text引用 -->
+        <dependency>
+            <groupId>com.mayabot</groupId>
+            <artifactId>fastText4j</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>

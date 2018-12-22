@@ -27,9 +27,9 @@ import java.util.Map;
  **/
 public class SaveCollocation {
 
-    private static final String CORPUS = "chinadaily";
+    private static final String CORPUS = "bnc";
 
-    private static final String TEMP_FILE_PATH = "E:\\chinadaily-collocation-temp.txt";
+    private static final String TEMP_FILE_PATH = "E:\\bnc-collocation-temp.txt";
 
     private static final String DB_HOST = "192.168.99.100";
 
@@ -41,7 +41,7 @@ public class SaveCollocation {
 
     private static final String USER_PASSWORD="123456";
 
-    private static Map<String, String> KEY_TO_SENTENCEIDS;
+    private static Map<String, String> KEY_TO_SENTENCEIDS = new HashMap<>();
 
     public static void main(String[] args) throws Exception{
         //连接mysql数据库

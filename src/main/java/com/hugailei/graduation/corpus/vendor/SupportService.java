@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
@@ -82,6 +83,7 @@ public class SupportService {
      * @param to
      * @return
      */
+//    @Transactional(timeout=30)
     public String googleTranslate(String text, String from, String to) {
         try {
             log.info("googleTranslate | text: {}, from: {}, to: {}", text, from, to);
@@ -129,6 +131,7 @@ public class SupportService {
      * @param to
      * @return
      */
+//    @Transactional(timeout=30)
     public YoudaoOpenApiResponse youdaoDict(String text, String from, String to) {
         try {
             log.info("youdaoDict | text: {}, from: {}, to: {}", text, from, to);

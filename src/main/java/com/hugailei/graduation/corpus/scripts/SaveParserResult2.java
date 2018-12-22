@@ -39,7 +39,7 @@ public class SaveParserResult2 {
     private static final String USER_PASSWORD="123456";
 
     //语料库名称
-    private static final String CORPUS_NAME="chinadaily";
+    private static final String CORPUS_NAME="bnc";
 
     private static final String TEMP_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\temp.txt";
 
@@ -54,14 +54,14 @@ public class SaveParserResult2 {
         }
 
         //读取语料
-        Map<String, Word> wordLemmaPos2Word;
-        try {
-            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File(TEMP_FILE_PATH)));
-            wordLemmaPos2Word = (Map<String, Word>)ois.readObject();
-        } catch (Exception e) {
-            e.printStackTrace();
-            wordLemmaPos2Word = new HashMap<>();
-        }
+        Map<String, Word> wordLemmaPos2Word = new HashMap<>();
+//        try {
+//            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File(TEMP_FILE_PATH)));
+//            wordLemmaPos2Word = (Map<String, Word>)ois.readObject();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            wordLemmaPos2Word = new HashMap<>();
+//        }
 
         if (wordLemmaPos2Word.isEmpty()) {
             // 先从数据库中读取句子

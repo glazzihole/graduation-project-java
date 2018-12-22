@@ -8,10 +8,13 @@ import com.hugailei.graduation.corpus.domain.StudentText;
 import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.dto.SentencePatternDto;
 import com.hugailei.graduation.corpus.dto.StudentTextDto;
+import com.hugailei.graduation.corpus.dto.TopicDto;
 import com.hugailei.graduation.corpus.enums.SentencePatternType;
+import com.hugailei.graduation.corpus.enums.Topic;
 import com.hugailei.graduation.corpus.service.StudentTextService;
 import com.hugailei.graduation.corpus.util.SentencePatternUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
+import com.hugailei.graduation.corpus.util.TopicClassifyUtil;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
@@ -378,6 +381,25 @@ public class StudentTextServiceImpl implements StudentTextService {
             return new ArrayList<>(type2SentencePatternDto.values());
         } catch (Exception e) {
             log.error("getSentencePatternInText | error: {}", e);
+            return null;
+        }
+    }
+
+    /**
+     * 获取文章的主题信息
+     *
+     * @param text
+     * @return
+     */
+    @Override
+    public List<TopicDto> getTopic(String text) {
+        try {
+            log.info("getTopic | text: {}", text);
+            List<TopicDto> topicDtoList = TopicClassifyUtil.getTopicInfoList(text);
+            log.info("getTopic | topic list info: {}", topicDtoList.toString());
+            return topicDtoList;
+        } catch (Exception e) {
+            log.info("getTopic | error: {}", e);
             return null;
         }
     }

@@ -3,6 +3,7 @@ package com.hugailei.graduation.corpus.service;
 import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.dto.SentencePatternDto;
 import com.hugailei.graduation.corpus.dto.StudentTextDto;
+import com.hugailei.graduation.corpus.dto.TopicDto;
 
 import java.util.List;
 
@@ -47,4 +48,12 @@ public interface StudentTextService {
      * @return
      */
     List<SentencePatternDto> getSentencePatternInText(String text);
+
+    /**
+     * 获取文章的主题信息
+     *
+     * @param text
+     * @return
+     */
+    List<TopicDto> getTopic(String text);
 }

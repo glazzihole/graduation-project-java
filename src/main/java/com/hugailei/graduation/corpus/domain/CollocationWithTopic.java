@@ -11,15 +11,15 @@ import java.io.Serializable;
  * @author HU Gailei
  * @date 2018/11/18
  * <p>
- * description: 词语搭配
+ * description: 带主题分类的词语搭配信息
  * </p>
  **/
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "tb_collocation")
-public class Collocation implements Serializable {
+@Table(name = "tb_collocation_with_topic")
+public class CollocationWithTopic implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
@@ -75,4 +75,10 @@ public class Collocation implements Serializable {
 
     @Column(name = "corpus")
     private String corpus;
+
+    /**
+     * 主题类型
+     */
+    @Column(name = "topic")
+    private Integer topic;
 }

@@ -3,6 +3,7 @@ package com.hugailei.graduation.corpus.controller;
 import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.dto.SentencePatternDto;
 import com.hugailei.graduation.corpus.dto.StudentTextDto;
+import com.hugailei.graduation.corpus.dto.TopicDto;
 import com.hugailei.graduation.corpus.service.StudentTextService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;
 import com.hugailei.graduation.corpus.vo.ResponseVO;
@@ -82,6 +83,12 @@ public class StudentTextController {
         return ResponseUtil.success(result);
     }
 
+    /**
+     * 获取学生作文中的所有搭配
+     *
+     * @param text
+     * @return
+     */
     @PostMapping("/collocation")
     @ResponseBody
     public ResponseVO getCollocationInText(@RequestParam String text) {
@@ -93,11 +100,28 @@ public class StudentTextController {
         return ResponseUtil.success(result);
     }
 
+    /**
+     * 获取学生作文中的所有句型
+     *
+     * @param text
+     * @return
+     */
     @PostMapping("/sentence-pattern")
     @ResponseBody
     public ResponseVO getSentencePatternInText(@RequestParam String text) {
         log.info("getSentencePatternInText | request to get sentence pattern in student's text");
         List<SentencePatternDto> result = studentTextService.getSentencePatternInText(text);
+        if (result == null) {
+            return ResponseUtil.error();
+        }
+        return ResponseUtil.success(result);
+    }
+
+    @PostMapping("/topic")
+    @ResponseBody
+    public ResponseVO getTextTopic(@RequestParam String text) {
+        log.info("getTextTopic | request to get topic of student's text");
+        List<TopicDto> result = studentTextService.getTopic(text);
         if (result == null) {
             return ResponseUtil.error();
         }

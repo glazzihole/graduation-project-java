@@ -15,10 +15,10 @@ import java.util.List;
  * </p>
  **/
 public class XMLExtract {
-    private static final String XML_FILES_PATH = "C:\\Users\\GAILEI\\Desktop\\2553\\2553\\download\\Texts";
+    private static final String XML_FILES_PATH = "E:\\毕业论文相关\\fasttext-train\\sogounews";
     private static final String XML_EXTRACT_SCRIPT_PATH = "D:\\xsltproc\\bin\\xsltproc.exe";
     private static final String XML_STYLE_SHEET_PATH = "D:\\xsltproc\\stylesheet\\justTheWords.xsl";
-    private static final String RESULT_FILE_PATH = "E:\\毕业论文相关\\bnc-sample-text\\";
+    private static final String RESULT_FILE_PATH = "E:\\毕业论文相关\\fasttext-train\\data\\sogounews\\";
     public static void main(String[] args) {
         List<File> allFile = new ArrayList<>();
 

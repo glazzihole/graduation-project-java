@@ -1,8 +1,10 @@
 package com.hugailei.graduation.corpus.util;
 
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
+import edu.stanford.nlp.ie.util.RelationTriple;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
@@ -11,10 +13,7 @@ import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * @author HU Gailei
@@ -108,12 +107,30 @@ public class StanfordParserUtil {
         return result;
     }
 
+
+    private static void sortRelationTripleList(List<RelationTriple> relationTripleList) {
+        Collections.sort(relationTripleList, new Comparator<RelationTriple>() {
+            @Override
+            public int compare(RelationTriple c1, RelationTriple c2) {
+                if (c2.confidence > c1.confidence) {
+                    return 1;
+                } else if (c2.confidence == c1.confidence) {
+                    return 0;
+                } else {
+                    return -1;
+                }
+            }
+        });
+    }
+
+
     public static void main(String[] args) {
-        String text = "I do remember the day I met you.";
+        String text = "this book need all the blackmail it can get, for it cannot stand up by itself to disinterested scrutiny. Almost everything is wrong with it, in particular the tone, which is enormously soppy";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         StringBuilder stringBuilder = new StringBuilder();
         // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
         for(CoreMap sentence : result) {
+            // 原型、词性等信息
             for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
                 // 获取单词
                 String word = token.get(CoreAnnotations.TextAnnotation.class);
@@ -125,22 +142,43 @@ public class StanfordParserUtil {
                 String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
                 stringBuilder.append("lemma = " + lemma + " " + "\r\n");
             }
-        }
-        System.out.println(stringBuilder.toString());
+            System.out.println(stringBuilder.toString());
 
-        List<SemanticGraphEdge> semanticGraphEdgeList = getDependency(text);
-        for (SemanticGraphEdge edge : semanticGraphEdgeList) {
-            System.out.println(edge.toString() + "  " + edge.getGovernor() + "  " + edge.getGovernor().index());
-        }
+            // 依存关系信息
+            List<SemanticGraphEdge> semanticGraphEdgeList = getDependency(sentence.toString());
+            for (SemanticGraphEdge edge : semanticGraphEdgeList) {
+                System.out.println(edge.toString() + "  " + edge.getGovernor() + "  " + edge.getGovernor().index());
+            }
 
-//        result = relationParse(text);
-//        for (CoreMap sentence : result) {
-//            Collection<RelationTriple> realtions = sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class);
-////            List<RelationMention> realtions = sentence.get(MachineReadingAnnotations.RelationMentionsAnnotation.class);
-//            for (RelationTriple relation : realtions) {
-//                System.out.println(relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss());
+            // 关系提取
+//            result = relationParse(sentence.toString());
+//            for (CoreMap s : result) {
+//                List<RelationTriple> realtions = new ArrayList<>(s.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class));
+//                sortRelationTripleList(realtions);
+//                double confidence = 0;
+//                // 最短的句子
+//                String shortest = s.toString();
+//                // 最长的句子
+//                String longest = "";
+//                for (RelationTriple relation : realtions) {
+//                    // 找出“可信度”最高的一批
+//                    if (relation.confidence >= confidence) {
+//                        confidence = relation.confidence;
+//                        String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
+//                        if (temp.split(" ").length >= longest.split(" ").length) {
+//                            longest = temp;
+//                        }
+//                        if (temp.split(" ").length <= shortest.split(" ").length) {
+//                            shortest = temp;
+//                        }
+//                    } else {
+//                        break;
+//                    }
+//                }
+//                System.out.println(shortest);
+//                System.out.println(longest);
 //            }
-//        }
+        }
 
     }
 

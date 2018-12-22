@@ -37,8 +37,8 @@ public class Text implements Serializable {
     /**
      * 主题类型
      */
-    @Column(name = "type")
-    private String type;
+    @Column(name = "topic")
+    private Integer topic;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

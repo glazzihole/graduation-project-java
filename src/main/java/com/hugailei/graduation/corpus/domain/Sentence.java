@@ -41,6 +41,9 @@ public class Sentence implements Serializable {
     @Column(name = "word_count")
     private Integer wordCount;
 
+    @Column(name = "topic")
+    private Integer topic;
+
     @Column(name = "corpus")
     @Field(type = FieldType.Text)
     private String corpus;

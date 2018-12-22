@@ -1154,7 +1154,7 @@ public class SentencePatternUtil {
             Edge temp = getRealNounEdge(edge.getDependent().index(), dependency);
             String subject = (temp == null ? edge.getDependent().word() : temp.getWord());
             String predicate = edge.getGovernor().word();
-            String object;
+            String object = "";
             int predicateIndex = edge.getGovernor().index();
             // 是否有宾语的标识
             boolean hasObject = false;
@@ -1164,7 +1164,7 @@ public class SentencePatternUtil {
                 if (semanticGraphEdge.getRelation().toString().equals("dobj")) {
                     String objGovAndDep = semanticGraphEdge.getGovernor().tag() + "-" + semanticGraphEdge.getDependent().tag();
                     if (objGovAndDep.matches("(VB[A-Z]{0,1})-(NN[A-Z]{0,1})") ||
-                            objGovAndDep.matches("(VB[A-Z]{0,1})-PRP")) {
+                        objGovAndDep.matches("(VB[A-Z]{0,1})-PRP")) {
                         // 通过单词位置判断是否为同一个谓语
                         if (semanticGraphEdge.getGovernor().index() == predicateIndex) {
                             temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), dependency);
@@ -1179,11 +1179,24 @@ public class SentencePatternUtil {
                                     break;
                                 }
                             }
-                            if (hasObject && !isDoubleObject) {
-                                System.out.println("主谓宾：" + subject + " " + predicate + " " + object);
-                                resultList.add(subject + " " + predicate + " " + object);
-                            }
                         }
+                    } else if (objGovAndDep.matches("(VB[A-Z]{0,1})-(JJ[A-Z]{0,1})")) {
+                        // 通过单词位置判断是否为同一个谓语
+                        if (semanticGraphEdge.getGovernor().index() == predicateIndex) {
+                            int objectIndex = semanticGraphEdge.getDependent().index();
+                            // 找到形容词短语
+                            for (SemanticGraphEdge se : dependency.edgeListSorted()) {
+                                if (se.getRelation().toString().startsWith("nmod:") &&
+                                    se.getGovernor().index() == objectIndex) {
+                                    object = se.getGovernor().word() + " " + se.getRelation().toString().split(":")[1] + " " + se.getDependent().lemma();
+                                }
+                            }
+                            hasObject = true;
+                        }
+                    }
+                    if (hasObject && !isDoubleObject) {
+                        System.out.println("主谓宾：" + subject + " " + predicate + " " + object);
+                        resultList.add(subject + " " + predicate + " " + object);
                     }
                 } // if (semanticGraphEdge.getRelation().toString().equals("dobj"))
             } // for
@@ -1423,7 +1436,7 @@ public class SentencePatternUtil {
     }
 
     public static void main(String[] args) {
-        String text = "It was not until his wife came back that he went to bed.";
+        String text = "this book need all the blackmail it can get, for it cannot stand up by itself to disinterested scrutiny. Almost everything is wrong with it, in particular the tone, which is enormously soppy";
         List<CoreMap> result = StanfordParserUtil.parse(text.toLowerCase());
 
         for(CoreMap sentence : result) {
