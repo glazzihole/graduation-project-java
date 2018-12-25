@@ -58,10 +58,11 @@ public class NgramController {
     }
 
     /**
-     * 查找指定语料库中N为指定值的ngram
+     * 查找指定语料库中N为指定值（且为指定主题的）的ngram
      *
      * @param corpus
      * @param nValue
+     * @param topic     主题
      * @param pageable
      * @return
      */
@@ -69,9 +70,10 @@ public class NgramController {
     @ResponseBody
     public ResponseVO ngramList(@RequestParam String corpus,
                                 @RequestParam("n_value") int nValue,
+                                @RequestParam(required = false, defaultValue = "0") int topic,
                                 Pageable pageable) {
         log.info("ngramList | request to get ngram list of corpus: {}", corpus);
-        List<NgramDto> result = ngramService.ngramList(corpus, nValue);
+        List<NgramDto> result = ngramService.ngramList(corpus, nValue, topic);
         if (result == null) {
             ResponseUtil.error();
         }

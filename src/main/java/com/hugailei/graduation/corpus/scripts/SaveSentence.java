@@ -71,7 +71,7 @@ public class SaveSentence {
                 System.out.println("line: " + line);
                 List<CoreMap> sentences = StanfordParserUtil.parse(line);
                 for (CoreMap sentence : sentences) {
-                    text.append(sentence.toString().replace("\r", "").replace("\n", ""));
+                    text.append(sentence.toString().replace("\r", "").replace("\n", "")).append(". ");
                     sentenceCount ++;
                     int wordCount = sentence.get(CoreAnnotations.TokensAnnotation.class).size();
                     PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO tb_sentence"

@@ -10,7 +10,6 @@ import com.hugailei.graduation.corpus.dto.SentencePatternDto;
 import com.hugailei.graduation.corpus.dto.StudentTextDto;
 import com.hugailei.graduation.corpus.dto.TopicDto;
 import com.hugailei.graduation.corpus.enums.SentencePatternType;
-import com.hugailei.graduation.corpus.enums.Topic;
 import com.hugailei.graduation.corpus.service.StudentTextService;
 import com.hugailei.graduation.corpus.util.SentencePatternUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;

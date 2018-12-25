@@ -14,11 +14,12 @@ import java.util.List;
 public interface NgramService {
 
     /**
-     * 获取指定语料库中n为指定值的ngrams
+     * 获取指定语料库中n为指定值(且为指定主题)的ngram
      *
      * @param corpus
      * @param nValue
+     * @param topic
      * @return
      */
-    List<NgramDto> ngramList(String corpus, int nValue);
+    List<NgramDto> ngramList(String corpus, int nValue, int topic);
 }

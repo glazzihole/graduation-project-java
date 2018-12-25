@@ -2,8 +2,10 @@ package com.hugailei.graduation.corpus.service.impl;
 
 import com.bfsuolframework.core.utils.StringUtils;
 import com.hugailei.graduation.corpus.dao.CollocationDao;
+import com.hugailei.graduation.corpus.dao.CollocationWithTopicDao;
 import com.hugailei.graduation.corpus.dao.WordExtensionDao;
 import com.hugailei.graduation.corpus.domain.Collocation;
+import com.hugailei.graduation.corpus.domain.CollocationWithTopic;
 import com.hugailei.graduation.corpus.domain.WordExtension;
 import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.service.CollocationService;
@@ -17,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author HU Gailei
@@ -35,6 +36,9 @@ public class CollocationServiceImpl implements CollocationService {
     private CollocationDao collocationDao;
 
     @Autowired
+    private CollocationWithTopicDao collocationWithTopicDao;
+
+    @Autowired
     private WordExtensionDao wordExtensionDao;
 
     @Override
@@ -42,16 +46,28 @@ public class CollocationServiceImpl implements CollocationService {
     public List<CollocationDto> searchCollocationOfWord(CollocationDto collocationDto) {
         try {
             log.info("searchCollocationOfWord | collocationDto:{}", collocationDto.toString());
-            Collocation collocation = new Collocation();
-            BeanUtils.copyProperties(collocationDto, collocation);
-            Example<Collocation> example = Example.of(collocation);
             Sort sort = new Sort(Sort.Direction.DESC, "freq");
-            List<CollocationDto> resultList = collocationDao.findAll(example, sort).stream().map(coll -> {
-                CollocationDto data = new CollocationDto();
-                BeanUtils.copyProperties(coll, data);
-                return data;
-            }).collect(Collectors.toList());
-
+            List<CollocationDto> resultList = new ArrayList<>();
+            CollocationDto temp = new CollocationDto();
+            // 不带主题的查询
+            if (collocationDto.getTopic() == null ) {
+                Collocation collocation = new Collocation();
+                BeanUtils.copyProperties(collocationDto, collocation);
+                collocationDao.findAll(Example.of(collocation), sort)
+                        .forEach(coll -> {
+                            BeanUtils.copyProperties(coll, temp);
+                            resultList.add(temp);
+                        });
+            } else {
+                // 带主题的查询
+                CollocationWithTopic collocationWithTopic = new CollocationWithTopic();
+                BeanUtils.copyProperties(collocationDto, collocationWithTopic);
+                List<CollocationWithTopic> collocationWithTopicList = collocationWithTopicDao.findAll(Example.of(collocationWithTopic), sort);
+                collocationWithTopicList.forEach(coll -> {
+                            BeanUtils.copyProperties(coll, temp);
+                            resultList.add(temp);
+                        });
+            }
             log.info("searchCollocationOfWord | result size: {}", (resultList != null ? resultList.size() : 0));
             return resultList;
         } catch (Exception e) {
@@ -126,29 +142,46 @@ public class CollocationServiceImpl implements CollocationService {
             String words = tempResult.isPresent() ? tempResult.get().getResults() : "";
 
             // 将每个同义词和相似词和原来的搭配词进行组合，进行搭配查询，看是否存在该搭配f，若存在，则放入结果集中
-            Collocation collocation = new Collocation();
-            BeanUtils.copyProperties(collocationDto, collocation);
             List<CollocationDto> resultList = new ArrayList<>();
+            CollocationWithTopic collocationWithTopic = new CollocationWithTopic();
+            BeanUtils.copyProperties(collocationDto, collocationWithTopic);
+
             for (String word : words.split(",")) {
                 if (collocationDto.getPosition() == 1) {
-                    collocation.setFirstWord(word);
+                    collocationWithTopic.setFirstWord(word);
                 } else if (collocationDto.getPosition() == 2) {
-                    collocation.setSecondWord(word);
+                    collocationWithTopic.setSecondWord(word);
                 } else {
-                    collocation.setThirdWord(word);
+                    collocationWithTopic.setThirdWord(word);
                 }
-                Example<Collocation> collocationExample = Example.of(collocation);
 
-                List<Collocation> collocationList = collocationDao.findAll(collocationExample);
-                if (collocationList.size() >= 1) {
-                    CollocationDto result = new CollocationDto();
-                    collocationList.forEach(coll->{
-                        BeanUtils.copyProperties(coll, result);
-                        resultList.add(result);
-                    });
+                // 不带主题的查询
+                if (collocationDto.getTopic() == null) {
+                    Collocation collocation = new Collocation();
+                    BeanUtils.copyProperties(collocationWithTopic, collocation);
+                    Example<Collocation> collocationExample = Example.of(collocation);
+
+                    List<Collocation> collocationList = collocationDao.findAll(collocationExample);
+                    if (collocationList.size() >= 1) {
+                        CollocationDto result = new CollocationDto();
+                        collocationList.forEach(coll -> {
+                            BeanUtils.copyProperties(coll, result);
+                            resultList.add(result);
+                        });
+                    }
+                }
+                // 带主题的查询
+                else {
+                    List<CollocationWithTopic> collocationWithTopicList = collocationWithTopicDao.findAll(Example.of(collocationWithTopic));
+                    if (!collocationWithTopicList.isEmpty()) {
+                        CollocationDto result = new CollocationDto();
+                        collocationWithTopicList.forEach(coll -> {
+                            BeanUtils.copyProperties(coll, result);
+                            resultList.add(result);
+                        });
+                    }
                 }
             }
-
             sortCollocationDtoList(resultList);
             log.info("searchSynonymousCollocation | result size: {}", (resultList != null ? resultList.size() : 0));
             return resultList;

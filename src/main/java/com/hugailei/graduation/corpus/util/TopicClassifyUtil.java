@@ -87,14 +87,14 @@ public class TopicClassifyUtil {
             if (count == 1 && pair.first < 0.2) {
                 topicInfoList.add(new TopicDto(Topic.OTHER.getTopicName(), Topic.OTHER.getTopicNum(), null));
                 break;
+            } else if (pair.first > 0.2) {
+                float prob = pair.first;
+                int topicNum = Integer.valueOf(pair.second.replaceAll(LABEL_PREFIX, ""));
+                Topic topic = Topic.getEnumBycode(Topic.class, topicNum);
+                String topicName = topic.getTopicName();
+                topicInfoList.add(new TopicDto(topicName, topicNum, prob));
+                count ++;
             }
-
-            float prob = pair.first;
-            int topicNum = Integer.valueOf(pair.second.replaceAll(LABEL_PREFIX, ""));
-            Topic topic = Topic.getEnumBycode(Topic.class, topicNum);
-            String topicName = topic.getTopicName();
-            topicInfoList.add(new TopicDto(topicName, topicNum, prob));
-            count ++;
         }
         return topicInfoList;
     }

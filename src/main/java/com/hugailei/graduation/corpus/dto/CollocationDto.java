@@ -46,7 +46,10 @@ public class CollocationDto implements Serializable {
      */
     private Integer position;
 
-    private String type;
+    /**
+     * 主题
+     */
+    private Integer topic;
 
 
     /**
