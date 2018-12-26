@@ -15,6 +15,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -44,6 +45,7 @@ public class SentenceServiceImpl implements SentenceService  {
     private SentenceDao sentenceDao;
 
     @Override
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public List<SentenceDto> sentenceElasticSearch(String keyword, String corpus) {
         try {
             log.info("sentenceElasticSearch | keyword: {}, corpus: {}", keyword, corpus);
@@ -69,6 +71,7 @@ public class SentenceServiceImpl implements SentenceService  {
 
     @Override
     @Transactional(readOnly = true, rollbackFor = Exception.class)
+    @Cacheable(value = "corpus", key = "#sentenceIdList.toString()", unless = "#result eq null")
     public List<SentenceDto> searchSentenceById(List<Long> sentenceIdList) {
         try {
             log.info("searchSentenceById | sentence id list: {}", sentenceIdList.toString());
@@ -85,6 +88,10 @@ public class SentenceServiceImpl implements SentenceService  {
     }
 
     @Override
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    @Cacheable(value = "corpus",
+            key = "#keyword + '_' + #sentenceIdList.toString() + '_' + #corpus",
+            unless = "#result eq null")
     public List<SentenceDto> filterSentence(String keyword, List<Long> sentenceIdList, String corpus) {
         try {
             log.info("filterSentence | keyword: {}, sentence size: {}, corpus: {}", keyword, sentenceIdList.size(), corpus);
@@ -137,6 +144,7 @@ public class SentenceServiceImpl implements SentenceService  {
     }
 
     @Override
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public List<SentencePattern> getSentencePattern(String sentence) {
         try {
             log.info("getSentencePattern | sentence: {}", sentence);

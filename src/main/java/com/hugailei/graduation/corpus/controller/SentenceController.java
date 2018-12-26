@@ -59,6 +59,13 @@ public class SentenceController {
         handler.checkAndHandler(pageable, corpus, blackLabServer, request, response, requestHandler);
     }
 
+    /**
+     * 按句子ID进行查询
+     *
+     * @param sentenceIds
+     * @param pageable
+     * @return
+     */
     @PostMapping("/by_id")
     public ResponseVO searchSentenceById(@RequestParam String sentenceIds,
                                          Pageable pageable) {

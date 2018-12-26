@@ -135,4 +135,42 @@ public class WordController {
         RequestHandler requestHandler = new WordRequestHandler(blackLabServer, request, user, corpus, null, null);
         handler.checkAndHandler(pageable, corpus, blackLabServer, request, response, requestHandler);
     }
+
+    /**
+     * 查询单词在不同语料库中的分布
+     *
+     * @param type  查询内容的类型，可以为“word”——词形，“lemma”——原型，“pos”——词性
+     * @param query 查询内容
+     * @return
+     */
+    @GetMapping("/corpus-distribution")
+    @ResponseBody
+    public ResponseVO corpusDistribution(@RequestParam String type, @RequestParam String query) {
+        log.info("corpusDistribution | request to get corpus distribution");
+        List<WordDto> result = wordService.corpusDistribution(query, type);
+        if (result == null) {
+            ResponseUtil.error();
+        }
+        return ResponseUtil.success(result);
+    }
+
+    /**
+     * 查询单词在指定语料库中不同主题中的分布
+     *
+     * @param type  查询内容的类型，可以为“word”——词形，“lemma”——原型
+     * @param query 查询内容
+     * @return
+     */
+    @GetMapping("/topic-distribution")
+    @ResponseBody
+    public ResponseVO topicDistribution(@RequestParam String type,
+                                        @RequestParam String query,
+                                        @RequestParam String corpus) {
+        log.info("topicDistribution | request to get topic distribution");
+        List<WordDto> result = wordService.topicDistribution(query, type, corpus);
+        if (result == null) {
+            ResponseUtil.error();
+        }
+        return ResponseUtil.success(result);
+    }
 }

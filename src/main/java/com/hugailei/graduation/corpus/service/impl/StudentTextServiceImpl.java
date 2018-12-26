@@ -21,6 +21,7 @@ import edu.stanford.nlp.util.CoreMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,6 +83,7 @@ public class StudentTextServiceImpl implements StudentTextService {
     }
 
     @Override
+    @Cacheable(value = "student", key = "#text", unless = "#result eq null")
     public CollocationDto.CollocationInfo getCollocationInText(String text) {
         try {
             log.info("getCollocationInText | text: {}", text);
@@ -288,6 +290,7 @@ public class StudentTextServiceImpl implements StudentTextService {
     }
 
     @Override
+    @Cacheable(value = "student", key = "#text", unless = "#result eq null")
     public List<SentencePatternDto> getSentencePatternInText(String text) {
         try {
             log.info("getSentencePatternInText | text: {}", text);

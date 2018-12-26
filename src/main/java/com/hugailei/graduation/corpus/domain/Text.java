@@ -20,7 +20,10 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "tb_text")
+@Table(name = "tb_text",
+        indexes = {
+                @Index(name = "id", columnList = "id", unique = true)
+        })
 public class Text implements Serializable {
 
 //    @GeneratedValue(strategy = GenerationType.IDENTITY)

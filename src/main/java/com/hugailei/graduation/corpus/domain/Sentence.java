@@ -18,7 +18,11 @@ import java.io.Serializable;
  * </p>
  **/
 @Entity
-@Table(name = "tb_sentence")
+@Table(name = "tb_sentence",
+        indexes = {
+                @Index(name = "id", columnList = "id", unique = true),
+                @Index(name = "text_id", columnList = "text_id")
+        })
 @Document(indexName = "sentence", type = "sentence")
 //@Mapping(mappingPath = "com/hugailei/graduation/corpus/elasticsearch/mapping/SentenceMapping.json")
 @Data

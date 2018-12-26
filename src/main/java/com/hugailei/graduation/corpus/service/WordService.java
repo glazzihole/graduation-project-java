@@ -34,11 +34,21 @@ public interface WordService {
     List<WordDto> searchDetail(String query, String corpus, String queryType);
 
     /**
-     * 所输入内容在不同语料库中的分布
+     * 查询所输入内容在不同语料库中的分布
      *
      * @param query         关键词
      * @param queryType     关键词的类型
      * @return
      */
-    List<WordDto> searchCorpus(String query, String queryType);
+    List<WordDto> corpusDistribution(String query, String queryType);
+
+    /**
+     * 查询所输入内容在不同主题中的分布
+     *
+     * @param query     关键词
+     * @param queryType 关键词的类型
+     * @param corpus    语料库
+     * @return
+     */
+    List<WordDto> topicDistribution(String query, String queryType, String corpus);
 }

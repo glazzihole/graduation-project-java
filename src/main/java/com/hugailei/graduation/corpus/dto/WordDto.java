@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public class WordDto {
     private Long id;
 
@@ -35,4 +34,22 @@ public class WordDto {
      * keyword中的关键性值
      */
     private Double keyness;
+
+    /**
+     * 主题
+     */
+    private Integer topic;
+
+    public WordDto() {
+
+    }
+
+    public WordDto(Long id, String form, String pos, String lemma, Integer freq, String corpus) {
+        this.id = id;
+        this.form = form;
+        this.pos = pos;
+        this.lemma = lemma;
+        this.freq = freq;
+        this.corpus = corpus;
+    }
 }

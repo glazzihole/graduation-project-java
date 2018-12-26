@@ -2,12 +2,15 @@ package com.hugailei.graduation.corpus.service.impl;
 
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import com.hugailei.graduation.corpus.dao.WordDao;
+import com.hugailei.graduation.corpus.dao.WordWithTopicDao;
 import com.hugailei.graduation.corpus.domain.Word;
+import com.hugailei.graduation.corpus.domain.WordWithTopic;
 import com.hugailei.graduation.corpus.dto.WordDto;
 import com.hugailei.graduation.corpus.service.WordService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +34,9 @@ public class WordServiceImpl implements WordService {
 
     @Autowired
     private WordDao wordDao;
+
+    @Autowired
+    private WordWithTopicDao wordWithTopicDao;
 
     @Override
     public List<WordDto> searchAll(String query, String corpus, String searchType) {
@@ -56,7 +62,7 @@ public class WordServiceImpl implements WordService {
                     long index = 1L;
                     for(Map.Entry<String, Integer> entry : key2Freq.entrySet()){
                         resultList.add(
-                                new WordDto(index++, query, null, entry.getKey(), entry.getValue(),null, corpus, null, null)
+                                new WordDto(index++, query, null, entry.getKey(), entry.getValue(), corpus)
                         );
                     }
                     break;
@@ -74,7 +80,7 @@ public class WordServiceImpl implements WordService {
                     index = 1L;
                     for(Map.Entry<String, Integer> entry : key2Freq.entrySet()){
                         resultList.add(
-                                new WordDto(index++, query, entry.getKey(), null, entry.getValue(),null, corpus, null, null)
+                                new WordDto(index++, query, entry.getKey(), null, entry.getValue(), corpus)
                         );
                     }
                     break;
@@ -92,7 +98,7 @@ public class WordServiceImpl implements WordService {
                     index = 1L;
                     for(Map.Entry<String, Integer> entry : key2Freq.entrySet()){
                         resultList.add(
-                                new WordDto(index++, entry.getKey(), null, query, entry.getValue(),null, corpus, null, null)
+                                new WordDto(index++, entry.getKey(), null, query, entry.getValue(), corpus)
                         );
                     }
                     break;
@@ -141,9 +147,9 @@ public class WordServiceImpl implements WordService {
     }
 
     @Override
-    public List<WordDto> searchCorpus(String query, String queryType) {
+    public List<WordDto> corpusDistribution(String query, String queryType) {
         try {
-            log.info("searchCorpus | query: {}, queryType: {}", query, queryType);
+            log.info("corpusDistribution | query: {}, queryType: {}", query, queryType);
             Word word = new Word();
             Example<Word> example;
             final Map<String, WordDto> corpus2WordDto = new HashMap<>();
@@ -151,60 +157,75 @@ public class WordServiceImpl implements WordService {
             switch (queryType) {
                 case CorpusConstant.LEMMA:
                     word.setLemma(query);
-                    example = Example.of(word);
-                    wordDao.findAll(example).forEach(w -> {
-                        WordDto wordDto = new WordDto();
-                        wordDto.setLemma(query);
-                        wordDto.setCorpus(w.getCorpus());
-                        wordDto.setFreq(w.getFreq());
-                        if(corpus2WordDto.containsKey(wordDto.getCorpus())) {
-                            int freq = corpus2WordDto.get(wordDto.getCorpus()).getFreq() + wordDto.getFreq();
-                            wordDto.setFreq(freq);
-                        } else {
-                            corpus2WordDto.put(wordDto.getCorpus(), wordDto);
-                        }
-                    });
                     break;
                 case CorpusConstant.FORM:
                     word.setForm(query);
-                    example = Example.of(word);
-                    wordDao.findAll(example).forEach(w -> {
-                        WordDto wordDto = new WordDto();
-                        wordDto.setForm(query);
-                        wordDto.setCorpus(w.getCorpus());
-                        wordDto.setFreq(w.getFreq());
-                        if(corpus2WordDto.containsKey(wordDto.getCorpus())) {
-                            int freq = corpus2WordDto.get(wordDto.getCorpus()).getFreq() + wordDto.getFreq();
-                            wordDto.setFreq(freq);
-                        } else {
-                            corpus2WordDto.put(wordDto.getCorpus(), wordDto);
-                        }
-                    });
                     break;
                 case CorpusConstant.POS:
                     word.setPos(query);
-                    example = Example.of(word);
-                    wordDao.findAll(example).forEach(w -> {
-                        WordDto wordDto = new WordDto();
-                        wordDto.setPos(query);
-                        wordDto.setCorpus(w.getCorpus());
-                        wordDto.setFreq(w.getFreq());
-                        if(corpus2WordDto.containsKey(wordDto.getCorpus())) {
-                            int freq = corpus2WordDto.get(wordDto.getCorpus()).getFreq() + wordDto.getFreq();
-                            wordDto.setFreq(freq);
-                        } else {
-                            corpus2WordDto.put(wordDto.getCorpus(), wordDto);
-                        }
-                    });
                     break;
                 default:
-                    log.error("searchCorpus | wrong queryType");
+                    log.error("corpusDistribution | wrong queryType");
                     return null;
             }
+            example = Example.of(word);
+            wordDao.findAll(example).forEach(w -> {
+                WordDto wordDto = new WordDto();
+                wordDto.setCorpus(w.getCorpus());
+                wordDto.setFreq(w.getFreq());
+                if(corpus2WordDto.containsKey(wordDto.getCorpus())) {
+                    int freq = corpus2WordDto.get(wordDto.getCorpus()).getFreq() + wordDto.getFreq();
+                    wordDto.setFreq(freq);
+                } else {
+                    corpus2WordDto.put(wordDto.getCorpus(), wordDto);
+                }
+            });
             resultList.addAll(corpus2WordDto.values());
             return resultList;
         } catch (Exception e) {
-            log.error("searchCorpus | error: {}", e);
+            log.error("corpusDistribution | error: {}", e);
+            return null;
+        }
+    }
+
+    @Override
+    public List<WordDto> topicDistribution(String query, String queryType, String corpus) {
+        try {
+            log.info("topicDistribution | query: {}, query type: {}, corpus: {}", query, queryType, corpus);
+            WordWithTopic wordWithTopic = new WordWithTopic();
+            wordWithTopic.setCorpus(corpus);
+            Example<WordWithTopic> example;
+            final Map<Integer, WordDto> topic2WordDto = new HashMap<>();
+            List<WordDto> resultList = new ArrayList<>();
+            switch (queryType) {
+                case CorpusConstant.LEMMA:
+                    wordWithTopic.setLemma(query);
+                    break;
+
+                case CorpusConstant.FORM:
+                    wordWithTopic.setForm(query);
+                    break;
+
+                default:
+                    log.error("corpusDistribution | wrong queryType");
+                    return null;
+            }
+            example = Example.of(wordWithTopic);
+            wordWithTopicDao.findAll(example).forEach(w -> {
+                WordDto wordDto = new WordDto();
+                wordDto.setTopic(w.getTopic());
+                wordDto.setFreq(w.getFreq());
+                if(topic2WordDto.containsKey(wordDto.getTopic())) {
+                    int freq = topic2WordDto.get(wordDto.getTopic()).getFreq() + wordDto.getFreq();
+                    wordDto.setFreq(freq);
+                } else {
+                    topic2WordDto.put(wordDto.getTopic(), wordDto);
+                }
+            });
+            resultList.addAll(topic2WordDto.values());
+            return resultList;
+        } catch (Exception e) {
+            log.error("topicDistribution | error: {}", e);
             return null;
         }
     }

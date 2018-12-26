@@ -7,6 +7,7 @@ import com.hugailei.graduation.corpus.service.NgramService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class NgramServiceImpl implements NgramService {
     private NgramWithTopicDao ngramWithTopicDao;
 
     @Override
+    @Cacheable(value = "corpus", key = "#corpus + '_' + #nValue + '_' + #topic", unless = "#result eq null")
     public List<NgramDto> ngramList(String corpus, int nValue, int topic) {
         try {
             log.info("ngramList | corpus: {}, nValue: {}", corpus, nValue);

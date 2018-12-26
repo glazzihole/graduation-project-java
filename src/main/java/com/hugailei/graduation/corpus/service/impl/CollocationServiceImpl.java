@@ -13,6 +13,7 @@ import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ public class CollocationServiceImpl implements CollocationService {
 
     @Override
     @Transactional(readOnly = true, rollbackFor = Exception.class)
+    @Cacheable(value = "corpus", key = "#collocationDto.toString()", unless = "#result eq null")
     public List<CollocationDto> searchCollocationOfWord(CollocationDto collocationDto) {
         try {
             log.info("searchCollocationOfWord | collocationDto:{}", collocationDto.toString());
@@ -78,6 +80,7 @@ public class CollocationServiceImpl implements CollocationService {
 
     @Override
     @Transactional(readOnly = true, rollbackFor = Exception.class)
+    @Cacheable(value = "corpus", key = "#collocationDto.toString()", unless = "#result eq null")
     public List<CollocationDto> searchSynonymousCollocation(CollocationDto collocationDto) {
         try {
             log.info("searchSynonymousCollocation | collocationDto: {}", collocationDto.toString());
