@@ -80,7 +80,11 @@ public class CollocationServiceImpl implements CollocationService {
 
     @Override
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    @Cacheable(value = "corpus", key = "#collocationDto.toString()", unless = "#result eq null")
+    @Cacheable(
+            value = "corpus",
+            key = "'synonymous_collocation_' + #collocationDto.toString()",
+            unless = "#result eq null"
+    )
     public List<CollocationDto> searchSynonymousCollocation(CollocationDto collocationDto) {
         try {
             log.info("searchSynonymousCollocation | collocationDto: {}", collocationDto.toString());

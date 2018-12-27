@@ -14,6 +14,15 @@ import java.util.List;
 public interface WordService {
 
     /**
+     * 单词——频率列表查询
+     *
+     * @param corpus    语料库名称
+     * @param topic     主题标号
+     * @return
+     */
+    List<WordDto> wordList(String corpus, int topic);
+
+    /**
      * 单词的词性、原型及形态查询
      *
      * @param query     待匹配的词汇

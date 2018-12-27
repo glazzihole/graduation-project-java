@@ -34,7 +34,11 @@ public class NgramServiceImpl implements NgramService {
     private NgramWithTopicDao ngramWithTopicDao;
 
     @Override
-    @Cacheable(value = "corpus", key = "#corpus + '_' + #nValue + '_' + #topic", unless = "#result eq null")
+    @Cacheable(
+            value = "corpus",
+            key = "#corpus + '_' + #nValue + '_' + #topic",
+            unless = "#result eq null"
+    )
     public List<NgramDto> ngramList(String corpus, int nValue, int topic) {
         try {
             log.info("ngramList | corpus: {}, nValue: {}", corpus, nValue);

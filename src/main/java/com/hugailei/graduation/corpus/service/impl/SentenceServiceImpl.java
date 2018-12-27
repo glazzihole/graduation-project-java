@@ -89,9 +89,11 @@ public class SentenceServiceImpl implements SentenceService  {
 
     @Override
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    @Cacheable(value = "corpus",
+    @Cacheable(
+            value = "corpus",
             key = "#keyword + '_' + #sentenceIdList.toString() + '_' + #corpus",
-            unless = "#result eq null")
+            unless = "#result eq null"
+    )
     public List<SentenceDto> filterSentence(String keyword, List<Long> sentenceIdList, String corpus) {
         try {
             log.info("filterSentence | keyword: {}, sentence size: {}, corpus: {}", keyword, sentenceIdList.size(), corpus);

@@ -1,6 +1,7 @@
 package com.hugailei.graduation.corpus.controller;
 
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
+import com.hugailei.graduation.corpus.dto.NgramDto;
 import com.hugailei.graduation.corpus.dto.WordDto;
 import com.hugailei.graduation.corpus.service.WordService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;
@@ -35,6 +36,28 @@ public class WordController {
 
     @Autowired
     private WordService wordService;
+
+    /**
+     * 单词——频率表查询
+     *
+     * @param corpus
+     * @param topic
+     * @param pageable
+     * @return
+     */
+    @GetMapping("/list")
+    @ResponseBody
+    public ResponseVO wordList(@RequestParam String corpus,
+                               @RequestParam(required = false, defaultValue = "0") int topic,
+                               Pageable pageable) {
+        log.info("wordList | request to get word list of corpus");
+        List<WordDto> result = wordService.wordList(corpus, topic);
+        if (result == null) {
+            ResponseUtil.error();
+        }
+        return ResponseUtil.createPageResponse(result, pageable);
+    }
+
 
     /**
      * 单词原型分布查询
@@ -143,7 +166,7 @@ public class WordController {
      * @param query 查询内容
      * @return
      */
-    @GetMapping("/corpus-distribution")
+    @GetMapping("/distribution/corpus")
     @ResponseBody
     public ResponseVO corpusDistribution(@RequestParam String type, @RequestParam String query) {
         log.info("corpusDistribution | request to get corpus distribution");
@@ -161,7 +184,7 @@ public class WordController {
      * @param query 查询内容
      * @return
      */
-    @GetMapping("/topic-distribution")
+    @GetMapping("/distribution/topic")
     @ResponseBody
     public ResponseVO topicDistribution(@RequestParam String type,
                                         @RequestParam String query,

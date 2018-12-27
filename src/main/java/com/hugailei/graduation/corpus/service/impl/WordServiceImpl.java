@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author HU Gailei
@@ -37,6 +38,42 @@ public class WordServiceImpl implements WordService {
 
     @Autowired
     private WordWithTopicDao wordWithTopicDao;
+
+    @Override
+    @Cacheable(value = "corpus", key = "#corpus + '_' + #topic", unless = "#result eq null")
+    public List<WordDto> wordList(String corpus, int topic) {
+        try {
+            log.info("wordList | corpus: {}, topic: {}", corpus, topic);
+            List<WordDto> resultList = new ArrayList<>();
+            // 不分主题查询
+            if (topic == 0) {
+                resultList = wordDao.findAllByCorpusOrderByFreqDesc(corpus).stream().map(
+                        w -> {
+                            WordDto wordDto = new WordDto();
+                            BeanUtils.copyProperties(w, wordDto);
+                            return wordDto;
+                        }
+                ).collect(Collectors.toList());
+            }
+            // 按主题进行查询
+            else {
+                resultList = wordWithTopicDao.findAllByCorpusAndTopicOrderByFreqDesc(corpus, topic)
+                        .stream()
+                        .map(
+                            w -> {
+                                WordDto wordDto = new WordDto();
+                                BeanUtils.copyProperties(w, wordDto);
+                                return wordDto;
+                            }
+                        )
+                        .collect(Collectors.toList());
+            }
+            return resultList;
+        } catch (Exception e) {
+            log.error("wordList | error: {}", e);
+            return null;
+        }
+    }
 
     @Override
     public List<WordDto> searchAll(String query, String corpus, String searchType) {

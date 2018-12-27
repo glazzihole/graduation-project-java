@@ -44,7 +44,7 @@ public class NgramController {
      * @param corpus    语料库
      * @param patt      CQL表达式
      */
-    @GetMapping("/search")
+    @GetMapping
     public void searchNgramByPatt(Pageable pageable,
                                   HttpServletRequest request,
                                   HttpServletResponse response,
@@ -72,7 +72,7 @@ public class NgramController {
                                 @RequestParam("n_value") int nValue,
                                 @RequestParam(required = false, defaultValue = "0") int topic,
                                 Pageable pageable) {
-        log.info("ngramList | request to get ngram list of corpus: {}", corpus);
+        log.info("ngramList | request to get ngram list of corpus");
         List<NgramDto> result = ngramService.ngramList(corpus, nValue, topic);
         if (result == null) {
             ResponseUtil.error();

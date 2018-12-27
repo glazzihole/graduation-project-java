@@ -1436,7 +1436,7 @@ public class SentencePatternUtil {
     }
 
     public static void main(String[] args) {
-        String text = "this book need all the blackmail it can get, for it cannot stand up by itself to disinterested scrutiny. Almost everything is wrong with it, in particular the tone, which is enormously soppy";
+        String text = "The idea that you can do this work well without thinking is quite wrong.";
         List<CoreMap> result = StanfordParserUtil.parse(text.toLowerCase());
 
         for(CoreMap sentence : result) {

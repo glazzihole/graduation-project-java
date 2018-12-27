@@ -150,103 +150,104 @@ public class LabelTopic {
      */
     public static void labelCollocationTopic() throws Exception{
         Map<String, String> key2SenteceIds = new HashMap<>();
+        String[] corpusArray = {"bnc","chinadaily"};
+        for (String corpus : corpusArray) {
+            // 从数据库中读取搭配信息
+            PreparedStatement preparedStatement = con.prepareStatement("SELECT * FROM tb_collocation WHERE corpus = '" + corpus + "'");
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String sentenceIds = resultSet.getString("sentence_ids");
+                String firstWord = resultSet.getString("first_word");
+                String firstPos = resultSet.getString("first_pos");
+                String secondWord = resultSet.getString("second_word");
+                String secondPos = resultSet.getString("second_pos");
+                String thirdWord = resultSet.getString("third_word");
+                String thirdPos = resultSet.getString("third_pos");
 
-        // 从数据库中读取搭配信息
-        PreparedStatement preparedStatement = con.prepareStatement("SELECT * FROM tb_collocation");
-        ResultSet resultSet = preparedStatement.executeQuery();
-        while (resultSet.next()) {
-            String sentenceIds = resultSet.getString("sentence_ids");
-            String corpus = resultSet.getString("corpus");
-            String firstWord = resultSet.getString("first_word");
-            String firstPos = resultSet.getString("first_pos");
-            String secondWord = resultSet.getString("second_word");
-            String secondPos = resultSet.getString("second_pos");
-            String thirdWord = resultSet.getString("third_word");
-            String thirdPos = resultSet.getString("third_pos");
-
-            for (String sentenceIdString : sentenceIds.split(",")) {
-                long sentenceId = Long.valueOf(sentenceIdString);
-                PreparedStatement ps = con.prepareStatement("SELECT topic FROM tb_sentence WHERE id = ?");
-                ps.setLong(1, sentenceId);
-                ResultSet rs = ps.executeQuery();
-                while (rs.next()) {
-                    int topic = rs.getInt("topic");
-                    String key = firstWord + "~" + firstPos + "~"
+                for (String sentenceIdString : sentenceIds.split(",")) {
+                    long sentenceId = Long.valueOf(sentenceIdString);
+                    PreparedStatement ps = con.prepareStatement("SELECT topic FROM tb_sentence WHERE id = ?");
+                    ps.setLong(1, sentenceId);
+                    ResultSet rs = ps.executeQuery();
+                    while (rs.next()) {
+                        int topic = rs.getInt("topic");
+                        String key = firstWord + "~" + firstPos + "~"
                                 + secondWord + "~" + secondPos + "~"
                                 + thirdWord + "~" + thirdPos + "~"
                                 + corpus + "~" + topic ;
-                    String newSentenceIds = sentenceIdString + ",";
-                    if (key2SenteceIds.containsKey(key)) {
-                        newSentenceIds = newSentenceIds + key2SenteceIds.get(key);
+                        String newSentenceIds = sentenceIdString + ",";
+                        if (key2SenteceIds.containsKey(key)) {
+                            newSentenceIds = newSentenceIds + key2SenteceIds.get(key);
+                        }
+                        key2SenteceIds.put(key, newSentenceIds);
+                        System.out.println(key);
                     }
-                    key2SenteceIds.put(key, newSentenceIds);
-                    System.out.println(key);
                 }
             }
-        }
 
-        System.out.println("分析完成，开始存入数据库");
-        try {
-            for (Map.Entry entry : key2SenteceIds.entrySet()) {
-                String key = (String) entry.getKey();
-                String value = (String) entry.getValue();
-                String[] data = key.split("~");
-                if (data.length == 8) {
-                    PreparedStatement ps = con.prepareStatement("INSERT INTO tb_collocation_with_topic(" +
-                            "first_word, " +
-                            "first_pos, " +
-                            "second_word, " +
-                            "second_pos, " +
-                            "third_word, " +
-                            "third_pos, " +
-                            "corpus, " +
-                            "topic, " +
-                            "sentence_ids, " +
-                            "freq" +
-                            ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    ps.setString(1, data[0]);
-                    ps.setString(2, data[1]);
-                    ps.setString(3, data[2]);
-                    ps.setString(4, data[3]);
-                    ps.setString(5, data[4]);
-                    ps.setString(6, data[5]);
-                    ps.setString(7, data[6]);
-                    ps.setInt(8, Integer.valueOf(data[7]));
-                    ps.setString(9, value);
-                    ps.setInt(10, value.split(",").length);
-                    ps.execute();
-                    System.out.println(ps.toString());
-                } else if (data.length == 6) {
-                    PreparedStatement ps = con.prepareStatement("INSERT INTO tb_collocation_with_topic(" +
-                                    "first_word, " +
-                                    "first_pos, " +
-                                    "second_word, " +
-                                    "second_pos, " +
-                                    "corpus, " +
-                                    "topic, " +
-                                    "sentence_ids, " +
-                                    "freq" +
+            System.out.println("分析完成，开始存入数据库");
+            try {
+                for (Map.Entry entry : key2SenteceIds.entrySet()) {
+                    String key = (String) entry.getKey();
+                    String value = (String) entry.getValue();
+                    String[] data = key.split("~");
+                    if (data.length == 8) {
+                        PreparedStatement ps = con.prepareStatement("INSERT INTO tb_collocation_with_topic(" +
+                                "first_word, " +
+                                "first_pos, " +
+                                "second_word, " +
+                                "second_pos, " +
+                                "third_word, " +
+                                "third_pos, " +
+                                "corpus, " +
+                                "topic, " +
+                                "sentence_ids, " +
+                                "freq" +
+                                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        ps.setString(1, data[0]);
+                        ps.setString(2, data[1]);
+                        ps.setString(3, data[2]);
+                        ps.setString(4, data[3]);
+                        ps.setString(5, data[4]);
+                        ps.setString(6, data[5]);
+                        ps.setString(7, data[6]);
+                        ps.setInt(8, Integer.valueOf(data[7]));
+                        ps.setString(9, value);
+                        ps.setInt(10, value.split(",").length);
+                        ps.execute();
+                        System.out.println(ps.toString());
+                    } else if (data.length == 6) {
+                        PreparedStatement ps = con.prepareStatement("INSERT INTO tb_collocation_with_topic(" +
+                                "first_word, " +
+                                "first_pos, " +
+                                "second_word, " +
+                                "second_pos, " +
+                                "corpus, " +
+                                "topic, " +
+                                "sentence_ids, " +
+                                "freq" +
                                 ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                    ps.setString(1, data[0]);
-                    ps.setString(2, data[1]);
-                    ps.setString(3, data[2]);
-                    ps.setString(4, data[3]);
-                    ps.setString(5, data[4]);
-                    ps.setInt(6, Integer.valueOf(data[5]));
-                    ps.setString(7, value);
-                    ps.setInt(8, value.split(",").length);
-                    ps.execute();
-                    System.out.println(ps.toString());
+                        ps.setString(1, data[0]);
+                        ps.setString(2, data[1]);
+                        ps.setString(3, data[2]);
+                        ps.setString(4, data[3]);
+                        ps.setString(5, data[4]);
+                        ps.setInt(6, Integer.valueOf(data[5]));
+                        ps.setString(7, value);
+                        ps.setInt(8, value.split(",").length);
+                        ps.execute();
+                        System.out.println(ps.toString());
+                    }
                 }
+                System.out.println("labelCollocationTopic操作完成");
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("操作失败，存入序列化文件");
+                ObjectOutputStream oo = new ObjectOutputStream(new FileOutputStream(
+                        new File("E:\\collocatin_with_topic.txt")));
+                oo.writeObject(key2SenteceIds);
+                oo.close();
             }
-            System.out.println("labelCollocationTopic操作完成");
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("操作失败，存入序列化文件");
-            ObjectOutputStream oo = new ObjectOutputStream(new FileOutputStream(
-                    new File("E:\\collocatin_with_topic.txt")));
-            oo.writeObject(key2SenteceIds);
-            oo.close();
         }
     }
 

@@ -83,7 +83,7 @@ public class StudentTextServiceImpl implements StudentTextService {
     }
 
     @Override
-    @Cacheable(value = "student", key = "#text", unless = "#result eq null")
+    @Cacheable(value = "student", key = "'collocation_' + #text", unless = "#result eq null")
     public CollocationDto.CollocationInfo getCollocationInText(String text) {
         try {
             log.info("getCollocationInText | text: {}", text);
@@ -290,7 +290,7 @@ public class StudentTextServiceImpl implements StudentTextService {
     }
 
     @Override
-    @Cacheable(value = "student", key = "#text", unless = "#result eq null")
+    @Cacheable(value = "student", key = "'sentence_pattern_' + #text", unless = "#result eq null")
     public List<SentencePatternDto> getSentencePatternInText(String text) {
         try {
             log.info("getSentencePatternInText | text: {}", text);

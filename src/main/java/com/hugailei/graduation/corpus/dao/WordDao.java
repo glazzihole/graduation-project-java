@@ -4,6 +4,8 @@ import com.hugailei.graduation.corpus.domain.Word;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 
 /**
  * @author HU Gailei
@@ -14,4 +16,12 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface WordDao extends JpaRepository<Word, Long>{
+
+    /**
+     * 查询指定语料库中的单词列表，并按照频次降序排序
+     *
+     * @param corpus
+     * @return
+     */
+    List<Word> findAllByCorpusOrderByFreqDesc(String corpus);
 }
