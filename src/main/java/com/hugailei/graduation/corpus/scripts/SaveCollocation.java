@@ -84,6 +84,7 @@ public class SaveCollocation {
             //遍历Map，把结果存入数据库中
             for (Map.Entry entry : KEY_TO_SENTENCEIDS.entrySet()) {
                 String key = (String)entry.getKey();
+                System.out.println(key);
                 String[] data = key.split("_");
                 String sentenceIds = KEY_TO_SENTENCEIDS.get(key);
                 int freq = sentenceIds.split(",").length;

@@ -1149,12 +1149,12 @@ public class SentencePatternUtil {
                     case 1:
                     case 2:
                     case 4:
-                        tempSentence = tempSentence.replace(clauseContent.trim().toLowerCase(), sbOrSth);
+                        tempSentence = tempSentence.replace(clauseContent.trim(), sbOrSth);
                         break;
 
                     // 定语从句或同位语从句 则省略
                     case 3:
-                        tempSentence = tempSentence.replaceAll(clauseContent.trim().toLowerCase(), "");
+                        tempSentence = tempSentence.replaceAll(clauseContent.trim(), "");
                         break;
 
                     // 状语从句
@@ -1163,7 +1163,7 @@ public class SentencePatternUtil {
                         String firstWordOfClause = clauseContent.split(" ")[0];
                         // 为地点状语从句
                         if (CorpusConstant.PLACE_ADVERBIAL_CLAUSE_CONJECTION_SET.contains(firstWordOfClause)) {
-                            tempSentence = tempSentence.replaceAll(clauseContent.trim().toLowerCase(), sp);
+                            tempSentence = tempSentence.replaceAll(clauseContent.trim(), sp);
                         }
                         // 为其他状语从句
                         else {
@@ -1252,11 +1252,26 @@ public class SentencePatternUtil {
         // 匹配是否包含主谓宾结构
         if (govAndDep.matches("(VB[A-Z]{0,1})-(NN[A-Z]{0,1})") ||
             govAndDep.matches("(VB[A-Z]{0,1})-PRP")) {
+            int predicateIndex = edge.getGovernor().index();
+            // 查找谓语动词是否有情态动词、助动词及否定结构，有的话需要加上
+            String beforePredicate = "";
+            for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
+                if (semanticGraphEdge.getRelation().toString().equals("aux") &&
+                    semanticGraphEdge.getGovernor().index() == predicateIndex) {
+                    beforePredicate += semanticGraphEdge.getDependent().word() + " ";
+                }
+            }
+            for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
+                if (semanticGraphEdge.getRelation().toString().equals("neg") &&
+                        semanticGraphEdge.getGovernor().index() == predicateIndex) {
+                    beforePredicate += semanticGraphEdge.getDependent().word() + " ";
+                }
+            }
+            String predicate = beforePredicate + edge.getGovernor().word();
             Edge temp = getRealNounEdge(edge.getDependent().index(), dependency);
             String subject = (temp == null ? edge.getDependent().word() : temp.getWord());
-            String predicate = edge.getGovernor().word();
             String object = "";
-            int predicateIndex = edge.getGovernor().index();
+
             // 是否有宾语的标识
             boolean hasObject = false;
             boolean isDoubleObject = false;
@@ -1537,16 +1552,16 @@ public class SentencePatternUtil {
     }
 
     public static void main(String[] args) {
-        String text = " \t\t\tMy friends dislike me because I’m handsome and successful.\n";
+        String text = " I didn’t realize how special my mother was until I became an adult.";
         String shorterText = abstractSentence(text);
         System.out.println("抽象后的句子：" + shorterText);
-        System.out.println(getPrincipalClause(StanfordParserUtil.parse(shorterText.toLowerCase()).get(0)));
+        System.out.println(getPrincipalClause(StanfordParserUtil.parse(shorterText).get(0)));
 
         List<CoreMap> result = StanfordParserUtil.parse(text.toLowerCase());
         for(CoreMap sentence : result) {
-            System.out.println(hasSoThat(sentence));
-            System.out.println(hasInvertedStructure(sentence));
-            System.out.println(getEmphaticStructure(sentence));
+            System.out.println("sothat句型" + hasSoThat(sentence));
+            System.out.println("倒装句型" + hasInvertedStructure(sentence));
+            System.out.println("强调句型" + getEmphaticStructure(sentence));
             sentence.get(TreeCoreAnnotations.TreeAnnotation.class).pennPrint();
             for (SentencePattern sp : findAllSpecialSentencePattern(sentence)) {
                 System.out.println(sp.toString());

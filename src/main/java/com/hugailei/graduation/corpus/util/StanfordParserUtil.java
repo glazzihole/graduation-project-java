@@ -125,7 +125,7 @@ public class StanfordParserUtil {
 
 
     public static void main(String[] args) {
-        String text = "\t\t\tMy friends dislike me because I’m handsome and successful.\n";
+        String text = "Do not worry about the exam, just take it easy.";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         StringBuilder stringBuilder = new StringBuilder();
         // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
