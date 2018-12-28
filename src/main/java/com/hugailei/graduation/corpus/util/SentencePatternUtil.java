@@ -17,10 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author HU Gailei
@@ -121,10 +118,9 @@ public class SentencePatternUtil {
      */
     public static List<SentencePattern> matchSubjectClause(CoreMap sentence) {
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-        TregexPattern pattern = TregexPattern.compile("SBAR $++ VP");
+        TregexPattern pattern = TregexPattern.compile("SBAR $+ VP");
         TregexMatcher matcher = pattern.matcher(tree);
-
-        List<SentencePattern> sentencePatternList = new ArrayList<>();
+        LinkedHashSet<String> clauseSet = new LinkedHashSet<>();
         // 匹配输出
         while (matcher.findNextMatchingNode()) {
             int type = SentencePatternType.SUBJECT_CLAUSE.getType();
@@ -137,13 +133,10 @@ public class SentencePatternUtil {
                 for (Tree children : clauseMatcher.getMatch().getLeaves()) {
                     clauseContent.append(children.label().value()).append(" ");
                 }
-                sentencePatternList.add(new SentencePattern(type, null, null, clauseContent.toString(), null, null, null, null));
+                clauseSet.add(type + "_" + clauseContent.toString());
             }
         }
-        if (sentencePatternList.isEmpty()) {
-            return null;
-        }
-        return sentencePatternList;
+        return setToList(clauseSet);
     }
 
     /**
@@ -152,13 +145,14 @@ public class SentencePatternUtil {
      * @param sentence 句法分析结果
      */
     public static List<SentencePattern> matchObjectClauseOrPredicativeClause(CoreMap sentence) {
+        List<SentencePattern> adverbialClauseList = matchAdverbialClause(sentence);
+        LinkedHashSet<String> clauseSet = new LinkedHashSet();
+
         // 先判断句中有没有so that句，若有，则需排除that后的从句
         Set<Integer> soThatIndexSet = getSoThatClauseIndex(sentence);
         // 排除掉it is XX that强调句的句型
         Set<Integer> emphaticIndexSet = getEmphaticStructure(sentence);
-
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-        List<SentencePattern> sentencePatternList = new ArrayList<>();
         SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
         TregexPattern pattern = TregexPattern.compile("/^P.*$/ << SBAR");
         TregexMatcher matcher = pattern.matcher(tree);
@@ -173,14 +167,13 @@ public class SentencePatternUtil {
                 } else if (emphaticIndexSet != null && emphaticIndexSet.contains(clauseStartIndex)) {
                     continue;
                 }
-
                 for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
                     clauseContent.append(leaf.label().value()).append(" ");
                 }
-                sentencePatternList.add(new SentencePattern(SentencePatternType.OBJECT_CLAUSE.getType(), null, null, clauseContent.toString(), null, null, null, null));
+                clauseSet.add(SentencePatternType.OBJECT_CLAUSE.getType() + "_" + clauseContent.toString());
             }
         }
-        pattern = TregexPattern.compile("VP << (/^VB.*$/ [$++ SBAR | $++ S])");
+        pattern = TregexPattern.compile("VP << (/^VB.*$/ [$+ SBAR | $+ S])");
         matcher = pattern.matcher(tree);
         while (matcher.findNextMatchingNode()) {
             Tree match = matcher.getMatch();
@@ -237,13 +230,6 @@ public class SentencePatternUtil {
                     }
 
                     if (found || isPredicativeClause) {
-                        int type;
-                        if (isPredicativeClause) {
-                            type = SentencePatternType.PREDICATIVE_CLAUSE.getType();
-                        } else {
-                            type = SentencePatternType.OBJECT_CLAUSE.getType();
-                        }
-
                         // 匹配SBAR，得出从句内容
                         clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(match);
                         StringBuilder clauseContent = new StringBuilder();
@@ -251,7 +237,22 @@ public class SentencePatternUtil {
                             for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
                                 clauseContent.append(leaf.label().value()).append(" ");
                             }
-                            sentencePatternList.add(new SentencePattern(type, null, null, clauseContent.toString(), null, null, null, null));
+                        }
+                        if (isPredicativeClause) {
+                            // 需要排除状语从句 如I did not realize how special my mother was until ……这类句子，则会被识别成表语从句
+                            boolean isAdverbialClause = false;
+                            for (SentencePattern sp : adverbialClauseList) {
+                                String advClauseContent = sp.getClauseContent();
+                                if (clauseContent.toString().equals(advClauseContent)) {
+                                    isAdverbialClause = true;
+                                    break;
+                                }
+                            }
+                            if (!isAdverbialClause) {
+                                clauseSet.add(SentencePatternType.OBJECT_CLAUSE.getType() + "_" + clauseContent.toString());
+                            }
+                        } else {
+                            clauseSet.add(SentencePatternType.OBJECT_CLAUSE.getType() + "_" + clauseContent.toString());
                         }
                         break;
                     } // if (found || isPredicativeClause)
@@ -259,10 +260,7 @@ public class SentencePatternUtil {
             } // for (Tree children : childrens)
         } // while
 
-        if (sentencePatternList.isEmpty()) {
-            return null;
-        }
-        return sentencePatternList;
+        return setToList(clauseSet);
     }
 
     /**
@@ -293,8 +291,7 @@ public class SentencePatternUtil {
                     // 获取该名词的index，从0开始
                     int index = children.getLeaves().get(0).indexLeaves(0, false) - 2;
                     // 通过index获取名词的原型
-                    CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(index);
-                    String lemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
+                    String lemma = sentence.get(CoreAnnotations.TokensAnnotation.class).get(index).get(CoreAnnotations.LemmaAnnotation.class);
                     // 判断该名词是否为同位语从句的先行词
                     if (CorpusConstant.APPOSITIVE_ANTECEDENT_SET.contains(lemma)) {
                         found = true;
@@ -327,7 +324,6 @@ public class SentencePatternUtil {
                             } else if (emphaticIndexSet != null && emphaticIndexSet.contains(clauseStartIndex)) {
                                 continue;
                             }
-
                             for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
                                 clauseContent.append(leaf.label().value()).append(" ");
                             }
@@ -364,47 +360,65 @@ public class SentencePatternUtil {
         // 获取依存关系
         SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
         // 判断依存关系中是否包含advcl:XXX
-        List<SentencePattern> sentencePatternList = new ArrayList<>();
+        LinkedHashSet<String> clauseSet = new LinkedHashSet<>();
         for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
             String relation = edge.getRelation().toString();
-            if (relation.startsWith("advcl")) {
-                int type = SentencePatternType.ADVERBIAL_CLAUSE.getType();
-                if (relation.contains(":")) {
-                    // 引导词
-                    String conjunction = relation.split(":")[1];
-
-                    // 匹配SBAR，看从句的第一个词是否为状语从句引导词，若是，则匹配从句内容
-                    TregexMatcher clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(tree);
-                    while (clauseMatcher.findNextMatchingNode()) {
-                        StringBuilder clauseContent = new StringBuilder();
-                        if (conjunction.contains("_")) {
-                            if (clauseMatcher.getMatch().getLeaves().get(0).label().value().equals(conjunction.split("_")[0]) &&
-                                clauseMatcher.getMatch().getLeaves().get(1).label().value().equals(conjunction.split("_")[1])) {
-                                for (Tree children : clauseMatcher.getMatch().getLeaves()) {
-                                    clauseContent.append(children.label().value()).append(" ");
-                                }
+            if (CorpusConstant.ADVERBIAL_CLAUSE_RELATION_SET.contains(relation)) {
+                // 引导词
+                String conjunction = relation.split(":")[1];
+                // 匹配SBAR，看从句的第一个词是否为状语从句引导词，若是，则匹配从句内容
+                TregexMatcher clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(tree);
+                while (clauseMatcher.findNextMatchingNode()) {
+                    StringBuilder clauseContent = new StringBuilder();
+                    boolean found = false;
+                    if (conjunction.contains("_")) {
+                        if (clauseMatcher.getMatch().getLeaves().get(0).label().value().equals(conjunction.split("_")[0]) &&
+                            clauseMatcher.getMatch().getLeaves().get(1).label().value().equals(conjunction.split("_")[1])) {
+                            for (Tree children : clauseMatcher.getMatch().getLeaves()) {
+                                clauseContent.append(children.label().value()).append(" ");
                             }
-                        } else {
-                            if (clauseMatcher.getMatch().getLeaves().get(0).label().value().equals(conjunction)) {
-                                for (Tree children : clauseMatcher.getMatch().getLeaves()) {
-                                    clauseContent.append(children.label().value()).append(" ");
-                                }
-                            }
+                            found = true;
                         }
-                        sentencePatternList.add(new SentencePattern(type, null, null, clauseContent.toString(), null, null, null, null));
+                    } else if (clauseMatcher.getMatch().getLeaves().get(0).label().value().equals(conjunction)) {
+                        for (Tree children : clauseMatcher.getMatch().getLeaves()) {
+                            clauseContent.append(children.label().value()).append(" ");
+                        }
+                        found = true;
+                    }
+                    if (found) {
+                        clauseSet.add(SentencePatternType.ADVERBIAL_CLAUSE.getType() + "_" + clauseContent.toString());
                         break;
                     }
                 }
-                else{
-                    sentencePatternList.add(new SentencePattern(type, null, null, null, null, null, null, null));
+            }
+            else if (relation.equals("advcl")) {
+                int tempIndex = edge.getDependent().index();
+                // 循环查找wh-引导的从句
+                for (SemanticGraphEdge se : dependency.edgeListSorted()) {
+                    if (se.getRelation().toString().equals("advmod") &&
+                        se.getGovernor().index() == tempIndex){
+                        String wh = se.getDependent().lemma();
+                        if (CorpusConstant.ADVERBIAL_CLAUSE_CONJECTION_SET.contains(wh)) {
+                            StringBuilder clauseContent = new StringBuilder();
+                            // 匹配SBAR，看从句的第一个词是否为状语从句引导词，若是，则匹配从句内容
+                            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(tree);
+                            while (clauseMatcher.findNextMatchingNode()) {
+                                if ((clauseMatcher.getMatch().getLeaves().get(0).label().value()).equals(wh)) {
+                                    for (Tree children : clauseMatcher.getMatch().getLeaves()) {
+                                        clauseContent.append(children.label().value()).append(" ");
+                                    }
+                                    break;
+                                }
+                            }
+                            clauseSet.add(SentencePatternType.ADVERBIAL_CLAUSE.getType() + "_" + clauseContent.toString());
+                            break;
+                        }
+                    }
                 }
             }
         }
 
-        if (sentencePatternList.isEmpty()) {
-            return null;
-        }
-        return sentencePatternList;
+        return setToList(clauseSet);
     }
 
     /**
@@ -1097,8 +1111,95 @@ public class SentencePatternUtil {
                 }
             }
         }
-
         return null;
+    }
+
+    /**
+     *  对句子中的从句进行抽象，方便句子主干提取
+     *  大概策略：
+     *      1、主语从句抽象为sb/sth
+     *      2、宾语从句抽象为sb/sth
+     *      3、表语从句抽象为sb/sth
+     *      4、同位语从句、定语从句省略去除
+     *      5、地点状语从句抽象为sp(some place)
+     *      6、时间状语从句、原因状语从句、条件状语从句、结果状语从句都省略去除
+     *
+     * @param sentence
+     */
+    public static String abstractSentence (String sentence) {
+        String sbOrSth = "somebodyOrSomeThing";
+        String sp = "some place";
+        StringBuilder resultSentence = new StringBuilder();
+        List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
+
+        for (CoreMap coreMap : coreMapList) {
+            StringBuilder tempSentenceBuilder = new StringBuilder();
+            for (CoreLabel token : coreMap.get(CoreAnnotations.TokensAnnotation.class)) {
+                String word = token.get(CoreAnnotations.TextAnnotation.class);
+                tempSentenceBuilder.append(word).append(" ");
+            }
+            String tempSentence = tempSentenceBuilder.toString();
+            // 识别从句类型（还需考虑从句中包含从句的情况），根据从句类型对句子进行抽象
+            List<SentencePattern> sentencePatternList = findAllSpecialSentencePattern(coreMap);
+            for (SentencePattern sentencePattern : sentencePatternList) {
+                int type = sentencePattern.getType();
+                String clauseContent = sentencePattern.getClauseContent();
+                switch (type) {
+                    // 主语从句、宾语从句、表语从句均抽象为sb/sth
+                    case 1:
+                    case 2:
+                    case 4:
+                        tempSentence = tempSentence.replace(clauseContent.trim().toLowerCase(), sbOrSth);
+                        break;
+
+                    // 定语从句或同位语从句 则省略
+                    case 3:
+                        tempSentence = tempSentence.replaceAll(clauseContent.trim().toLowerCase(), "");
+                        break;
+
+                    // 状语从句
+                    case 5:
+                        // 判断从句类型
+                        String firstWordOfClause = clauseContent.split(" ")[0];
+                        // 为地点状语从句
+                        if (CorpusConstant.PLACE_ADVERBIAL_CLAUSE_CONJECTION_SET.contains(firstWordOfClause)) {
+                            tempSentence = tempSentence.replaceAll(clauseContent.trim().toLowerCase(), sp);
+                        }
+                        // 为其他状语从句
+                        else {
+                            tempSentence = tempSentence.replaceAll(clauseContent.trim(), "");
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+            }// for (SentencePattern sentencePattern : sentencePatternList)
+            resultSentence.append(tempSentence).append(" ");
+        }// for (CoreMap coreMap : coreMapList)
+
+        return resultSentence.toString();
+    }
+
+    /**
+     * 集合转列表
+     *
+     * @param set
+     * @return
+     */
+    private static List<SentencePattern> setToList (Set<String> set) {
+        if (set.isEmpty()) {
+            return null;
+        }
+        else {
+            List<SentencePattern> sentencePatternList = new ArrayList<>();
+            for (String clause : set) {
+                sentencePatternList.add(
+                        new SentencePattern(Integer.valueOf(clause.split("_")[0]), null, null, clause.split("_")[1], null, null, null, null)
+                );
+            }
+            return sentencePatternList;
+        }
     }
 
     /**
@@ -1436,11 +1537,13 @@ public class SentencePatternUtil {
     }
 
     public static void main(String[] args) {
-        String text = "The idea that you can do this work well without thinking is quite wrong.";
-        List<CoreMap> result = StanfordParserUtil.parse(text.toLowerCase());
+        String text = " \t\t\tMy friends dislike me because I’m handsome and successful.\n";
+        String shorterText = abstractSentence(text);
+        System.out.println("抽象后的句子：" + shorterText);
+        System.out.println(getPrincipalClause(StanfordParserUtil.parse(shorterText.toLowerCase()).get(0)));
 
+        List<CoreMap> result = StanfordParserUtil.parse(text.toLowerCase());
         for(CoreMap sentence : result) {
-            getPrincipalClause(sentence);
             System.out.println(hasSoThat(sentence));
             System.out.println(hasInvertedStructure(sentence));
             System.out.println(getEmphaticStructure(sentence));

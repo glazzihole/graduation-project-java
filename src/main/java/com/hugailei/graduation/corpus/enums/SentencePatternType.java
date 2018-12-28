@@ -8,6 +8,7 @@ package com.hugailei.graduation.corpus.enums;
  * </p>
  **/
 public enum SentencePatternType {
+
     /**
      * 主语从句
      */

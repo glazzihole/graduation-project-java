@@ -287,7 +287,9 @@ public class SaveCollocation {
                         thirdWord = temp.getLemma();
                     }
                 }
-                found = true;
+                if (!thirdPos.equals("PRP")) {
+                    found = true;
+                }
             }
 
             if (found) {

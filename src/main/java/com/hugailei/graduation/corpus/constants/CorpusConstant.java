@@ -107,19 +107,19 @@ public class CorpusConstant {
             add("turn");
             add("grow");
 //            add("make");
-            add("come");
-            add("go");
-            add("fall");
-            add("run");
+//            add("come");
+//            add("go");
+//            add("fall");
+//            add("run");
             add("remain");
             add("keep");
             add("stay");
-            add("continue");
-            add("stand");
-            add("rest");
-            add("lie");
-            add("hold");
-            add("prove");
+//            add("continue");
+//            add("stand");
+//            add("rest");
+//            add("lie");
+//            add("hold");
+//            add("prove");
         }
     };
 
@@ -149,6 +149,51 @@ public class CorpusConstant {
             add("resolution");
             add("eagerness");
             add("impression");
+        }
+    };
+
+    /**
+     * 状语从句关系依存分析关系集合
+     */
+    public static final HashSet<String>  ADVERBIAL_CLAUSE_RELATION_SET = new HashSet<String>() {
+        {
+            add("advcl:because");
+            add("advcl:until");
+            add("advcl:till");
+            add("advcl:if");
+            add("advcl:as");
+            add("advcl:as_if");
+            add("advcl:so_that");
+            add("advcl:since");
+            add("advcl:after");
+            add("advcl:before");
+            add("advcl:in_order");
+            add("advcl:though");
+            add("advcl:although");
+            add("advcl:than");
+            add("advcl:while");
+        }
+    };
+
+    /**
+     * 地点状语从句引导词
+     */
+    public static final HashSet<String> PLACE_ADVERBIAL_CLAUSE_CONJECTION_SET = new HashSet<String>() {
+        {
+            add("where");
+            add("wherever");
+        }
+    };
+
+    /**
+     * 状语从句
+     */
+    public static final HashSet<String> ADVERBIAL_CLAUSE_CONJECTION_SET = new HashSet<String>() {
+        {
+            add("where");
+            add("wherever");
+            add("whenever");
+            add("when");
         }
     };
 
