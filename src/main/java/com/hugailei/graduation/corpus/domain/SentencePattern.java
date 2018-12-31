@@ -51,28 +51,28 @@ public class SentencePattern implements Serializable {
     private String clauseContent;
 
     /**
-     * 主语的位置（主要用于被动句和双宾语句），从0开始计数
+     * 主语（主要用于被动句和双宾语句）
      */
-    @Column(name = "subject_index", length = 3)
-    private Integer subjectIndex;
+    @Column(name = "subject")
+    private String subject;
 
     /**
-     * 直接宾语位置（主要用于双宾语句），从0开始计数
+     * 直接宾语(主要用于双宾语句）
      */
-    @Column(name = "direct_object_index", length = 3)
-    private Integer directObjectIndex;
+    @Column(name = "direct_object")
+    private String directObject;
 
     /**
-     * 间接宾语位置（主要用于双宾语句），从0开始计数
+     * 间接宾语（主要用于双宾语句）
      */
-    @Column(name = "indirect_object_index", length = 3)
-    private Integer indirectObjectIndex;
+    @Column(name = "indirect_object")
+    private String indirectObject;
 
     /**
-     * 动作发起者位置（主要用于被动语态）
+     * 动作发起者（主要用于被动语态）
      */
-    @Column(name = "agent_index", length = 3)
-    private Integer agentIndex;
+    @Column(name = "agent")
+    private String agent;
 
     @Column(name = "freq")
     private Integer freq;
@@ -88,17 +88,17 @@ public class SentencePattern implements Serializable {
                            String modificand,
                            String modificandPos,
                            String clauseContent,
-                           Integer subjectIndex,
-                           Integer directObjectIndex,
-                           Integer indirectObjectIndex,
-                           Integer agentIndex) {
+                           String subject,
+                           String directObject,
+                           String indirectObject,
+                           String agentIndex) {
         this.type = type;
         this.modificand = modificand;
         this.modificandPos = modificandPos;
         this.clauseContent = clauseContent;
-        this.subjectIndex = subjectIndex;
-        this.directObjectIndex = directObjectIndex;
-        this.indirectObjectIndex = indirectObjectIndex;
-        this.agentIndex = agentIndex;
+        this.subject = subject;
+        this.directObject = directObject;
+        this.indirectObject = indirectObject;
+        this.agent = agentIndex;
     }
 }

@@ -125,11 +125,11 @@ public class StanfordParserUtil {
 
 
     public static void main(String[] args) {
-        String text = "Do not worry about the exam, just take it easy.";
+        String text = "We found it impossible that he could finish it in such a short time";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         StringBuilder stringBuilder = new StringBuilder();
         // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
-        for(CoreMap sentence : result) {
+        for (CoreMap sentence : result) {
             // 原型、词性等信息
             for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
                 // 获取单词

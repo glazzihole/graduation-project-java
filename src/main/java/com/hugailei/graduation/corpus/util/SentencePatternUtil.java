@@ -125,10 +125,9 @@ public class SentencePatternUtil {
         while (matcher.findNextMatchingNode()) {
             int type = SentencePatternType.SUBJECT_CLAUSE.getType();
             StringBuilder clauseContent = new StringBuilder();
-
             // 匹配SBAR，得出从句内容
             Tree matchTree = matcher.getMatch();
-            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(matchTree);
+            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR").matcher(matchTree);
             if (clauseMatcher.findNextMatchingNode()) {
                 for (Tree children : clauseMatcher.getMatch().getLeaves()) {
                     clauseContent.append(children.label().value()).append(" ");
@@ -151,14 +150,14 @@ public class SentencePatternUtil {
         // 先判断句中有没有so that句，若有，则需排除that后的从句
         Set<Integer> soThatIndexSet = getSoThatClauseIndex(sentence);
         // 排除掉it is XX that强调句的句型
-        Set<Integer> emphaticIndexSet = getEmphaticStructure(sentence);
+        Set<Integer> emphaticIndexSet = getEmphaticStructureIndex(sentence);
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
         SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
         TregexPattern pattern = TregexPattern.compile("/^P.*$/ << SBAR");
         TregexMatcher matcher = pattern.matcher(tree);
         while (matcher.findNextMatchingNode()) {
             // 匹配SBAR，得出从句内容
-            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(matcher.getMatch());
+            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR").matcher(matcher.getMatch());
             StringBuilder clauseContent = new StringBuilder();
             if (clauseMatcher.findNextMatchingNode()) {
                 int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
@@ -173,12 +172,12 @@ public class SentencePatternUtil {
                 clauseSet.add(SentencePatternType.OBJECT_CLAUSE.getType() + "_" + clauseContent.toString());
             }
         }
-        pattern = TregexPattern.compile("VP << (/^VB.*$/ [$+ SBAR | $+ S])");
+        pattern = TregexPattern.compile("VP < (/^VB.*$/ .. SBAR)");
         matcher = pattern.matcher(tree);
         while (matcher.findNextMatchingNode()) {
-            Tree match = matcher.getMatch();
+            Tree vp = matcher.getMatch();
             // 排除从句为so that 句型和it is that的强调句型
-            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(matcher.getMatch());
+            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR").matcher(vp);
             if (clauseMatcher.findNextMatchingNode()) {
                 int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
                 if (soThatIndexSet != null && soThatIndexSet.contains(clauseStartIndex)) {
@@ -192,23 +191,23 @@ public class SentencePatternUtil {
             //是否为表语从句的标识
             boolean isPredicativeClause = false;
             // 获取匹配到的树结构的子节点
-            Tree[] childrens = match.children();
+            Tree[] childrens = vp.children();
             // 获取动词
             String verbReg = "VB.*";
             for (Tree children : childrens) {
                 if (children.label().toString().matches(verbReg)) {
-                    // 获取当前单词在句子中是第几个单词（从0开始）
-                    int index = children.getLeaves().get(0).indexLeaves(0, false) - 2;
+                    // 获取动词在句子中是第几个单词（从0开始）
+                    int verbIndex = children.getLeaves().get(0).indexLeaves(0, false) - 2;
                     // 根据index获取动词的原型
-                    CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(index);
+                    CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(verbIndex);
                     String lemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
 
                     // 查找句法依存关系，看该动词是否有补语(ccomp)
                     for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
                         if (edge.getRelation().toString().equals("ccomp") ||
                             edge.getRelation().toString().equals("dep")) {
-                            if(edge.getGovernor().index() - 1 == index) {
-                                if (edge.getDependent().index() - 1 > index) {
+                            if(edge.getGovernor().index() - 1 == verbIndex) {
+                                if (edge.getDependent().index() - 1 > verbIndex) {
                                     found = true;
                                     // 判断该动词是否为系统词
                                     if (CorpusConstant.COPULA_LEMMA_SET.contains(lemma)) {
@@ -218,8 +217,8 @@ public class SentencePatternUtil {
                                 }
                             }
                         } else if (edge.getRelation().toString().startsWith("advcl")) {
-                            if(edge.getGovernor().index() - 1 == index) {
-                                if (edge.getDependent().index() - 1 > index) {
+                            if(edge.getGovernor().index() - 1 == verbIndex) {
+                                if (edge.getDependent().index() - 1 > verbIndex) {
                                     if (CorpusConstant.COPULA_LEMMA_SET.contains(lemma)) {
                                         isPredicativeClause = true;
                                         break;
@@ -229,9 +228,29 @@ public class SentencePatternUtil {
                         }
                     }
 
+                    //匹配 find it impossible that的句型,verbIndex从0开始，.index()从1开始
+                    if (!found) {
+                        for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
+                            if (edge.getRelation().toString().equals("xcomp") &&
+                                edge.getGovernor().index() - 1 == verbIndex) {
+                                int xcompIndex = edge.getDependent().index();
+
+                                for (SemanticGraphEdge se : dependency.edgeListSorted()) {
+                                    if (se.getRelation().toString().equals("ccomp") &&
+                                        se.getGovernor().index() == xcompIndex) {
+                                        if (se.getDependent().index() - 1 > verbIndex) {
+                                            found = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+
                     if (found || isPredicativeClause) {
                         // 匹配SBAR，得出从句内容
-                        clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(match);
+                        clauseMatcher = TregexPattern.compile("SBAR").matcher(vp);
                         StringBuilder clauseContent = new StringBuilder();
                         if (clauseMatcher.findNextMatchingNode()) {
                             for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
@@ -241,15 +260,17 @@ public class SentencePatternUtil {
                         if (isPredicativeClause) {
                             // 需要排除状语从句 如I did not realize how special my mother was until ……这类句子，则会被识别成表语从句
                             boolean isAdverbialClause = false;
-                            for (SentencePattern sp : adverbialClauseList) {
-                                String advClauseContent = sp.getClauseContent();
-                                if (clauseContent.toString().equals(advClauseContent)) {
-                                    isAdverbialClause = true;
-                                    break;
+                            if (adverbialClauseList != null) {
+                                for (SentencePattern sp : adverbialClauseList) {
+                                    String advClauseContent = sp.getClauseContent();
+                                    if (clauseContent.toString().equals(advClauseContent)) {
+                                        isAdverbialClause = true;
+                                        break;
+                                    }
                                 }
                             }
                             if (!isAdverbialClause) {
-                                clauseSet.add(SentencePatternType.OBJECT_CLAUSE.getType() + "_" + clauseContent.toString());
+                                clauseSet.add(SentencePatternType.PREDICATIVE_CLAUSE.getType() + "_" + clauseContent.toString());
                             }
                         } else {
                             clauseSet.add(SentencePatternType.OBJECT_CLAUSE.getType() + "_" + clauseContent.toString());
@@ -270,26 +291,35 @@ public class SentencePatternUtil {
      */
     public static List<SentencePattern> matchAppositiveClauseOrAttributiveClause(CoreMap sentence) {
         // 先判断句中有没有so that句，若有，则需排除that后的从句，否则会识别为定语从句。
-        Set<Integer> thatIndexSet = getSoThatClauseIndex(sentence);
+        Set<Integer> soThatClauseIndex = getSoThatClauseIndex(sentence);
         // 排除掉it is XX that强调句的句型
-        Set<Integer> emphaticIndexSet = getEmphaticStructure(sentence);
-
+        Set<Integer> emphaticThatIndexSet = getEmphaticStructureIndex(sentence);
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
         SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
-        TregexPattern pattern = TregexPattern.compile("NP $.. SBAR");
-        TregexMatcher matcher = pattern.matcher(tree);
+        TregexPattern pattern = TregexPattern.compile("SBAR $, NP");
+        TregexMatcher clauseMatcher = pattern.matcher(tree);
         List<SentencePattern> sentencePatternList = new ArrayList<>();
-        while (matcher.findNextMatchingNode()) {
+        while (clauseMatcher.findNextMatchingNode()) {
             // 是否找到
             boolean found = false;
-            Tree match = matcher.getMatch();
-            Tree[] childrens = match.children();
+            int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+            if (soThatClauseIndex != null && soThatClauseIndex.contains(clauseStartIndex)) {
+                continue;
+            } else if (emphaticThatIndexSet != null && emphaticThatIndexSet.contains(clauseStartIndex)) {
+                continue;
+            }
+            // 获取从句内容
+            StringBuilder clauseContent = new StringBuilder();
+            for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
+                clauseContent.append(leaf.label().value()).append(" ");
+            }
             // 获取从句所修饰的名词
             String nounReg = "NN.*";
-            for (Tree children : childrens) {
-                if (children.label().toString().matches(nounReg)) {
+            Tree clauseParent = clauseMatcher.getMatch().parent(tree);
+            for (Tree leaf : clauseParent.getLeaves()) {
+                if (leaf.parent(tree).label().value().matches(nounReg)) {
                     // 获取该名词的index，从0开始
-                    int index = children.getLeaves().get(0).indexLeaves(0, false) - 2;
+                    int index = leaf.indexLeaves(0, false) - 2;
                     // 通过index获取名词的原型
                     String lemma = sentence.get(CoreAnnotations.TokensAnnotation.class).get(index).get(CoreAnnotations.LemmaAnnotation.class);
                     // 判断该名词是否为同位语从句的先行词
@@ -313,37 +343,20 @@ public class SentencePatternUtil {
                     if (found) {
                         int type;
                         type = SentencePatternType.ATTRIBUTIVE_CLAUSE_OR_APPOSITIVE_CLAUSE.getType();
-                        // 匹配SBAR，得出从句内容
-                        Tree parent = match.parent(tree);
-                        TregexMatcher clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(parent);
-                        StringBuilder clauseContent = new StringBuilder();
-                        if (clauseMatcher.findNextMatchingNode()) {
-                            int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
-                            if (thatIndexSet != null && thatIndexSet.contains(clauseStartIndex)) {
-                                continue;
-                            } else if (emphaticIndexSet != null && emphaticIndexSet.contains(clauseStartIndex)) {
-                                continue;
-                            }
-                            for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
-                                clauseContent.append(leaf.label().value()).append(" ");
-                            }
-                            SentencePattern result = new SentencePattern(type, null, null, clauseContent.toString(), null, null, null, null);
+                        SentencePattern result = new SentencePattern(type, null, null, clauseContent.toString(), null, null, null, null);
 
-                            // 查找被修饰的词
-                            List<SentencePattern> tempList = matchModificand(clauseMatcher.getMatch(), sentence, "NP");
-                            if (tempList != null) {
-                                result.setModificand(tempList.get(0).getModificand());
-                                result.setModificandPos(StanfordParserUtil.getBasePos(tempList.get(0).getModificandPos()));
-                            }
-                            sentencePatternList.add(result);
+                        // 查找被修饰的词
+                        List<SentencePattern> tempList = matchModificand(clauseMatcher.getMatch(), sentence, "NP");
+                        if (tempList != null) {
+                            result.setModificand(tempList.get(0).getModificand());
+                            result.setModificandPos(StanfordParserUtil.getBasePos(tempList.get(0).getModificandPos()));
                         }
+                        sentencePatternList.add(result);
                         break;
                     } // if (found || isAppositiveClause)
                 } // if (children.label().toString().matches(nounReg))
             }// for (Tree children : childrens)
-
         } // while
-
         if (sentencePatternList.isEmpty()) {
             return null;
         }
@@ -357,33 +370,53 @@ public class SentencePatternUtil {
      */
     public static List<SentencePattern> matchAdverbialClause(CoreMap sentence) {
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+        LinkedHashSet<String> clauseSet = new LinkedHashSet<>();
+        // 先直接通过字符串匹配判断句子中是否有so that状语从句
+        TregexMatcher soThatClauseMatcher = TregexPattern.compile("(SBAR <<, that) , so").matcher(tree);
+        while (soThatClauseMatcher.findNextMatchingNode()) {
+            StringBuilder clauseContent = new StringBuilder().append("so").append(" ");
+            for (Tree children : soThatClauseMatcher.getMatch().getLeaves()) {
+                clauseContent.append(children.label().value()).append(" ");
+            }
+            clauseSet.add(SentencePatternType.ADVERBIAL_CLAUSE.getType() + "_" + clauseContent.toString());
+        }
         // 获取依存关系
         SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
         // 判断依存关系中是否包含advcl:XXX
-        LinkedHashSet<String> clauseSet = new LinkedHashSet<>();
         for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
             String relation = edge.getRelation().toString();
             if (CorpusConstant.ADVERBIAL_CLAUSE_RELATION_SET.contains(relation)) {
                 // 引导词
                 String conjunction = relation.split(":")[1];
+                int conjuctionIndexBiggerThan = edge.getGovernor().index();
+                int conjuctionIndexLessThan = edge.getDependent().index();
                 // 匹配SBAR，看从句的第一个词是否为状语从句引导词，若是，则匹配从句内容
-                TregexMatcher clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(tree);
+                TregexMatcher clauseMatcher = TregexPattern.compile("SBAR").matcher(tree);
                 while (clauseMatcher.findNextMatchingNode()) {
                     StringBuilder clauseContent = new StringBuilder();
                     boolean found = false;
                     if (conjunction.contains("_")) {
                         if (clauseMatcher.getMatch().getLeaves().get(0).label().value().equals(conjunction.split("_")[0]) &&
                             clauseMatcher.getMatch().getLeaves().get(1).label().value().equals(conjunction.split("_")[1])) {
+                            int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+                            if (clauseStartIndex >= conjuctionIndexBiggerThan && clauseStartIndex <= conjuctionIndexLessThan) {
+                                for (Tree children : clauseMatcher.getMatch().getLeaves()) {
+                                    clauseContent.append(children.label().value()).append(" ");
+                                }
+                                found = true;
+                            }
+                        }
+                    }
+                    // (even等副词) + 从句引导词
+                    else if (clauseMatcher.getMatch().getLeaves().get(0).label().value().equals(conjunction) ||
+                           clauseMatcher.getMatch().getLeaves().get(1).label().value().equals(conjunction)) {
+                        int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+                        if (clauseStartIndex >= conjuctionIndexBiggerThan && clauseStartIndex <= conjuctionIndexLessThan) {
                             for (Tree children : clauseMatcher.getMatch().getLeaves()) {
                                 clauseContent.append(children.label().value()).append(" ");
                             }
                             found = true;
                         }
-                    } else if (clauseMatcher.getMatch().getLeaves().get(0).label().value().equals(conjunction)) {
-                        for (Tree children : clauseMatcher.getMatch().getLeaves()) {
-                            clauseContent.append(children.label().value()).append(" ");
-                        }
-                        found = true;
                     }
                     if (found) {
                         clauseSet.add(SentencePatternType.ADVERBIAL_CLAUSE.getType() + "_" + clauseContent.toString());
@@ -396,22 +429,26 @@ public class SentencePatternUtil {
                 // 循环查找wh-引导的从句
                 for (SemanticGraphEdge se : dependency.edgeListSorted()) {
                     if (se.getRelation().toString().equals("advmod") &&
-                        se.getGovernor().index() == tempIndex){
+                        se.getGovernor().index() == tempIndex) {
                         String wh = se.getDependent().lemma();
                         if (CorpusConstant.ADVERBIAL_CLAUSE_CONJECTION_SET.contains(wh)) {
-                            StringBuilder clauseContent = new StringBuilder();
+
                             // 匹配SBAR，看从句的第一个词是否为状语从句引导词，若是，则匹配从句内容
-                            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR == SBAR").matcher(tree);
+                            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR").matcher(tree);
                             while (clauseMatcher.findNextMatchingNode()) {
-                                if ((clauseMatcher.getMatch().getLeaves().get(0).label().value()).equals(wh)) {
-                                    for (Tree children : clauseMatcher.getMatch().getLeaves()) {
-                                        clauseContent.append(children.label().value()).append(" ");
+                                StringBuilder clauseContent = new StringBuilder();
+                                boolean foundWh = false;
+                                for (Tree children : clauseMatcher.getMatch().getLeaves()) {
+                                    if ((children.label().value()).equals(wh)) {
+                                        foundWh = true;
                                     }
+                                    clauseContent.append(children.label().value()).append(" ");
+                                }
+                                if (foundWh) {
+                                    clauseSet.add(SentencePatternType.ADVERBIAL_CLAUSE.getType() + "_" + clauseContent.toString());
                                     break;
                                 }
                             }
-                            clauseSet.add(SentencePatternType.ADVERBIAL_CLAUSE.getType() + "_" + clauseContent.toString());
-                            break;
                         }
                     }
                 }
@@ -433,26 +470,27 @@ public class SentencePatternUtil {
         // 判断依存关系中是否包含nsubjpass
         for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
             String relation = edge.getRelation().toString();
-            if (relation.startsWith("nsubjpass")) {
+            if (relation.startsWith("nsubjpass") &&
+                edge.getGovernor().tag().matches("VB.*")) {
                 int type = SentencePatternType.PASSIVE_VOICE.getType();
                 int passiveVerbIndex = edge.getGovernor().index();
                 int subjectIndex = edge.getDependent().index();
                 Edge temp = getRealNounEdge(subjectIndex, dependency);
-                subjectIndex = (temp == null ? subjectIndex : temp.getIndex());
+                String subject = (temp == null ? edge.getDependent().word() : temp.getWord());
                 boolean hasAgent = false;
                 // 寻找nmod:agent依存关系，找出施事者
                 for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
                     if (semanticGraphEdge.getRelation().toString().equals("nmod:agent") &&
                         semanticGraphEdge.getGovernor().index() == passiveVerbIndex) {
                         Edge tempEdge = getRealNounEdge(semanticGraphEdge.getDependent().index(), dependency);
-                        int agentIndex = (tempEdge == null ? semanticGraphEdge.getDependent().index() : tempEdge.getIndex());
+                        String agent = (tempEdge == null ? semanticGraphEdge.getDependent().word() : tempEdge.getWord());
                         hasAgent = true;
-                        sentencePatternList.add(new SentencePattern(type, null, null, null, subjectIndex - 1, null, null, agentIndex - 1));
+                        sentencePatternList.add(new SentencePattern(type, null, null, null, subject, null, null, agent));
                     }
                 }
 
                 if (!hasAgent) {
-                    sentencePatternList.add(new SentencePattern(type, null, null, null, subjectIndex - 1, null, null, null));
+                    sentencePatternList.add(new SentencePattern(type, null, null, null, subject, null, null, null));
                 }
             }
         }
@@ -476,24 +514,23 @@ public class SentencePatternUtil {
         for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
             String relation = edge.getRelation().toString();
             if (relation.startsWith("iobj")) {
-                int subjectIndex, directObjectIndex;
                 int verbIndex = edge.getGovernor().index();
                 Edge temp = getRealNounEdge(edge.getDependent().index(), dependency);
-                int indirectObjectIndex = (temp == null ? edge.getDependent().index() : temp.getIndex());
+                String indirectObject = (temp == null ? edge.getDependent().word() : temp.getWord());
 
                 // 寻找nsubj依存关系，找出主语
                 for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
                     if (semanticGraphEdge.getRelation().toString().equals("nsubj") &&
                             semanticGraphEdge.getGovernor().index() == verbIndex) {
                         temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), dependency);
-                        subjectIndex = (temp == null ? semanticGraphEdge.getDependent().index() : temp.getIndex());
+                        String subject = (temp == null ? semanticGraphEdge.getDependent().word() : temp.getWord());
                         // 寻找dobj关系，找出直接宾语
                         for (SemanticGraphEdge se : dependency.edgeListSorted()) {
                             if (se.getRelation().toString().equals("dobj") &&
                                     se.getGovernor().index() == verbIndex) {
                                 temp = getRealNounEdge(se.getDependent().index(), dependency);
-                                directObjectIndex = (temp == null ? se.getDependent().index() : temp.getIndex());
-                                sentencePatternList.add(new SentencePattern(type, null, null, null, subjectIndex - 1, directObjectIndex - 1, indirectObjectIndex - 1, null));
+                                String directObject = (temp == null ? se.getDependent().word() : temp.getWord());
+                                sentencePatternList.add(new SentencePattern(type, null, null, null, subject, directObject, indirectObject, null));
                             }
                         }
                     }
@@ -508,6 +545,7 @@ public class SentencePatternUtil {
                     int directObjectIndex = edge.getDependent().index();
                     Edge temp = getRealNounEdge(directObjectIndex, dependency);
                     directObjectIndex = (temp == null ? directObjectIndex : temp.getIndex());
+                    String directObject = (temp == null ? edge.getDependent().word() : temp.getWord());
                     // 寻找nsubj依存关系，找出主语
                     for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
                         if ((semanticGraphEdge.getRelation().toString().equals("nsubj") ||
@@ -520,11 +558,11 @@ public class SentencePatternUtil {
                                     se.getGovernor().index() == directObjectIndex) {
                                     int subjectIndex = semanticGraphEdge.getDependent().index();
                                     temp = getRealNounEdge(subjectIndex, dependency);
-                                    subjectIndex = (temp == null ? subjectIndex : temp.getIndex());
+                                    String subject = (temp == null ? semanticGraphEdge.getDependent().word() : temp.getWord());
                                     int indirectObjectIndex = se.getDependent().index();
                                     temp = getRealNounEdge(indirectObjectIndex, dependency);
-                                    indirectObjectIndex = (temp == null ? indirectObjectIndex : temp.getIndex());
-                                    sentencePatternList.add(new SentencePattern(type, null, null, null, subjectIndex - 1, directObjectIndex - 1, indirectObjectIndex - 1, null));
+                                    String indirectObject = (temp == null ? se.getDependent().word() : temp.getWord());
+                                    sentencePatternList.add(new SentencePattern(type, null, null, null, subject, directObject, indirectObject, null));
                                 }
                             }
                         }
@@ -551,13 +589,18 @@ public class SentencePatternUtil {
         for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
             if (edge.getDependent().word().toLowerCase().equals("so") ||
                 edge.getDependent().word().toLowerCase().equals("such")) {
+                int soIndex = edge.getDependent().index();
                 int afterSoIndex = edge.getGovernor().index();
-
                 // 查找that所修饰的词
                 for (SemanticGraphEdge s : dependency.edgeListSorted()) {
                     if (s.getRelation().toString().startsWith("mark") &&
                         s.getDependent().word().toLowerCase().equals("that") &&
                         s.getDependent().tag().equals("IN")) {
+                        int thatIndex = s.getDependent().index();
+                        // 排除 so that 目的状语从句识别成so..that的情况
+                        if (thatIndex == soIndex + 1) {
+                            break;
+                        }
                         int afterThatIndex = s.getGovernor().index();
                         // 看so所修饰的词和that所修饰的词之间是否存在依存关系
                         for (SemanticGraphEdge e : dependency.edgeListSorted()) {
@@ -602,7 +645,6 @@ public class SentencePatternUtil {
         Set<Integer> indexSet = new HashSet<>();
         // 找so或such 及其所修饰的词
         for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
-            boolean found = false;
             if (edge.getDependent().word().toLowerCase().equals("so") ||
                 edge.getDependent().word().toLowerCase().equals("such")) {
                 int afterSoIndex = edge.getGovernor().index();
@@ -621,20 +663,19 @@ public class SentencePatternUtil {
                                 indexSet.add(thatIndex - 1);
                             }
                         }
-                        if (!found) {
-                            // 若so所修饰的词和that所修饰的词之间不存在直接的依存关系，则先查找与that所修饰的词存在依存关系的词A
-                            for (SemanticGraphEdge e : dependency.edgeListSorted()) {
-                                if (e.getDependent().index() == afterThatIndex &&
-                                        (e.getRelation().toString().startsWith("cop") ||
-                                        e.getRelation().toString().startsWith("ccomp") ||
-                                        e.getRelation().toString().startsWith("dep") )) {
-                                    int tempAIndex = e.getGovernor().index();
-                                    // 查找A与so所修饰的词是否存在指定关系
-                                    for (SemanticGraphEdge se : dependency.edgeListSorted()) {
-                                        if (se.getDependent().index() == afterSoIndex &&
-                                                se.getGovernor().index() == tempAIndex) {
-                                            indexSet.add(thatIndex - 1);
-                                        }
+
+                        // 若so所修饰的词和that所修饰的词之间不存在直接的依存关系，则先查找与that所修饰的词存在依存关系的词A
+                        for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                            if (e.getDependent().index() == afterThatIndex &&
+                                (e.getRelation().toString().startsWith("cop") ||
+                                e.getRelation().toString().startsWith("ccomp") ||
+                                e.getRelation().toString().startsWith("dep") )) {
+                                int tempAIndex = e.getGovernor().index();
+                                // 查找A与so所修饰的词是否存在指定关系
+                                for (SemanticGraphEdge se : dependency.edgeListSorted()) {
+                                    if (se.getDependent().index() == afterSoIndex &&
+                                        se.getGovernor().index() == tempAIndex) {
+                                        indexSet.add(thatIndex - 1);
                                     }
                                 }
                             }
@@ -858,11 +899,11 @@ public class SentencePatternUtil {
 
         // 匹配it is + 从句 + that/who 形式的强调句型
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-        TregexMatcher matcher = TregexPattern.compile("it .. (was >> (VP << (SBAR << (SBAR [<< that | << who]))))").matcher(tree);
+        TregexMatcher matcher = TregexPattern.compile("it . (was > (VP < (SBAR [< that | < who])))").matcher(tree);
         if (matcher.findNextMatchingNode()) {
             return true;
         }
-        matcher = TregexPattern.compile("it .. (is >> (VP << (SBAR << (SBAR [<< that | << who]))))").matcher(tree);
+        matcher = TregexPattern.compile("it . (is > (VP < (SBAR [< that | < who])))").matcher(tree);
         if (matcher.findNextMatchingNode()) {
             return true;
         }
@@ -875,7 +916,7 @@ public class SentencePatternUtil {
      * @param sentence
      * @return
      */
-    public static Set<Integer> getEmphaticStructure(CoreMap sentence) {
+    public static Set<Integer> getEmphaticStructureIndex(CoreMap sentence) {
         Set<Integer> indexSet = new HashSet<>();
 
         // 匹配简单的强调句句型  it is XXX that/who
@@ -891,7 +932,7 @@ public class SentencePatternUtil {
                             if (e.getRelation().toString().equals("ref") &&
                                 e.getGovernor().index() == emphasizedSubjectIndex &&
                                 (e.getDependent().lemma().equals("who") || e.getDependent().lemma().equals("that"))) {
-                                indexSet.add(e.getDependent().index());
+                                indexSet.add(e.getDependent().index() - 1);
                             }
                         }
 
@@ -903,7 +944,7 @@ public class SentencePatternUtil {
                                     if (se.getRelation().toString().equals("ccomp") &&
                                         se.getGovernor().index() == emphasizedSubjectIndex &&
                                         se.getDependent().index() == ccompIndex) {
-                                        indexSet.add(e.getDependent().index());
+                                        indexSet.add(e.getDependent().index() - 1);
                                     }
                                 }
                             }
@@ -913,9 +954,22 @@ public class SentencePatternUtil {
             }
         }
 
-        // 匹配it is + 从句 + that/who 形式的强调句型
+        // 匹配it is/was + 从句 + that/who 形式的强调句型
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-        TregexMatcher matcher = TregexPattern.compile("(was >> (VP << (SBAR << (SBAR [<< that | << who])))) ,, it").matcher(tree);
+        TregexMatcher matcher = TregexPattern.compile("(was > (VP < (SBAR [< that | < who]))) , it").matcher(tree);
+        while (matcher.findNextMatchingNode()) {
+            Tree subTree = matcher.getMatch();
+            Tree parentTree = subTree.parent(tree).parent(tree);
+            int temp = parentTree.getLeaves().get(1).indexLeaves(0, false) - 2;
+            indexSet.add(temp);
+            for (Tree t : parentTree.getLeaves()) {
+                if ("that".equals(t.label().value()) || "who".equals(t.label().value())) {
+                    indexSet.add(t.indexLeaves(0, false) - 2);
+                }
+            }
+        }
+
+        matcher = TregexPattern.compile("(is > (VP < (SBAR [< that | < who]))) , it").matcher(tree);
         while (matcher.findNextMatchingNode()) {
             Tree subTree = matcher.getMatch();
             Tree parentTree = subTree.parent(tree).parent(tree);
@@ -981,77 +1035,72 @@ public class SentencePatternUtil {
     public static List<SentencePattern> matchModificand(Tree clauseTree, CoreMap sentence, String supposedParentLabel) {
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
         List<SentencePattern> sentencePatternList = new ArrayList<>();
+        // 获取从句起始位置，从0开始计数
+        int clauseIndex = 0;
         for (Tree match : tree.subTreeList()) {
             if (match.equals(clauseTree)) {
-                // 获取从句起始位置，从0开始计数
-                int clauseIndex = match.getLeaves().get(0).indexLeaves(0, false) - 2;
-                // 获取从句（字符串）
-                StringBuilder clause = new StringBuilder();
-                for (Tree t : match.getLeaves()) {
-                    clause.append(t.label().value()).append(" ");
-                }
-                // 获取其父节点
-                String parentLabel = supposedParentLabel;
-                if (supposedParentLabel == null) {
-                    Tree parent = clauseTree.parent(tree);
-                    parentLabel = parent.label().value();
-                }
-                TregexPattern leafPat = null;
-                TregexPattern adverbLeafPat = null;
-                // 根据父节点的类型获取从句所修饰的词的词性
-                switch (parentLabel) {
-                    case "NP":
-                        leafPat = TregexPattern.compile("/^NN.*$/ == /^NN.*$/");
-                        break;
-                    case "VP":
-                        leafPat = TregexPattern.compile("/^VB.*$/ == /^VB.*$/");
-                        adverbLeafPat = TregexPattern.compile("/^RB.*$/ == /^RB.*$/");
-                        break;
-                    case "ADJP":
-                        leafPat = TregexPattern.compile("/^JJ.*$/ == /^JJ.*$/");
-                        adverbLeafPat = TregexPattern.compile("/^RB.*$/ == /^RB.*$/");
-                        break;
-                    case "ADVP":
-                        leafPat = TregexPattern.compile("/^RB.*$/ == /^RB.*$/");
-                        break;
-                    default:
-                        break;
-                }
-                if (leafPat != null) {
-                    String lemma = null, adverbLemma = null, pos = null, adverbPos = null;
-                    int modificandIndex = 0, adverbModificandIndex = 0;
-                    // 匹配被修饰的词和其在句中的位置，从0开始计数
-                    TregexMatcher leafMatcher = leafPat.matcher(tree);
-                    while (leafMatcher.findNextMatchingNode()) {
-                        int tempIndex = leafMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
-                        if (tempIndex >= clauseIndex) {
-                            break;
-                        }
-                        modificandIndex = tempIndex;
-                        CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(modificandIndex);
-                        lemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
-                        pos = coreLabel.get(CoreAnnotations.PartOfSpeechAnnotation.class);
-                    }
-
-                    if (adverbLeafPat != null) {
-                        TregexMatcher adverbLeafMatcher = adverbLeafPat.matcher(tree);
-                        while (adverbLeafMatcher.findNextMatchingNode()) {
-                            int tempIndex = adverbLeafMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
-                            if (tempIndex >= clauseIndex) {
-                                break;
-                            }
-                            adverbModificandIndex = tempIndex;
-                            CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(adverbModificandIndex);
-                            adverbPos = coreLabel.get(CoreAnnotations.PartOfSpeechAnnotation.class);
-                            adverbLemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
-                        }
-                    }
-                    sentencePatternList.add(new SentencePattern(null, lemma, pos, clause.toString(), null, null, null, null));
-                    sentencePatternList.add(new SentencePattern(null, adverbLemma, adverbPos, clause.toString(), null, null, null, null));
-                }
+                clauseIndex = match.getLeaves().get(0).indexLeaves(0, false) - 2;
+            }
+        }
+        // 获取其父节点
+        String parentLabel = supposedParentLabel;
+        if (supposedParentLabel == null) {
+            Tree parent = clauseTree.parent(tree);
+            parentLabel = parent.label().value();
+        }
+        TregexPattern leafPat = null;
+        TregexPattern adverbLeafPat = null;
+        // 根据父节点的类型获取从句所修饰的词的词性
+        switch (parentLabel) {
+            case "NP":
+                leafPat = TregexPattern.compile("/^NN.*$/");
                 break;
-            } //if (match.equals(clauseTree))
-        } // for (Tree match : tree.subTreeList())
+            case "VP":
+                leafPat = TregexPattern.compile("/^VB.*$/");
+                adverbLeafPat = TregexPattern.compile("/^RB.*$/");
+                break;
+            case "ADJP":
+                leafPat = TregexPattern.compile("/^JJ.*$/");
+                adverbLeafPat = TregexPattern.compile("/^RB.*$/");
+                break;
+            case "ADVP":
+                leafPat = TregexPattern.compile("/^RB.*$/");
+                break;
+            default:
+                break;
+        }
+        if (leafPat != null) {
+            String lemma = null, adverbLemma = null, pos = null, adverbPos = null;
+            int modificandIndex = 0, adverbModificandIndex = 0;
+            // 匹配被修饰的词和其在句中的位置，从0开始计数
+            TregexMatcher leafMatcher = leafPat.matcher(tree);
+            while (leafMatcher.findNextMatchingNode()) {
+                int tempIndex = leafMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+                if (tempIndex >= clauseIndex) {
+                    break;
+                }
+                modificandIndex = tempIndex;
+                CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(modificandIndex);
+                lemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
+                pos = coreLabel.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+            }
+
+            if (adverbLeafPat != null) {
+                TregexMatcher adverbLeafMatcher = adverbLeafPat.matcher(tree);
+                while (adverbLeafMatcher.findNextMatchingNode()) {
+                    int tempIndex = adverbLeafMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+                    if (tempIndex >= clauseIndex) {
+                        break;
+                    }
+                    adverbModificandIndex = tempIndex;
+                    CoreLabel coreLabel = sentence.get(CoreAnnotations.TokensAnnotation.class).get(adverbModificandIndex);
+                    adverbPos = coreLabel.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+                    adverbLemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
+                }
+                sentencePatternList.add(new SentencePattern(null, adverbLemma, adverbPos, null, null, null, null, null));
+            }
+            sentencePatternList.add(new SentencePattern(null, lemma, pos, null, null, null, null, null));
+        }
         if (sentencePatternList.isEmpty()) {
             return null;
         }
@@ -1552,7 +1601,7 @@ public class SentencePatternUtil {
     }
 
     public static void main(String[] args) {
-        String text = " I didn’t realize how special my mother was until I became an adult.";
+        String text = "In his book's conclusion, he writes: ‘It has been my sad experience, again and again, especially in my Aids ministry, to witness the damning effects of my church's institutionalised God on young people's souls.\n";
         String shorterText = abstractSentence(text);
         System.out.println("抽象后的句子：" + shorterText);
         System.out.println(getPrincipalClause(StanfordParserUtil.parse(shorterText).get(0)));
@@ -1561,8 +1610,10 @@ public class SentencePatternUtil {
         for(CoreMap sentence : result) {
             System.out.println("sothat句型" + hasSoThat(sentence));
             System.out.println("倒装句型" + hasInvertedStructure(sentence));
-            System.out.println("强调句型" + getEmphaticStructure(sentence));
+            System.out.println("强调句型" + hasEmphaticStructure(sentence));
+
             sentence.get(TreeCoreAnnotations.TreeAnnotation.class).pennPrint();
+
             for (SentencePattern sp : findAllSpecialSentencePattern(sentence)) {
                 System.out.println(sp.toString());
             }

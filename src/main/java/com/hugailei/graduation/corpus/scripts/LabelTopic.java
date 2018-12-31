@@ -60,8 +60,8 @@ public class LabelTopic {
 //        formatText();
 //        labelTextTopic();
 //        labelSentenceTopic();
-        labelCollocationTopic();
-        labelNgramTopic();
+//        labelCollocationTopic();
+//        labelNgramTopic();
         labelWordTopic();
     }
 
@@ -150,11 +150,18 @@ public class LabelTopic {
      */
     public static void labelCollocationTopic() throws Exception{
         String[] corpusArray = {"chinadaily"};
-        for (String corpus : corpusArray) {
+        for (String corpusName : corpusArray) {
             // 从数据库中读取搭配信息
-            PreparedStatement preparedStatement = con.prepareStatement("SELECT * FROM tb_collocation WHERE corpus = '" + corpus + "'");
+            PreparedStatement preparedStatement = con.prepareStatement("SELECT * FROM tb_collocation " +
+                    "WHERE corpus = '" + corpusName + "' and id >= 575730 ORDER BY id ASC ");
             ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet.last();
+            int totalResultCount = resultSet.getRow();
+            int i = 1;
+            resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
+                long id = resultSet.getLong("id");
+                System.out.println(i++ + "/" + totalResultCount + " " + id);
                 Map<String, String> key2SenteceIds = new HashMap<>();
                 String sentenceIds = resultSet.getString("sentence_ids");
                 String firstWord = resultSet.getString("first_word");
@@ -174,7 +181,7 @@ public class LabelTopic {
                         String key = firstWord + "~" + firstPos + "~"
                                 + secondWord + "~" + secondPos + "~"
                                 + thirdWord + "~" + thirdPos + "~"
-                                + corpus + "~" + topic ;
+                                + corpusName + "~" + topic ;
                         String newSentenceIds = sentenceIdString + ",";
                         if (key2SenteceIds.containsKey(key)) {
                             newSentenceIds = newSentenceIds + key2SenteceIds.get(key);
@@ -259,10 +266,10 @@ public class LabelTopic {
             int nValue = resultSet.getInt("n_value");
             String nGramString = resultSet.getString("ngram_str");
 
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM tb_sentence WHERE corpus = " + corpus);
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM tb_sentence WHERE corpus = '" + corpus + "'");
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                String text = rs.getString("text");
+                String text = rs.getString("sentence");
                 int topic = rs.getInt("topic");
 
                 if (text.toLowerCase().contains(nGramString)) {
