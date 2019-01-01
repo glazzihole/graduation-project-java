@@ -129,7 +129,7 @@ public class SentenceController {
     public ResponseVO sentencePattern(@RequestParam String sentence) {
         log.info("sentencePattern | request to get sentence pattern");
         List<SentencePattern> result = sentenceService.getSentencePattern(sentence);
-        if (result != null) {
+        if (result == null) {
             return ResponseUtil.error();
         }
         return ResponseUtil.success(result);
