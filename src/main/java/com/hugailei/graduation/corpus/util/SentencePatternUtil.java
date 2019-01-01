@@ -172,7 +172,7 @@ public class SentencePatternUtil {
                 clauseSet.add(SentencePatternType.OBJECT_CLAUSE.getType() + "_" + clauseContent.toString());
             }
         }
-        pattern = TregexPattern.compile("VP < (/^VB.*$/ .. SBAR)");
+        pattern = TregexPattern.compile("VP < (/^VB.*$/ [$. SBAR | $. (S << SBAR)])");
         matcher = pattern.matcher(tree);
         while (matcher.findNextMatchingNode()) {
             Tree vp = matcher.getMatch();
@@ -186,7 +186,6 @@ public class SentencePatternUtil {
                     continue;
                 }
             }
-
             boolean found = false;
             //是否为表语从句的标识
             boolean isPredicativeClause = false;
@@ -234,7 +233,6 @@ public class SentencePatternUtil {
                             if (edge.getRelation().toString().equals("xcomp") &&
                                 edge.getGovernor().index() - 1 == verbIndex) {
                                 int xcompIndex = edge.getDependent().index();
-
                                 for (SemanticGraphEdge se : dependency.edgeListSorted()) {
                                     if (se.getRelation().toString().equals("ccomp") &&
                                         se.getGovernor().index() == xcompIndex) {
@@ -246,8 +244,6 @@ public class SentencePatternUtil {
                             }
                         }
                     }
-
-
                     if (found || isPredicativeClause) {
                         // 匹配SBAR，得出从句内容
                         clauseMatcher = TregexPattern.compile("SBAR").matcher(vp);
@@ -540,7 +536,7 @@ public class SentencePatternUtil {
             else {
                 String govAndDep = edge.getGovernor().tag() + "-" + edge.getDependent().tag();
                 if (govAndDep.matches("(VB[A-Z]{0,1})-(NN[A-Z]{0,1})") &&
-                        CorpusConstant.DOUBLE_OBJECT_VERB_SET.contains(edge.getGovernor().lemma().toLowerCase())){
+                    CorpusConstant.DOUBLE_OBJECT_VERB_SET.contains(edge.getGovernor().lemma().toLowerCase())){
                     int verbIndex = edge.getGovernor().index();
                     int directObjectIndex = edge.getDependent().index();
                     Edge temp = getRealNounEdge(directObjectIndex, dependency);
@@ -552,17 +548,24 @@ public class SentencePatternUtil {
                              semanticGraphEdge.getRelation().toString().equals("discourse"))&&
                              semanticGraphEdge.getGovernor().index() == verbIndex) {
 
-                            // 寻找nsubj依存关系，找出间接宾语
+                            // 寻找nsubj依存关系，找出间接宾语 he give me the book
                             for (SemanticGraphEdge se : dependency.edgeListSorted()) {
-                                if (se.getRelation().toString().equals("nsubj") &&
-                                    se.getGovernor().index() == directObjectIndex) {
+                                if (
+                                        ((se.getRelation().toString().equals("nsubj") &&
+                                        se.getGovernor().index() == directObjectIndex)) ||
+                                        ((se.getRelation().toString().equals("dobj") &&
+                                        se.getGovernor().index() == verbIndex))
+                                ) {
                                     int subjectIndex = semanticGraphEdge.getDependent().index();
                                     temp = getRealNounEdge(subjectIndex, dependency);
                                     String subject = (temp == null ? semanticGraphEdge.getDependent().word() : temp.getWord());
                                     int indirectObjectIndex = se.getDependent().index();
                                     temp = getRealNounEdge(indirectObjectIndex, dependency);
-                                    String indirectObject = (temp == null ? se.getDependent().word() : temp.getWord());
-                                    sentencePatternList.add(new SentencePattern(type, null, null, null, subject, directObject, indirectObject, null));
+                                    int tempIndirectObjectIndex = (temp == null ? indirectObjectIndex : temp.getIndex());
+                                    if (tempIndirectObjectIndex == verbIndex + 1) {
+                                        String indirectObject = (temp == null ? se.getDependent().word() : temp.getWord());
+                                        sentencePatternList.add(new SentencePattern(type, null, null, null, subject, directObject, indirectObject, null));
+                                    }
                                 }
                             }
                         }
@@ -1602,6 +1605,7 @@ public class SentencePatternUtil {
 
     public static void main(String[] args) {
         String text = "In his book's conclusion, he writes: ‘It has been my sad experience, again and again, especially in my Aids ministry, to witness the damning effects of my church's institutionalised God on young people's souls.\n";
+//        String text = "we found it impossible that she can open the door.";
         String shorterText = abstractSentence(text);
         System.out.println("抽象后的句子：" + shorterText);
         System.out.println(getPrincipalClause(StanfordParserUtil.parse(shorterText).get(0)));

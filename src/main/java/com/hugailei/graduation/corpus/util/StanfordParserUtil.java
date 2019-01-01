@@ -31,7 +31,7 @@ public class StanfordParserUtil {
         props = new Properties();
         // 总共可以有tokenize, ssplit, pos, lemma, parse, ner, dcoref七中属性
         props.put("annotators", "tokenize, ssplit, parse, pos, lemma");
-        pipeline = new StanfordCoreNLP( props );
+        pipeline = new StanfordCoreNLP(props);
     }
 
     /**
@@ -40,11 +40,11 @@ public class StanfordParserUtil {
      * @param text
      * @return
      */
-    public static List<CoreMap> parse( String text ) {
+    public static List<CoreMap> parse(String text) {
         List<CoreMap> result = new ArrayList<>();
-        if( !StringUtils.isEmpty( text.trim() ) ) {
-            Annotation document = new Annotation( text );
-            pipeline.annotate( document );
+        if( !StringUtils.isEmpty(text.trim())) {
+            Annotation document = new Annotation(text);
+            pipeline.annotate(document);
             result = document.get(CoreAnnotations.SentencesAnnotation.class);
         }
         return result;
@@ -99,9 +99,9 @@ public class StanfordParserUtil {
             relationPipeline = new StanfordCoreNLP( props );
         }
         List<CoreMap> result = new ArrayList<>();
-        if( !StringUtils.isEmpty( text.trim() ) ) {
-            Annotation document = new Annotation( text );
-            relationPipeline.annotate( document );
+        if( !StringUtils.isEmpty(text.trim())) {
+            Annotation document = new Annotation(text);
+            relationPipeline.annotate(document);
             result = document.get(CoreAnnotations.SentencesAnnotation.class);
         }
         return result;
@@ -125,7 +125,7 @@ public class StanfordParserUtil {
 
 
     public static void main(String[] args) {
-        String text = "We found it impossible that he could finish it in such a short time";
+        String text = "In his book's conclusion, he writes: ‘It has been my sad experience, again and again, especially in my Aids ministry, to witness the damning effects of my church's institutionalised God on young people's souls.";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         StringBuilder stringBuilder = new StringBuilder();
         // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。

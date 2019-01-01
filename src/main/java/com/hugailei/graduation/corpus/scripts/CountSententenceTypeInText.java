@@ -33,7 +33,9 @@ public class CountSententenceTypeInText {
 
     private static final int TOPIC = 1;
 
-    private static final String OUTPUT_FILE_PATH = "E:\\sentence-type-count-topic" + TOPIC + ".txt";
+    private static final String CORPUS_NAME = "bnc";
+
+    private static final String OUTPUT_FILE_PATH = "E:\\sentence-type-count-topic" + CORPUS_NAME + "_" +TOPIC + ".txt";
 
     public static void main(String[] args) throws Exception{
         //连接mysql数据库
@@ -47,7 +49,8 @@ public class CountSententenceTypeInText {
         float topic1SentenceCount = 0, topic2SentenceCount = 0, topic3SentenceCount = 0, topic4SentenceCount = 0;
         float type1Count = 0, type2Count = 0, type3Count = 0, type4Count = 0, type5Count = 0;
         float type6Count = 0, type7Count = 0, type8Count = 0, type9Count = 0, type10Count = 0, type11Count = 0;
-        PreparedStatement preparedStatement = con.prepareStatement("SELECT sentence FROM tb_sentence where topic = " + TOPIC);
+        PreparedStatement preparedStatement = con.prepareStatement("SELECT sentence FROM tb_sentence where topic = " + TOPIC + " " +
+                "AND corpus = '" + CORPUS_NAME + "'");
         ResultSet resultSet = preparedStatement.executeQuery();
         while (resultSet.next()) {
             String sentence = resultSet.getString("sentence");
