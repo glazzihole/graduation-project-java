@@ -35,7 +35,7 @@ public class CreateWithTopicXml {
             }
             List<TopicDto> topicDtoList = TopicClassifyUtil.getTopicInfoList(text.toString());
             int topicNum = topicDtoList.get(0).getTopicNum();
-
+            System.out.println(file.getName() + "   " + topicNum);
             bufferedReader = new BufferedReader(fileReader);
             while ((line = bufferedReader.readLine()) != null) {
                 if (line.startsWith("<s n=\"")) {
@@ -44,5 +44,6 @@ public class CreateWithTopicXml {
                 }
             }
         }
+        System.out.println("处理完成");
     }
 }

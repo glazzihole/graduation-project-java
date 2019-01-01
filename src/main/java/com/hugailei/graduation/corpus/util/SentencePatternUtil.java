@@ -391,23 +391,30 @@ public class SentencePatternUtil {
                 while (clauseMatcher.findNextMatchingNode()) {
                     StringBuilder clauseContent = new StringBuilder();
                     boolean found = false;
+                    int clauseStartIndex = 0;
                     if (conjunction.contains("_")) {
                         if (clauseMatcher.getMatch().getLeaves().get(0).label().value().equals(conjunction.split("_")[0]) &&
                             clauseMatcher.getMatch().getLeaves().get(1).label().value().equals(conjunction.split("_")[1])) {
-                            int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
-                            if (clauseStartIndex >= conjuctionIndexBiggerThan && clauseStartIndex <= conjuctionIndexLessThan) {
-                                for (Tree children : clauseMatcher.getMatch().getLeaves()) {
-                                    clauseContent.append(children.label().value()).append(" ");
-                                }
-                                found = true;
-                            }
+                            clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
                         }
                     }
                     // (even等副词) + 从句引导词
-                    else if (clauseMatcher.getMatch().getLeaves().get(0).label().value().equals(conjunction) ||
-                           clauseMatcher.getMatch().getLeaves().get(1).label().value().equals(conjunction)) {
-                        int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+                    else if (clauseMatcher.getMatch().getLeaves().size() > 1 &&
+                            (
+                                clauseMatcher.getMatch().getLeaves().get(0).label().value().equals(conjunction) ||
+                                clauseMatcher.getMatch().getLeaves().get(1).label().value().equals(conjunction))
+                            ) {
+                        clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+                    }
+                    if (conjuctionIndexLessThan > conjuctionIndexBiggerThan) {
                         if (clauseStartIndex >= conjuctionIndexBiggerThan && clauseStartIndex <= conjuctionIndexLessThan) {
+                            for (Tree children : clauseMatcher.getMatch().getLeaves()) {
+                                clauseContent.append(children.label().value()).append(" ");
+                            }
+                            found = true;
+                        }
+                    } else {
+                        if (clauseStartIndex <= conjuctionIndexLessThan) {
                             for (Tree children : clauseMatcher.getMatch().getLeaves()) {
                                 clauseContent.append(children.label().value()).append(" ");
                             }
@@ -1604,13 +1611,13 @@ public class SentencePatternUtil {
     }
 
     public static void main(String[] args) {
-        String text = "In his book's conclusion, he writes: ‘It has been my sad experience, again and again, especially in my Aids ministry, to witness the damning effects of my church's institutionalised God on young people's souls.\n";
+        String text = "Well as I say, you know, I'm not lilac minded.";
 //        String text = "we found it impossible that she can open the door.";
         String shorterText = abstractSentence(text);
         System.out.println("抽象后的句子：" + shorterText);
         System.out.println(getPrincipalClause(StanfordParserUtil.parse(shorterText).get(0)));
 
-        List<CoreMap> result = StanfordParserUtil.parse(text.toLowerCase());
+        List<CoreMap> result = StanfordParserUtil.parse(text);
         for(CoreMap sentence : result) {
             System.out.println("sothat句型" + hasSoThat(sentence));
             System.out.println("倒装句型" + hasInvertedStructure(sentence));
