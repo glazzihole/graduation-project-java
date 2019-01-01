@@ -7,6 +7,7 @@ import com.hugailei.graduation.corpus.util.TopicClassifyUtil;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,13 +19,15 @@ import java.util.List;
  * </p>
  **/
 public class CreateWithTopicXml {
-    private static final String NON_TOPIC_XML_PATH = "";
+    private static final String NON_TOPIC_XML_PATH = "C:\\Users\\赖赖\\Desktop\\bnc-sample-xml\\";
 
-    private static final String WITH_TOPIC_XML_PATH = "";
+    private static final String TEXT_PATH = "C:\\Users\\赖赖\\Desktop\\bnc-sample-text";
+
+    private static final String WITH_TOPIC_XML_PATH = "C:\\Users\\赖赖\\Desktop\\bnc-sample-with-topic-xml\\";
 
     public static void main(String[] args) throws Exception{
         List<File> fileList = new ArrayList<>();
-        FileUtil.getFilesUnderPath(NON_TOPIC_XML_PATH, fileList);
+        FileUtil.getFilesUnderPath(TEXT_PATH, fileList);
         for (File file : fileList) {
             FileReader fileReader = new FileReader(file);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -36,12 +39,17 @@ public class CreateWithTopicXml {
             List<TopicDto> topicDtoList = TopicClassifyUtil.getTopicInfoList(text.toString());
             int topicNum = topicDtoList.get(0).getTopicNum();
             System.out.println(file.getName() + "   " + topicNum);
-            bufferedReader = new BufferedReader(fileReader);
-            while ((line = bufferedReader.readLine()) != null) {
+            FileReader fileReader2 = new FileReader(new File(NON_TOPIC_XML_PATH + file.getName().replace("txt", "xml")));
+            BufferedReader bufferedReader2 = new BufferedReader(fileReader2);
+            FileWriter fileWriter = new FileWriter(new File(WITH_TOPIC_XML_PATH + file.getName().replace("txt", "xml")));
+            while ((line = bufferedReader2.readLine()) != null) {
                 if (line.startsWith("<s n=\"")) {
-                    line.replace("(<s n=\"[0-9]{1,}\">)", "$1<topic = \"" + topicNum + "\">");
-                    line.replace("</s>", "</topic></s>");
+                    String reg = "(<s n=\"\\d+\">)";
+                    line = line.replaceAll(reg, "$1<topic = \"" + topicNum + "\">");
+                    line = line.replace("</s>", "</topic></s>");
                 }
+                fileWriter.write(line + "\r\n");
+                fileWriter.flush();
             }
         }
         System.out.println("处理完成");
