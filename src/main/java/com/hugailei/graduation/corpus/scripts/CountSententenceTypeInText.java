@@ -31,7 +31,7 @@ public class CountSententenceTypeInText {
 
     private static final String USER_PASSWORD="123456";
 
-    private static final int TOPIC = 1;
+    private static final int TOPIC = 4;
 
     private static final String CORPUS_NAME = "bnc";
 
@@ -52,71 +52,77 @@ public class CountSententenceTypeInText {
         PreparedStatement preparedStatement = con.prepareStatement("SELECT sentence FROM tb_sentence where topic = " + TOPIC + " " +
                 "AND corpus = '" + CORPUS_NAME + "'");
         ResultSet resultSet = preparedStatement.executeQuery();
-        while (resultSet.next()) {
-            String sentence = resultSet.getString("sentence");
-            System.out.println(sentence);
-            switch (TOPIC) {
-                case 1:
-                    topic1SentenceCount ++;
-                    break;
-                case 2:
-                    topic2SentenceCount ++;
-                    break;
-                case 3:
-                    topic3SentenceCount ++;
-                    break;
-                case 4:
-                    topic4SentenceCount ++;
-                    break;
-                default:
-                    break;
-            }
-            List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
-            List<SentencePattern> sentencePatternList = SentencePatternUtil.findAllSpecialSentencePattern(coreMapList.get(0));
-            if (sentencePatternList != null) {
-                for (SentencePattern sentencePattern : sentencePatternList) {
-                    int type = sentencePattern.getType();
-                    System.out.println(type + " " + sentence);
-                    switch (type) {
+            while (resultSet.next()) {
+                try {
+                    String sentence = resultSet.getString("sentence");
+                    System.out.println(sentence);
+                    switch (TOPIC) {
                         case 1:
-                            type1Count ++;
+                            topic1SentenceCount ++;
                             break;
                         case 2:
-                            type2Count ++;
+                            topic2SentenceCount ++;
                             break;
                         case 3:
-                            type3Count ++;
+                            topic3SentenceCount ++;
                             break;
                         case 4:
-                            type4Count ++;
-                            break;
-                        case 5:
-                            type5Count ++;
-                            break;
-                        case 6:
-                            type6Count ++;
-                            break;
-                        case 7:
-                            type7Count ++;
-                            break;
-                        case 8:
-                            type8Count ++;
-                            break;
-                        case 9:
-                            type9Count ++;
-                            break;
-                        case 10:
-                            type10Count ++;
-                            break;
-                        case 11:
-                            type11Count ++;
+                            topic4SentenceCount ++;
                             break;
                         default:
                             break;
                     }
+                    List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
+                    List<SentencePattern> sentencePatternList = SentencePatternUtil.findAllSpecialSentencePattern(coreMapList.get(0));
+                    if (sentencePatternList != null) {
+                        for (SentencePattern sentencePattern : sentencePatternList) {
+                            int type = sentencePattern.getType();
+                            System.out.println(type + " " + sentence);
+                            switch (type) {
+                                case 1:
+                                    type1Count ++;
+                                    break;
+                                case 2:
+                                    type2Count ++;
+                                    break;
+                                case 3:
+                                    type3Count ++;
+                                    break;
+                                case 4:
+                                    type4Count ++;
+                                    break;
+                                case 5:
+                                    type5Count ++;
+                                    break;
+                                case 6:
+                                    type6Count ++;
+                                    break;
+                                case 7:
+                                    type7Count ++;
+                                    break;
+                                case 8:
+                                    type8Count ++;
+                                    break;
+                                case 9:
+                                    type9Count ++;
+                                    break;
+                                case 10:
+                                    type10Count ++;
+                                    break;
+                                case 11:
+                                    type11Count ++;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
                 }
-            }
-        } // while
+            } // while
+
 
         System.out.println("分析完成，开始存入文件");
         FileWriter fileWriter = new FileWriter(new File(OUTPUT_FILE_PATH));

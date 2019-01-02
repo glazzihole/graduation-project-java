@@ -19,11 +19,11 @@ import java.util.List;
  * </p>
  **/
 public class CreateWithTopicXml {
-    private static final String NON_TOPIC_XML_PATH = "C:\\Users\\赖赖\\Desktop\\chinadaily-xml\\";
+    private static final String NON_TOPIC_XML_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\bnc-sample-xml\\";
 
-    private static final String TEXT_PATH = "C:\\Users\\赖赖\\Desktop\\chinadaily-text";
+    private static final String TEXT_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\bnc-sample-text";
 
-    private static final String WITH_TOPIC_XML_PATH = "C:\\Users\\赖赖\\Desktop\\chinadaily-with-topic-xml\\";
+    private static final String WITH_TOPIC_XML_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\bnc-sample-with-topic-xml\\";
 
     public static void main(String[] args) throws Exception{
         List<File> fileList = new ArrayList<>();
@@ -43,18 +43,21 @@ public class CreateWithTopicXml {
             BufferedReader bufferedReader2 = new BufferedReader(fileReader2);
             FileWriter fileWriter = new FileWriter(new File(WITH_TOPIC_XML_PATH + file.getName().replace("txt", "xml")));
             while ((line = bufferedReader2.readLine()) != null) {
-//                if (line.startsWith("<s n=\"")) {
-//                    String reg = "(<s n=\"\\d+\">)";
-//                    line = line.replaceAll(reg, "$1<topic = \"" + topicNum + "\">");
-//                    line = line.replace("</s>", "</topic></s>");
+                // 处理bnc的xml文件
+                if (line.startsWith("<s n=\"")) {
+                    String reg = "(<s n=\"\\d+\">)";
+                    line = line.replaceAll(reg, "$1<topic" + topicNum + ">");
+                    line = line.replace("</s>", "</topic"  + topicNum + "></s>");
+                }
+
+                // 处理利用脚本生成的xml文件
+//                if (line.contains("<s n=\"")) {
+//                    String reg = "(<s n=\"[0-9\\-]+\">)";
+//                    line = line.replaceAll(reg, "$1<topic" + topicNum + ">");
 //                }
-                if (line.contains("<s n=\"")) {
-                    String reg = "(<s n=\"\\d+-\\d+\">)";
-                    line = line.replaceAll(reg, "$1<topic = \"" + topicNum + "\">");
-                }
-                else if (line.contains("</s>")) {
-                    line = line.replace("</s>", "</topic></s>");
-                }
+//                else if (line.contains("</s>")) {
+//                    line = line.replace("</s>", "</topic"  + topicNum + "></s>");
+//                }
                 fileWriter.write(line + "\r\n");
                 fileWriter.flush();
             }
