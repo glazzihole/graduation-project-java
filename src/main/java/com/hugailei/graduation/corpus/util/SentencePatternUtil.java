@@ -1421,6 +1421,14 @@ public class SentencePatternUtil {
         Edge temp = getRealNounEdge(edge.getGovernor().index(), dependency);
         String predicative = (temp == null ? edge.getGovernor().word() : temp.getWord());
         int predicativeIndex = edge.getGovernor().index();
+        // 寻找否定结构，判断系动词前是否有否定结构
+        for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()  ) {
+            if (semanticGraphEdge.getRelation().toString().equals("neg") &&
+                semanticGraphEdge.getGovernor().index() == predicativeIndex) {
+                copula = copula + " " + semanticGraphEdge.getDependent().word();
+            }
+        }
+
         // 寻找nsubj依存关系，找出系动词的主语
         for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
             if (semanticGraphEdge.getRelation().toString().equals("nsubj")) {
@@ -1611,7 +1619,7 @@ public class SentencePatternUtil {
     }
 
     public static void main(String[] args) {
-        String text = "Well as I say, you know, I'm not lilac minded.";
+        String text = "Well as I say, you know, I'm never lilac minded.";
 //        String text = "we found it impossible that she can open the door.";
         String shorterText = abstractSentence(text);
         System.out.println("抽象后的句子：" + shorterText);
