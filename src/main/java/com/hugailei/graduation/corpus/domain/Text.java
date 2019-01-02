@@ -49,7 +49,7 @@ public class Text implements Serializable {
             joinColumns = {@JoinColumn(name = "text_id", referencedColumnName = "id")},
             inverseJoinColumns = {@JoinColumn(name = "keyword_id", referencedColumnName = "id")}
     )
-    private Set<KeyWord> keywords = new HashSet<>();
+    private Set<Keyword> keywords = new HashSet<>();
 
     @Column(name = "sentence_count")
     private Integer sentenceCount;

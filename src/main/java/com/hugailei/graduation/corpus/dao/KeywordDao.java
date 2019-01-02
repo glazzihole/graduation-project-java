@@ -1,6 +1,6 @@
 package com.hugailei.graduation.corpus.dao;
 
-import com.hugailei.graduation.corpus.domain.KeyWord;
+import com.hugailei.graduation.corpus.domain.Keyword;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.List;
  * description:
  * </p>
  **/
-public interface KeyWordDao extends JpaRepository<KeyWord, Long> {
+public interface KeywordDao extends JpaRepository<Keyword, Long> {
 
     /**
      * 按照指定语料库和参考语料库进行查询
@@ -21,5 +21,5 @@ public interface KeyWordDao extends JpaRepository<KeyWord, Long> {
      * @param refCorpus
      * @return
      */
-    List<KeyWord> findByCorpusAndRefCorpusOrderByKeynessDesc(String corpus, String refCorpus);
+    List<Keyword> findByCorpusAndRefCorpusOrderByKeynessDesc(String corpus, String refCorpus);
 }

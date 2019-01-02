@@ -1,6 +1,6 @@
 package com.hugailei.graduation.corpus.service.impl;
 
-import com.hugailei.graduation.corpus.dao.KeyWordDao;
+import com.hugailei.graduation.corpus.dao.KeywordDao;
 import com.hugailei.graduation.corpus.dto.WordDto;
 import com.hugailei.graduation.corpus.service.KeyWordService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class KeyWordServiceImpl implements KeyWordService {
 
     @Autowired
-    private KeyWordDao keyWordDao;
+    private KeywordDao keyWordDao;
 
     @Override
     @Transactional(readOnly = true, rollbackFor = Exception.class)
