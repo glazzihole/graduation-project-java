@@ -178,8 +178,10 @@ public class SentencePatternUtil {
             Tree vp = matcher.getMatch();
             // 排除从句为so that 句型和it is that的强调句型
             TregexMatcher clauseMatcher = TregexPattern.compile("SBAR | S").matcher(vp);
+            int clauseStartIndex = 0, clauseEndIndex = 0;
             if (clauseMatcher.findNextMatchingNode()) {
-                int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+                clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+                clauseEndIndex = clauseStartIndex + clauseMatcher.getMatch().getLeaves().size() - 1;
                 if (soThatIndexSet != null && soThatIndexSet.contains(clauseStartIndex)) {
                     continue;
                 } else if (emphaticIndexSet != null && emphaticIndexSet.contains(clauseStartIndex)) {
@@ -206,7 +208,9 @@ public class SentencePatternUtil {
                         if (edge.getRelation().toString().equals("ccomp") ||
                             edge.getRelation().toString().equals("dep")) {
                             if(edge.getGovernor().index() - 1 == verbIndex) {
-                                if (edge.getDependent().index() - 1 > verbIndex) {
+                                if (edge.getDependent().index() - 1 > verbIndex &&
+                                    edge.getDependent().index() - 1 > clauseStartIndex &&
+                                    edge.getDependent().index() - 1 < clauseEndIndex) {
                                     found = true;
                                     // 判断该动词是否为系统词
                                     if (CorpusConstant.COPULA_LEMMA_SET.contains(lemma)) {
@@ -236,7 +240,9 @@ public class SentencePatternUtil {
                                 for (SemanticGraphEdge se : dependency.edgeListSorted()) {
                                     if (se.getRelation().toString().equals("ccomp") &&
                                         se.getGovernor().index() == xcompIndex) {
-                                        if (se.getDependent().index() - 1 > verbIndex) {
+                                        if (se.getDependent().index() - 1 > verbIndex &&
+                                            se.getDependent().index() - 1 > clauseStartIndex &&
+                                            se.getDependent().index() - 1 < clauseEndIndex) {
                                             found = true;
                                         }
                                     }
@@ -1623,7 +1629,7 @@ public class SentencePatternUtil {
 //        String text = "we found it impossible that she can open the door.";
         String shorterText = abstractSentence(text);
         System.out.println("抽象后的句子：" + shorterText);
-        System.out.println(getPrincipalClause(StanfordParserUtil.parse(shorterText).get(0)));
+        System.out.println("句子主干：" + getPrincipalClause(StanfordParserUtil.parse(shorterText).get(0)));
 
         List<CoreMap> result = StanfordParserUtil.parse(text);
         for(CoreMap sentence : result) {
