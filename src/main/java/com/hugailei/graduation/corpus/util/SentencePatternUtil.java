@@ -172,12 +172,12 @@ public class SentencePatternUtil {
                 clauseSet.add(SentencePatternType.OBJECT_CLAUSE.getType() + "_" + clauseContent.toString());
             }
         }
-        pattern = TregexPattern.compile("VP < (/^VB.*$/ [$. SBAR | $. (S << SBAR)])");
+        pattern = TregexPattern.compile("VP < (/^VB.*$/ [$. SBAR | $. (S << SBAR) | $. S])");
         matcher = pattern.matcher(tree);
         while (matcher.findNextMatchingNode()) {
             Tree vp = matcher.getMatch();
             // 排除从句为so that 句型和it is that的强调句型
-            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR").matcher(vp);
+            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR | S").matcher(vp);
             if (clauseMatcher.findNextMatchingNode()) {
                 int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
                 if (soThatIndexSet != null && soThatIndexSet.contains(clauseStartIndex)) {
@@ -246,7 +246,7 @@ public class SentencePatternUtil {
                     }
                     if (found || isPredicativeClause) {
                         // 匹配SBAR，得出从句内容
-                        clauseMatcher = TregexPattern.compile("SBAR").matcher(vp);
+                        clauseMatcher = TregexPattern.compile("SBAR | S").matcher(vp);
                         StringBuilder clauseContent = new StringBuilder();
                         if (clauseMatcher.findNextMatchingNode()) {
                             for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
@@ -1619,7 +1619,7 @@ public class SentencePatternUtil {
     }
 
     public static void main(String[] args) {
-        String text = "Well as I say, you know, I'm never lilac minded.";
+        String text = "I never said I love that book.";
 //        String text = "we found it impossible that she can open the door.";
         String shorterText = abstractSentence(text);
         System.out.println("抽象后的句子：" + shorterText);
