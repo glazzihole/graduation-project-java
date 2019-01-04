@@ -118,7 +118,7 @@ public class SentencePatternUtil {
      */
     public static List<SentencePattern> matchSubjectClause(CoreMap sentence) {
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-        TregexPattern pattern = TregexPattern.compile("SBAR $+ VP");
+        TregexPattern pattern = TregexPattern.compile("SBAR $++ VP");
         TregexMatcher matcher = pattern.matcher(tree);
         LinkedHashSet<String> clauseSet = new LinkedHashSet<>();
         // 匹配输出
@@ -316,7 +316,7 @@ public class SentencePatternUtil {
                 clauseContent.append(leaf.label().value()).append(" ");
             }
             // 获取从句所修饰的名词
-            String nounReg = "NN.*";
+            String nounReg = "(NN.*)|(PRP)|(NP)";
             Tree clauseParent = clauseMatcher.getMatch().parent(tree);
             for (Tree leaf : clauseParent.getLeaves()) {
                 if (leaf.parent(tree).label().value().matches(nounReg)) {
@@ -779,6 +779,7 @@ public class SentencePatternUtil {
             posString.append(StanfordParserUtil.getBasePos(label.tag())).append(" ");
             lemmaString.append(label.lemma()).append(" ");
         }
+        // 判断是否包含can he do 的结构
         if (posString.toString().contains(" MD PRP VB") && !isQuestion) {
             return true;
         }
@@ -1625,8 +1626,13 @@ public class SentencePatternUtil {
     }
 
     public static void main(String[] args) {
-        String text = "I never said I love that book.";
+//        String text = "I never said I love that book.";
 //        String text = "we found it impossible that she can open the door.";
+//        String text = "What he said yesterday really works.";
+//        String text = "he show me the book he bought yesterday.";
+//        String text = "This is such an interesting book that we all enjoy reading it. ";
+//        String text = "It was yesterday that he met Li Ping.";
+        String text = "Not a single word of English can he speak.";
         String shorterText = abstractSentence(text);
         System.out.println("抽象后的句子：" + shorterText);
         System.out.println("句子主干：" + getPrincipalClause(StanfordParserUtil.parse(shorterText).get(0)));

@@ -19,11 +19,11 @@ import java.util.List;
  * </p>
  **/
 public class CreateWithTopicXml {
-    private static final String NON_TOPIC_XML_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\bnc-sample-xml\\";
+    private static final String NON_TOPIC_XML_PATH = "E:\\毕业论文相关\\bnc-sample-xml\\";
 
-    private static final String TEXT_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\bnc-sample-text";
+    private static final String TEXT_PATH = "E:\\毕业论文相关\\bnc-sample-text";
 
-    private static final String WITH_TOPIC_XML_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\bnc-sample-with-topic-xml\\";
+    private static final String WITH_TOPIC_XML_PATH = "E:\\毕业论文相关\\bnc-sample-with-topic-xml\\";
 
     public static void main(String[] args) throws Exception{
         List<File> fileList = new ArrayList<>();
@@ -44,11 +44,9 @@ public class CreateWithTopicXml {
             FileWriter fileWriter = new FileWriter(new File(WITH_TOPIC_XML_PATH + file.getName().replace("txt", "xml")));
             while ((line = bufferedReader2.readLine()) != null) {
                 // 处理bnc的xml文件
-                if (line.startsWith("<s n=\"")) {
-                    String reg = "(<s n=\"\\d+\">)";
-                    line = line.replaceAll(reg, "$1<topic" + topicNum + ">");
-                    line = line.replace("</s>", "</topic"  + topicNum + "></s>");
-                }
+                String reg = "(<s n=\"[0-9_]+\">)";
+                line = line.replaceAll(reg, "$1<topic" + topicNum + ">");
+                line = line.replace("</s>", "</topic"  + topicNum + "></s>");
 
                 // 处理利用脚本生成的xml文件
 //                if (line.contains("<s n=\"")) {
