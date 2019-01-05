@@ -8,9 +8,7 @@ import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.util.CoreMap;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.List;
@@ -324,74 +322,89 @@ public class LabelTopic {
      */
     public static void labelWordTopic() throws Exception {
         Map<String, WordWithTopic> key2WordWithTopic = new HashMap<>();
-        String[] corpusArray = {"bnc", "chinadaily"};
-        for (String corpusName : corpusArray) {
-            // 从数据库中读取句子信息
-            PreparedStatement preparedStatement = con.prepareStatement("SELECT id, sentence, topic, corpus " +
-                    "FROM tb_sentence " +
-                    "WHERE corpus = '" + corpusName + "' " +
-                    "ORDER BY id ASC ");
-            ResultSet resultSet = preparedStatement.executeQuery();
-            int totalResultCount = resultSet.getRow();
-            int i = 1;
-            while (resultSet.next()) {
-                String sentence = resultSet.getString("sentence");
-                Long sentenceId = resultSet.getLong("id");
-                int topic = resultSet.getInt("topic");
-                String corpus = resultSet.getString("corpus");
-                List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
-                System.out.println(i + " / " + totalResultCount + " id: " + sentenceId);
-                i ++;
-                for (CoreLabel coreLabel : coreMapList.get(0).get(CoreAnnotations.TokensAnnotation.class)) {
-                    String word = coreLabel.get(CoreAnnotations.TextAnnotation.class);
-                    String pos = coreLabel.get(CoreAnnotations.PartOfSpeechAnnotation.class);
-                    String lemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
-                    String key = word + "~" + pos + "~" + lemma + "~" + topic;
-                    if (key2WordWithTopic.containsKey(key)) {
-                        WordWithTopic wordWithTopic = key2WordWithTopic.get(key);
-                        wordWithTopic.setFreq(wordWithTopic.getFreq() + 1);
-                        wordWithTopic.setSentenceIds(wordWithTopic.getSentenceIds() + sentenceId + ",");
-                        key2WordWithTopic.put(key, wordWithTopic);
-                        System.out.println(wordWithTopic.toString());
-                    } else {
-                        WordWithTopic wordWithTopic = new WordWithTopic();
-                        wordWithTopic.setCorpus(corpus);
-                        wordWithTopic.setForm(word);
-                        wordWithTopic.setLemma(lemma);
-                        wordWithTopic.setPos(pos);
-                        wordWithTopic.setSentenceIds(sentenceId + ",");
-                        wordWithTopic.setTopic(topic);
-                        wordWithTopic.setFreq(1);
-                        key2WordWithTopic.put(key, wordWithTopic);
-                        System.out.println(wordWithTopic.toString());
+        ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File("E:\\word_with_topic.txt")));
+
+        try {
+            key2WordWithTopic = (Map<String, WordWithTopic>)ois.readObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("读取序列化文件失败，开始重新计算");
+            key2WordWithTopic = new HashMap<>();
+        }
+
+        if (key2WordWithTopic.isEmpty()) {
+            String[] corpusArray = {"bnc", "chinadaily"};
+            for (String corpusName : corpusArray) {
+                // 从数据库中读取句子信息
+                PreparedStatement preparedStatement = con.prepareStatement("SELECT id, sentence, topic, corpus " +
+                        "FROM tb_sentence " +
+                        "WHERE corpus = '" + corpusName + "' " +
+                        "ORDER BY id ASC ");
+                ResultSet resultSet = preparedStatement.executeQuery();
+                resultSet.last();
+                int totalResultCount = resultSet.getRow();
+                int i = 1;
+                resultSet = preparedStatement.executeQuery();
+                while (resultSet.next()) {
+                    String sentence = resultSet.getString("sentence");
+                    Long sentenceId = resultSet.getLong("id");
+                    int topic = resultSet.getInt("topic");
+                    String corpus = resultSet.getString("corpus");
+                    List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
+                    System.out.println(i + " / " + totalResultCount + " id: " + sentenceId + " corpus: " + corpusName);
+                    i++;
+                    for (CoreLabel coreLabel : coreMapList.get(0).get(CoreAnnotations.TokensAnnotation.class)) {
+                        String word = coreLabel.get(CoreAnnotations.TextAnnotation.class);
+                        String pos = coreLabel.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+                        String lemma = coreLabel.get(CoreAnnotations.LemmaAnnotation.class);
+                        String key = word + "~" + pos + "~" + lemma + "~" + topic;
+                        if (key2WordWithTopic.containsKey(key)) {
+                            WordWithTopic wordWithTopic = key2WordWithTopic.get(key);
+                            wordWithTopic.setFreq(wordWithTopic.getFreq() + 1);
+                            wordWithTopic.setSentenceIds(wordWithTopic.getSentenceIds() + sentenceId + ",");
+                            key2WordWithTopic.put(key, wordWithTopic);
+                            System.out.println(wordWithTopic.toString());
+                        } else {
+                            WordWithTopic wordWithTopic = new WordWithTopic();
+                            wordWithTopic.setCorpus(corpus);
+                            wordWithTopic.setForm(word);
+                            wordWithTopic.setLemma(lemma);
+                            wordWithTopic.setPos(pos);
+                            wordWithTopic.setSentenceIds(sentenceId + ",");
+                            wordWithTopic.setTopic(topic);
+                            wordWithTopic.setFreq(1);
+                            key2WordWithTopic.put(key, wordWithTopic);
+                            System.out.println(wordWithTopic.toString());
+                        }
                     }
                 }
             }
-            System.out.println("分析完成，开始存入数据库");
-            try {
-                for (Map.Entry entry : key2WordWithTopic.entrySet()) {
-                    WordWithTopic value = (WordWithTopic) entry.getValue();
-                    PreparedStatement ps = con.prepareStatement("INSERT INTO tb_word_with_topic"
-                            + "(form, pos, lemma, freq, sentence_ids, corpus, topic) "
-                            + " VALUES (?, ?, ?, ?, ?, ?, ?)");
-                    ps.setString(1, value.getForm());
-                    ps.setString(2, value.getPos());
-                    ps.setString(3, value.getLemma());
-                    ps.setInt(4, value.getFreq());
-                    ps.setString(5, value.getSentenceIds());
-                    ps.setString(6, value.getCorpus());
-                    ps.setInt(7, value.getTopic());
-                    ps.execute();
-                }
+        }
 
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println("操作失败，存入序列化文件");
-                ObjectOutputStream oo = new ObjectOutputStream(new FileOutputStream(
-                        new File("E:\\word_with_topic.txt")));
-                oo.writeObject(key2WordWithTopic);
-                oo.close();
+        System.out.println("分析完成，开始存入数据库");
+        try {
+            for (Map.Entry entry : key2WordWithTopic.entrySet()) {
+                WordWithTopic value = (WordWithTopic) entry.getValue();
+                PreparedStatement ps = con.prepareStatement("INSERT INTO tb_word_with_topic"
+                        + "(form, pos, lemma, freq, sentence_ids, corpus, topic) "
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?)");
+                ps.setString(1, value.getForm());
+                ps.setString(2, value.getPos());
+                ps.setString(3, value.getLemma());
+                ps.setInt(4, value.getFreq());
+                ps.setString(5, value.getSentenceIds());
+                ps.setString(6, value.getCorpus());
+                ps.setInt(7, value.getTopic());
+                ps.execute();
             }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("操作失败，存入序列化文件");
+            ObjectOutputStream oo = new ObjectOutputStream(new FileOutputStream(
+                    new File("E:\\word_with_topic.txt")));
+            oo.writeObject(key2WordWithTopic);
+            oo.close();
         }
         System.out.println("labelWordTopic完成");
     }
