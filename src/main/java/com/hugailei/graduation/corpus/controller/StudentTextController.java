@@ -4,6 +4,7 @@ import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.dto.SentencePatternDto;
 import com.hugailei.graduation.corpus.dto.StudentTextDto;
 import com.hugailei.graduation.corpus.dto.TopicDto;
+import com.hugailei.graduation.corpus.service.CollocationService;
 import com.hugailei.graduation.corpus.service.StudentTextService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;
 import com.hugailei.graduation.corpus.vo.ResponseVO;
@@ -27,6 +28,9 @@ public class StudentTextController {
 
     @Autowired
     private StudentTextService studentTextService;
+
+    @Autowired
+    private CollocationService collocationService;
 
     /**
      * 存储学生作文
@@ -93,7 +97,7 @@ public class StudentTextController {
     @ResponseBody
     public ResponseVO getCollocationInText(@RequestParam String text) {
         log.info("getCollocationInText | request to get collocation in student's text");
-        CollocationDto.CollocationInfo result = studentTextService.getCollocationInText(text);
+        CollocationDto.CollocationInfo result = collocationService.getCollocationInText(text);
         if (result == null) {
             return ResponseUtil.error();
         }

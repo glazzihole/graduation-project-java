@@ -5,6 +5,7 @@ import com.hugailei.graduation.corpus.domain.SentencePattern;
 import com.hugailei.graduation.corpus.enums.SentencePatternType;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
@@ -44,7 +45,7 @@ public class SentencePatternUtil {
      * @param sentence
      * @return
      */
-    public static List<SentencePattern> findAllSpecialSentencePattern(CoreMap sentence) {
+    public static List<SentencePattern> findAllClauseType(CoreMap sentence) {
         List<SentencePattern> sentencePatternList = new ArrayList<>();
         List<SentencePattern> tempList = matchSubjectClause(sentence);
 
@@ -67,7 +68,15 @@ public class SentencePatternUtil {
             sentencePatternList.addAll(tempList);
         }
 
-        tempList = matchDoubleObject(sentence);
+        if (sentencePatternList == null) {
+            return null;
+        }
+        return sentencePatternList;
+    }
+
+    public static List<SentencePattern> findOtherSpecialSentencePattern(CoreMap sentence) {
+        List<SentencePattern> sentencePatternList = new ArrayList<>();
+        List<SentencePattern> tempList = matchSubjectClause(sentence);
         if (tempList != null) {
             sentencePatternList.addAll(tempList);
         }
@@ -91,7 +100,10 @@ public class SentencePatternUtil {
             sentencePatternList.add(sentencePattern);
         }
 
-        if (SentencePatternUtil.hasInvertedStructure(sentence)) {
+        String shorterText = abstractSentence(sentence.toString()).replace(".", "");
+        CoreMap shorterTextCoreMap = StanfordParserUtil.parse(shorterText).get(0);
+        if (SentencePatternUtil.hasInvertedStructure(sentence) ||
+            SentencePatternUtil.hasInvertedStructure(shorterTextCoreMap)) {
             int type = SentencePatternType.INVERTED_STRUCTURE.getType();
             SentencePattern sentencePattern = new SentencePattern();
             sentencePattern.setType(type);
@@ -765,6 +777,14 @@ public class SentencePatternUtil {
      */
     public static boolean hasInvertedStructure(CoreMap sentence) {
         SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
+        // 首先判断句子的句法分析树结构中是否有倒装结构“SINV”节点
+        Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+        for (Label l : tree.labels()) {
+            if ("SINV".equals(l.value())) {
+                return true;
+            }
+        }
+
         // 判断句子是否是疑问句
         int sentenceWordCount = sentence.get(CoreAnnotations.TokensAnnotation.class).size();
         String punct = sentence.get(CoreAnnotations.TokensAnnotation.class).get(sentenceWordCount - 1).lemma();
@@ -1206,7 +1226,7 @@ public class SentencePatternUtil {
             }
             String tempSentence = tempSentenceBuilder.toString();
             // 识别从句类型（还需考虑从句中包含从句的情况），根据从句类型对句子进行抽象
-            List<SentencePattern> sentencePatternList = findAllSpecialSentencePattern(coreMap);
+            List<SentencePattern> sentencePatternList = findAllClauseType(coreMap);
             for (SentencePattern sentencePattern : sentencePatternList) {
                 int type = sentencePattern.getType();
                 String clauseContent = sentencePattern.getClauseContent();
@@ -1632,20 +1652,27 @@ public class SentencePatternUtil {
 //        String text = "he show me the book he bought yesterday.";
 //        String text = "This is such an interesting book that we all enjoy reading it. ";
 //        String text = "It was yesterday that he met Li Ping.";
-        String text = "Not a single word of English can he speak.";
-        String shorterText = abstractSentence(text);
-        System.out.println("抽象后的句子：" + shorterText);
-        System.out.println("句子主干：" + getPrincipalClause(StanfordParserUtil.parse(shorterText).get(0)));
-
+//        String text = "Lucky is she who was admitted to a famous university last year.";
+        String text = "She opened the shop in March 2009 after finding it hard to obtain parts in China for specialty fixed-gear bikes - which have wheels that are always in motion when the bikes are moving , as opposed to ordinary bikes that can coast .";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         for(CoreMap sentence : result) {
+            String shorterText = abstractSentence(sentence.toString());
+            System.out.println("抽象后的句子：" + shorterText);
+            System.out.println("句子主干：" + getPrincipalClause(StanfordParserUtil.parse(shorterText).get(0)));
+
             System.out.println("sothat句型" + hasSoThat(sentence));
-            System.out.println("倒装句型" + hasInvertedStructure(sentence));
+            shorterText = shorterText.replaceAll("\\.", "");
+            System.out.println("倒装句型" + (hasInvertedStructure(sentence) ||
+                    hasInvertedStructure(StanfordParserUtil.parse(shorterText).get(0))));
             System.out.println("强调句型" + hasEmphaticStructure(sentence));
 
             sentence.get(TreeCoreAnnotations.TreeAnnotation.class).pennPrint();
 
-            for (SentencePattern sp : findAllSpecialSentencePattern(sentence)) {
+            for (SentencePattern sp : findAllClauseType(sentence)) {
+                System.out.println(sp.toString());
+            }
+
+            for (SentencePattern sp : findOtherSpecialSentencePattern(sentence)) {
                 System.out.println(sp.toString());
             }
         }

@@ -51,7 +51,14 @@ public class PhraseController {
         log.info("searchPhrase | request to search phrase, patt: {}, corpus: {}", patt, INDEX_PREFIX + corpus);
         User user = User.loggedIn("admin", "1");
         handler.checkConfig(request, response, blackLabServer);
-        RequestHandler requestHandler = new SentenceRequestHandler(blackLabServer, request, user, INDEX_PREFIX + corpus, null, null);
+        RequestHandler requestHandler = new SentenceRequestHandler(
+                blackLabServer,
+                null,
+                null,
+                request, user,
+                INDEX_PREFIX + corpus,
+                null,
+                null);
         handler.checkAndHandler(pageable, corpus, blackLabServer, request, response, requestHandler);
     }
 }

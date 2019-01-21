@@ -1,8 +1,14 @@
 package com.hugailei.graduation.corpus.controller;
 
+import com.hugailei.graduation.corpus.constants.CorpusConstant;
+import com.hugailei.graduation.corpus.domain.RankWord;
 import com.hugailei.graduation.corpus.domain.SentencePattern;
+import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.dto.SentenceDto;
+import com.hugailei.graduation.corpus.service.CollocationService;
+import com.hugailei.graduation.corpus.service.RankWordService;
 import com.hugailei.graduation.corpus.service.SentenceService;
+import com.hugailei.graduation.corpus.service.StudentRankWordService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;
 import com.hugailei.graduation.corpus.vo.ResponseVO;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +43,15 @@ public class SentenceController {
     @Autowired
     private SentenceService sentenceService;
 
+    @Autowired
+    private StudentRankWordService studentRankWordService;
+
+    @Autowired
+    private RankWordService rankWordService;
+
+    @Autowired
+    private CollocationService collocationService;
+
     /**
      * 句子检索
      *
@@ -51,11 +66,21 @@ public class SentenceController {
                                       HttpServletRequest request,
                                       HttpServletResponse response,
                                       @RequestParam String corpus,
-                                      @RequestParam String patt) {
+                                      @RequestParam String patt,
+                                      @RequestParam(defaultValue = "2") Integer rankNum) {
         log.info("searchSentenceByPatt | request to search sentence, patt: {}, corpus: {}", patt, corpus);
         User user = User.loggedIn("admin", "1");
         handler.checkConfig(request, response, blackLabServer);
-        RequestHandler requestHandler = new SentenceRequestHandler(blackLabServer, request, user, corpus, null, null);
+        RequestHandler requestHandler = new SentenceRequestHandler(
+                blackLabServer,
+                studentRankWordService,
+                rankWordService,
+                request,
+                user,
+                corpus,
+                null,
+                null
+        );
         handler.checkAndHandler(pageable, corpus, blackLabServer, request, response, requestHandler);
     }
 
@@ -70,7 +95,10 @@ public class SentenceController {
     public ResponseVO searchSentenceById(@RequestParam String sentenceIds,
                                          Pageable pageable) {
         log.info("searchSentenceById | request to search sentence by ids");
-        List<Long> sentenceIdList = Arrays.asList(sentenceIds.split(",")).stream().map(i -> Long.valueOf(i)).collect(Collectors.toList());
+        List<Long> sentenceIdList = Arrays.asList(sentenceIds.split(","))
+                .stream()
+                .map(i -> Long.valueOf(i))
+                .collect(Collectors.toList());
         List<SentenceDto> result = sentenceService.searchSentenceById(sentenceIdList);
         if (result == null) {
             return ResponseUtil.error();
@@ -129,6 +157,26 @@ public class SentenceController {
     public ResponseVO sentencePattern(@RequestParam String sentence) {
         log.info("sentencePattern | request to get sentence pattern");
         List<SentencePattern> result = sentenceService.getSentencePattern(sentence);
+        if (result == null) {
+            return ResponseUtil.error();
+        }
+        return ResponseUtil.success(result);
+    }
+
+    /**
+     * 获取句中的所有搭配
+     *
+     * @param sentence
+     * @return
+     */
+    @PostMapping("/collocation")
+    @ResponseBody
+    public ResponseVO getCollocationInSentence(@RequestParam String sentence) {
+        log.info("getCollocationInSentence | request to get collocation in sentence");
+        sentence = sentence
+                .replaceAll(CorpusConstant.STRENGTHEN_OPEN_LABEL, "")
+                .replaceAll(CorpusConstant.STRENGTHEN_CLOSE_LABEL, "");
+        CollocationDto.CollocationInfo result = collocationService.getCollocationInText(sentence);
         if (result == null) {
             return ResponseUtil.error();
         }

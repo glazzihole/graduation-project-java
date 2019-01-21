@@ -59,8 +59,8 @@ public class LabelTopic {
 //        labelTextTopic();
 //        labelSentenceTopic();
 //        labelCollocationTopic();
-//        labelNgramTopic();
-        labelWordTopic();
+        labelNgramTopic();
+//        labelWordTopic();
     }
 
     /**

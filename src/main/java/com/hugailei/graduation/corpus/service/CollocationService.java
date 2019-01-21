@@ -27,4 +27,12 @@ public interface CollocationService {
      * @return
      */
     List<CollocationDto> searchSynonymousCollocation(CollocationDto collocationDto);
+
+    /**
+     * 获取文章/句子中的搭配信息
+     *
+     * @param text
+     * @return
+     */
+    CollocationDto.CollocationInfo getCollocationInText(String text);
 }

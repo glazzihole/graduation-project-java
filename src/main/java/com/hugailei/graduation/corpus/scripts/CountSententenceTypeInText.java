@@ -73,7 +73,7 @@ public class CountSententenceTypeInText {
                             break;
                     }
                     List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
-                    List<SentencePattern> sentencePatternList = SentencePatternUtil.findAllSpecialSentencePattern(coreMapList.get(0));
+                    List<SentencePattern> sentencePatternList = SentencePatternUtil.findAllClauseType(coreMapList.get(0));
                     if (sentencePatternList != null) {
                         for (SentencePattern sentencePattern : sentencePatternList) {
                             int type = sentencePattern.getType();

@@ -18,14 +18,17 @@ public class StudentTextDto implements Serializable {
     private Long id;
 
     @NotNull
-    private Long stuId;
+    private Long studentId;
 
     private String title;
 
     @NotNull
     private String text;
 
-    private String type;
+    private String topic;
+
+    @NotNull
+    private Integer rankNum;
 
     private Long createTime;
 

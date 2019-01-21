@@ -25,17 +25,21 @@ public class StudentText implements Serializable {
     @Id
     private Long id;
 
-    @Column(name = "stu_id")
-    private Long stuId;
+    @Column(name = "student_id")
+    private Long studentId;
 
     @Column(name = "title")
     private String title;
 
     @Column(name = "text")
+    @Lob
     private String text;
 
-    @Column(name = "type")
-    private String type;
+    @Column(name = "topic")
+    private String topic;
+
+    @Column(name = "rank_num")
+    private Integer rankNum;
 
     @Column(name = "create_time")
     private Long createTime;

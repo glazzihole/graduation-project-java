@@ -1,6 +1,12 @@
 package nl.inl.blacklab.server.requesthandlers;
 
+import com.bfsuolframework.core.utils.StringUtils;
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
+import com.hugailei.graduation.corpus.dao.RankWordDao;
+import com.hugailei.graduation.corpus.dao.StudentRankWordDao;
+import com.hugailei.graduation.corpus.domain.StudentRankWord;
+import com.hugailei.graduation.corpus.service.RankWordService;
+import com.hugailei.graduation.corpus.service.StudentRankWordService;
 import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.search.*;
 import nl.inl.blacklab.search.grouping.HitGroup;
@@ -13,12 +19,13 @@ import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.jobs.*;
 import nl.inl.blacklab.server.search.BlsConfig;
 import org.apache.lucene.document.Document;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -26,9 +33,24 @@ import java.util.Map;
  * @author HU Gailei
  */
 @Slf4j
+@Component
 public class SentenceRequestHandler extends RequestHandler {
-    public SentenceRequestHandler(BlackLabServer servlet, HttpServletRequest request, User user, String indexName, String urlResource, String urlPathPart) {
+
+    private StudentRankWordService studentRankWordService;
+
+    private RankWordService rankWordService;
+
+    public SentenceRequestHandler(BlackLabServer servlet,
+                                  StudentRankWordService studentRankWordService,
+                                  RankWordService rankWordService,
+                                  HttpServletRequest request,
+                                  User user,
+                                  String indexName,
+                                  String urlResource,
+                                  String urlPathPart) {
         super(servlet, request, user, indexName, urlResource, urlPathPart);
+        this.studentRankWordService = studentRankWordService;
+        this.rankWordService = rankWordService;
     }
 
     @Override
@@ -158,6 +180,19 @@ public class SentenceRequestHandler extends RequestHandler {
 
             ds.startEntry("page").startList();
             Map<Integer, String> pids = new HashMap<>();
+
+            // 从session中获取用户信息
+            long studentId = 2345678L;
+
+            // 获取等级
+            int rankNum = Integer.valueOf(request.getParameter("rankNum"));
+
+            // 获取当前级别及当前级别之上的所有词汇
+            Set<String> rankWordSet = rankWordService.findMoreDifficultRankWord(rankNum);
+
+            // 获取用户在当前级别的熟悉词汇集合
+            Set<String> studentWordSet = studentRankWordService.getStudentRankWord(studentId, rankNum);
+
             for (Hit hit: window) {
                 ds.startItem("hit").startMap();
 
@@ -178,15 +213,25 @@ public class SentenceRequestHandler extends RequestHandler {
                     ds.startEntry("sentence").plain(c.match()).endEntry();
                 }
                 else {
-                    String left = "", match = "", right = "";
+                    String match = "";
                     // Add KWIC info
                     if(window!=null) {
                         Kwic c = window.getKwic(hit);
-                        List<String> matchWordsList = c.getMatch( "word" );
-                        for(String word : matchWordsList) {
-                            match = match + word + " ";
+                        List<String> sentenceWordList = new ArrayList<>();
+                        sentenceWordList.addAll(c.getMatch( "word" ));
+                        List<String> sentenceLemmaList = c.getMatch("lemma");
+                        for (int i = 0; i < sentenceLemmaList.size(); i++) {
+                            if (rankWordSet.contains(sentenceLemmaList.get(i))) {
+                                if (!studentWordSet.contains(sentenceLemmaList.get(i))) {
+                                    String temp = sentenceWordList.get(i);
+                                    sentenceWordList.set(i, CorpusConstant.STRENGTHEN_OPEN_LABEL + temp + CorpusConstant.STRENGTHEN_CLOSE_LABEL);
+                                }
+                            }
                         }
 
+                        for (String word : sentenceWordList) {
+                            match = match + word + " ";
+                        }
                     }
                     ds.entry("sentence", match);
 

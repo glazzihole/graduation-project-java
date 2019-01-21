@@ -34,14 +34,6 @@ public interface StudentTextService {
     StudentTextDto getStudentText(Long textId);
 
     /**
-     * 获取文章中的所有搭配信息
-     *
-     * @param text
-     * @return
-     */
-    CollocationDto.CollocationInfo getCollocationInText(String text);
-
-    /**
      * 获取文章中的所有句型信息
      *
      * @param text

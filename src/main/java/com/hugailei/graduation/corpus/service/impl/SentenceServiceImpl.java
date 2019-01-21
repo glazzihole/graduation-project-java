@@ -151,7 +151,7 @@ public class SentenceServiceImpl implements SentenceService  {
         try {
             log.info("getSentencePattern | sentence: {}", sentence);
             List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
-            List<SentencePattern> result = SentencePatternUtil.findAllSpecialSentencePattern(coreMapList.get(0));
+            List<SentencePattern> result = SentencePatternUtil.findAllClauseType(coreMapList.get(0));
             return result;
         } catch (Exception e) {
             log.error("getSentencePattern | error: {}", e);

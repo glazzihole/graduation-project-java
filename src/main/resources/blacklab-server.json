@@ -22,7 +22,7 @@
     // NOTE: if multiple accessible collections contain indices with the 
     // same name, one of them is picked at random (i.e. don't do this).  
     "indexCollections": [
-        "C:/Users/GAILEI/Desktop/毕业论文相关/indexData"
+        "E:/毕业论文相关/indexData"
         
 //      e.g.:
 //      "/data1/blacklab/public-indices/",
@@ -34,7 +34,7 @@
     // index collections. So a subdirectory "jan" will contain indices 
     // that belong to user jan. Indices in these collections are only
     // available when that user is logged in.
-    "userCollectionsDir": "C:/Users/GAILEI/Desktop/毕业论文相关/indexData",
+    "userCollectionsDir": "E:/毕业论文相关/indexData",
 
     // A list of single indices, where they can be found,
     // and whether or not full document content may be retrieved

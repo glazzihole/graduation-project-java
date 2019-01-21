@@ -20,6 +20,9 @@ public class CorpusConstant {
     public static final int SUCCESS_CODE = 200;
     public static final int FAILED_CODE = 999999;
 
+    public static final String STRENGTHEN_OPEN_LABEL = "<b>";
+    public static final String STRENGTHEN_CLOSE_LABEL = "</b>";
+
     public static final HashSet<String> SYNTACTIC_PRIMING_STRUCTURE_SET = new HashSet<String>(){
         {
             add("ex");
