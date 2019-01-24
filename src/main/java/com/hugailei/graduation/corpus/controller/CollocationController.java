@@ -29,7 +29,7 @@ public class CollocationController {
     private CollocationService collocationService;
 
     /**
-     * 单词的搭配词查询
+     * 单词在语料库中的搭配词查询
      *
      * @param collocationDto
      * @return
@@ -62,4 +62,22 @@ public class CollocationController {
         }
         return ResponseUtil.success(result);
     }
+
+    /**
+     * 查询搭配词典及语料库，判断词对是否为正确、常用搭配
+     *
+     * @param wordPair
+     * @return
+     */
+    @GetMapping("/check")
+    @ResponseBody
+    public ResponseVO checkCollocation(@RequestParam("word_pair") String wordPair) {
+        log.info("checkCollocation | request to check collocation");
+        Boolean result = collocationService.checkCollocation(wordPair);
+        if (result == null) {
+            ResponseUtil.error();
+        }
+        return ResponseUtil.success(result);
+    }
+
 }

@@ -2,6 +2,7 @@ package com.hugailei.graduation.corpus.dao;
 
 import com.hugailei.graduation.corpus.domain.NgramWithTopic;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
  * description:
  * </p>
  **/
+@Repository
 public interface NgramWithTopicDao extends JpaRepository<NgramWithTopic, Long> {
     /**
      * 按语料库，ngram值及主题查找，并按频率降序排序

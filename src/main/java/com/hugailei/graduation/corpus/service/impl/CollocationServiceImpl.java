@@ -3,9 +3,11 @@ package com.hugailei.graduation.corpus.service.impl;
 import com.bfsuolframework.core.utils.StringUtils;
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import com.hugailei.graduation.corpus.dao.CollocationDao;
+import com.hugailei.graduation.corpus.dao.CollocationFromDictDao;
 import com.hugailei.graduation.corpus.dao.CollocationWithTopicDao;
 import com.hugailei.graduation.corpus.dao.WordExtensionDao;
 import com.hugailei.graduation.corpus.domain.Collocation;
+import com.hugailei.graduation.corpus.domain.CollocationFromDict;
 import com.hugailei.graduation.corpus.domain.CollocationWithTopic;
 import com.hugailei.graduation.corpus.domain.WordExtension;
 import com.hugailei.graduation.corpus.dto.CollocationDto;
@@ -17,6 +19,7 @@ import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -47,6 +50,9 @@ public class CollocationServiceImpl implements CollocationService {
 
     @Autowired
     private WordExtensionDao wordExtensionDao;
+
+    @Autowired
+    private CollocationFromDictDao collocationFromDictDao;
 
     private final static String NOT_IMPORTANT = "notsoimportant";
 
@@ -436,6 +442,52 @@ public class CollocationServiceImpl implements CollocationService {
     }
 
     /**
+     * 验证该词对是否为正确搭配，是返回true，否则返回false
+     *
+     * @param wordPair
+     * @return
+     */
+    @Override
+    public Boolean checkCollocation(String wordPair) {
+        try {
+            log.info("checkCollocation | word pair: {}", wordPair);
+            // 去除收尾及多余空格
+            wordPair = wordPair.trim().replaceAll(" +", " ");
+            // 先查找搭配词典
+            CollocationFromDict dictCollocation = collocationFromDictDao.findOneByCollocation(wordPair);
+            if (dictCollocation != null) {
+                return true;
+            }
+
+            // 若词典中不存在，则查找数据库
+            String[] wordArray = wordPair.split(" ");
+            String firstWord = "", secondWord = "", thirdWord = "";
+            if (wordArray.length == 2) {
+                firstWord = wordArray[0];
+                secondWord = wordArray[1];
+            }
+            else if (wordArray.length == 3) {
+                firstWord = wordArray[0];
+                secondWord = wordArray[1];
+                thirdWord = wordArray[2];
+            }
+            List<Collocation> collocationList = collocationDao.findAllByFirstWordAndSecondWordAndThirdWordOOrderByFreqDesc(firstWord, secondWord, thirdWord);
+            if (!CollectionUtils.isEmpty(collocationList)) {
+                // 判断搭配出现的次数是否达到一定数量标准
+                int maxFreq = collocationList.get(0).getFreq();
+                if (maxFreq >= 5) {
+                    return true;
+                }
+            }
+            return false;
+
+        } catch (Exception e) {
+            log.error("checkCollocation | error: {}", e);
+            return null;
+        }
+    }
+
+    /**
      * 原型搭配情况统计
      *
      * @param key
@@ -467,7 +519,6 @@ public class CollocationServiceImpl implements CollocationService {
         secondPos = temp[3].toUpperCase();
         String posCollocationKey;
         if (temp.length == 6) {
-            thirdWord = temp[4];
             thirdPos = temp[5].toUpperCase();
             freq = 1;
             posCollocationKey = (firstWord + "_" + firstPos + "_" + secondWord + "_" + secondPos + "_" + NOT_IMPORTANT + "_" + thirdPos).toLowerCase();

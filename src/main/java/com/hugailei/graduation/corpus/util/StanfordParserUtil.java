@@ -125,7 +125,7 @@ public class StanfordParserUtil {
 
 
     public static void main(String[] args) {
-        String text = "angry with";
+        String text = "Every window was ablaze with light.";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         StringBuilder stringBuilder = new StringBuilder();
         // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
@@ -151,33 +151,33 @@ public class StanfordParserUtil {
             }
 
             // 关系提取
-            result = relationParse(sentence.toString());
-            for (CoreMap s : result) {
-                List<RelationTriple> realtions = new ArrayList<>(s.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class));
-                sortRelationTripleList(realtions);
-                double confidence = 0;
-                // 最短的句子
-                String shortest = s.toString();
-                // 最长的句子
-                String longest = "";
-                for (RelationTriple relation : realtions) {
-                    // 找出“可信度”最高的一批
-                    if (relation.confidence >= confidence) {
-                        confidence = relation.confidence;
-                        String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
-                        if (temp.split(" ").length >= longest.split(" ").length) {
-                            longest = temp;
-                        }
-                        if (temp.split(" ").length <= shortest.split(" ").length) {
-                            shortest = temp;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-                System.out.println(shortest);
-                System.out.println(longest);
-            }
+//            result = relationParse(sentence.toString());
+//            for (CoreMap s : result) {
+//                List<RelationTriple> realtions = new ArrayList<>(s.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class));
+//                sortRelationTripleList(realtions);
+//                double confidence = 0;
+//                // 最短的句子
+//                String shortest = s.toString();
+//                // 最长的句子
+//                String longest = "";
+//                for (RelationTriple relation : realtions) {
+//                    // 找出“可信度”最高的一批
+//                    if (relation.confidence >= confidence) {
+//                        confidence = relation.confidence;
+//                        String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
+//                        if (temp.split(" ").length >= longest.split(" ").length) {
+//                            longest = temp;
+//                        }
+//                        if (temp.split(" ").length <= shortest.split(" ").length) {
+//                            shortest = temp;
+//                        }
+//                    } else {
+//                        break;
+//                    }
+//                }
+//                System.out.println(shortest);
+//                System.out.println(longest);
+//            }
         }
     }
 }

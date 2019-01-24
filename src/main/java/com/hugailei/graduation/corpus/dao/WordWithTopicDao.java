@@ -2,6 +2,7 @@ package com.hugailei.graduation.corpus.dao;
 
 import com.hugailei.graduation.corpus.domain.WordWithTopic;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
  * description:
  * </p>
  **/
+@Repository
 public interface WordWithTopicDao extends JpaRepository<WordWithTopic, Long> {
     /**
      * 查询指定语料库中指定主题下的单词列表，并按照频次降序排序

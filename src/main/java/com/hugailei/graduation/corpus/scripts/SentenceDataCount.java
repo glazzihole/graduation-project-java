@@ -35,7 +35,6 @@ public class SentenceDataCount {
     private static final String DB_HOST = "192.168.99.100";
     private static final String DB_PORT = "3307";
     private static final String DB_NAME="corpus";
-    private static final String COLL_NAME="tb_rank_word";
     private static final String USER_NAME="root";
     private static final String USER_PASSWORD="123456";
 

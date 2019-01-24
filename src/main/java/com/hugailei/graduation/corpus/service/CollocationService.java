@@ -35,4 +35,12 @@ public interface CollocationService {
      * @return
      */
     CollocationDto.CollocationInfo getCollocationInText(String text);
+
+    /**
+     * 验证该词对是否为正确搭配，是返回true，否则返回false
+     *
+     * @param wordPair
+     * @return
+     */
+    Boolean checkCollocation(String wordPair);
 }
