@@ -29,9 +29,9 @@ import java.util.List;
  * </p>
  **/
 public class SentenceDataCount {
-    private static final String ARTICLE_FILE_PATH = "";
-    private static final String OUTPUT_FILE_PATH = "";
-    private static final int LEVEL = 0;
+    private static final String ARTICLE_FILE_PATH = "E:\\毕业论文相关\\作文\\ielts.txt";
+    private static final String OUTPUT_FILE_PATH = "E:\\毕业论文相关\\作文\\统计结果\\ielts.txt";
+    private static final int LEVEL = 5;
     private static final String DB_HOST = "192.168.99.100";
     private static final String DB_PORT = "3307";
     private static final String DB_NAME="corpus";
@@ -75,7 +75,7 @@ public class SentenceDataCount {
 
                         String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
                         PreparedStatement ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                "and rankNum = ?");
+                                "and rank_num = ?");
                         ps.setString(1, lemma);
                         ps.setInt(2, 1);
                         ResultSet rs = ps.executeQuery();
@@ -87,7 +87,7 @@ public class SentenceDataCount {
                         }
                         if (!found) {
                             ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                    "and rankNum = ?");
+                                    "and rank_num = ?");
                             ps.setString(1, lemma);
                             ps.setInt(2, 2);
                             rs = ps.executeQuery();
@@ -99,7 +99,7 @@ public class SentenceDataCount {
                         }
                         if (!found) {
                             ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                    "and rankNum = ?");
+                                    "and rank_num = ?");
                             ps.setString(1, lemma);
                             ps.setInt(2, 3);
                             rs = ps.executeQuery();
@@ -111,7 +111,7 @@ public class SentenceDataCount {
                         }
                         if (!found) {
                             ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                    "and rankNum = ?");
+                                    "and rank_num = ?");
                             ps.setString(1, lemma);
                             ps.setInt(2, 4);
                             rs = ps.executeQuery();
@@ -123,7 +123,7 @@ public class SentenceDataCount {
                         }
                         if (!found) {
                             ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                    "and rankNum = ?");
+                                    "and rank_num = ?");
                             ps.setString(1, lemma);
                             ps.setInt(2, 5);
                             rs = ps.executeQuery();
@@ -135,7 +135,7 @@ public class SentenceDataCount {
                         }
                         if (!found) {
                             ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                    "and rankNum = ?");
+                                    "and rank_num = ?");
                             ps.setString(1, lemma);
                             ps.setInt(2, 6);
                             rs = ps.executeQuery();
@@ -164,7 +164,8 @@ public class SentenceDataCount {
                                 level4WordCount + "\t" +
                                 level5WordCount + "\t" +
                                 level6WordCount;
-                    fileWriter.write(out);
+                    System.out.println(out);
+                    fileWriter.write(out + "\r\n");
                     fileWriter.flush();
                 } // for (CoreMap sentence : result)
             } // while line

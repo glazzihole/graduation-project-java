@@ -1,5 +1,7 @@
 package com.hugailei.graduation.corpus.scripts;
 
+import com.bfsuolframework.core.utils.StringUtils;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -56,8 +58,9 @@ public class SaveCollocationFromDict {
             else if (line.contains(">verb<") ||
                     line.contains(">noun<") ||
                     line.contains(">adj.<") ||
-                    line.contains(">adv.<")) {
-                Pattern pattern = Pattern.compile(">(noun)|(verb)|(adv\\.)|(adj\\.)<");
+                    line.contains(">adv.<") ||
+                    line.contains("phr verb")) {
+                Pattern pattern = Pattern.compile(">(noun)|(verb)|(adv\\.)|(adj\\.)|(phr verb)<");
                 Matcher matcher = pattern.matcher(line);
                 if(matcher.find()) {
                     pos = matcher.group().replace(">", "").replace("<", "");
@@ -76,7 +79,7 @@ public class SaveCollocationFromDict {
                     switch (collocationPos) {
                         case "VERB":
                             if (pos.equals("noun")) {
-                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z ]+</b></font>");
+                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z\\- ]+</b></font>");
                                 Matcher collocationMatcher = collocationPattern.matcher(line);
                                 while (collocationMatcher.find()) {
                                     collocation = collocationMatcher.group()
@@ -94,7 +97,7 @@ public class SaveCollocationFromDict {
                                 }
                             }
                             else if (pos.equals("adv.")) {
-                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z ]+</b></font>");
+                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z\\- ]+</b></font>");
                                 Matcher collocationMatcher = collocationPattern.matcher(line);
                                 while (collocationMatcher.find()) {
                                     collocation = word + " " + collocationMatcher.group()
@@ -127,7 +130,7 @@ public class SaveCollocationFromDict {
                             break;
                         case "ADVERB":
                             if (pos.equals("adj.")) {
-                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z ]+</b></font>");
+                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z\\- ]+</b></font>");
                                 Matcher collocationMatcher = collocationPattern.matcher(line);
                                 while (collocationMatcher.find()) {
                                     collocation = collocationMatcher.group()
@@ -145,7 +148,7 @@ public class SaveCollocationFromDict {
                                 }
                             }
                             else if (pos.equals("verb")) {
-                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z ]+</b></font>");
+                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z\\- ]+</b></font>");
                                 Matcher collocationMatcher = collocationPattern.matcher(line);
                                 while (collocationMatcher.find()) {
                                     collocation = collocationMatcher.group()
@@ -178,7 +181,7 @@ public class SaveCollocationFromDict {
                             break;
                         case "PREPOSITION":
                             if (pos.equals("verb") || pos.equals("adj.")) {
-                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z ]+</b></font>");
+                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z\\- ]+</b></font>");
                                 Matcher collocationMatcher = collocationPattern.matcher(line);
                                 while (collocationMatcher.find()) {
                                     collocation = word + " " + collocationMatcher.group()
@@ -198,7 +201,7 @@ public class SaveCollocationFromDict {
                             break;
                         case "ADJECTIVE":
                             if (pos.equals("noun")) {
-                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z ]+</b></font>");
+                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z\\- ]+</b></font>");
                                 Matcher collocationMatcher = collocationPattern.matcher(line);
                                 while (collocationMatcher.find()) {
                                     collocation = collocationMatcher.group()
@@ -216,7 +219,7 @@ public class SaveCollocationFromDict {
                                 }
                             }
                             else if (pos.equals("adv.")) {
-                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z ]+</b></font>");
+                                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z\\- ]+</b></font>");
                                 Matcher collocationMatcher = collocationPattern.matcher(line);
                                 while (collocationMatcher.find()) {
                                     collocation = word + " " + collocationMatcher.group()
@@ -241,7 +244,7 @@ public class SaveCollocationFromDict {
             }
 
             else if (line.contains("is used with these verbs")) {
-                Pattern collocationPattern = Pattern.compile("<a href='entry://[A-Za-z]+'>");
+                Pattern collocationPattern = Pattern.compile("<a href='entry://[A-Za-z\\- ]+'>");
                 Matcher collocationMatcher = collocationPattern.matcher(line);
                 while (collocationMatcher.find()) {
                     collocation = collocationMatcher.group()
@@ -254,7 +257,7 @@ public class SaveCollocationFromDict {
                     ps.setString(1, word);
                     ps.setString(2, pos);
                     ps.setString(3, collocation);
-                    ps.setString(4, collocationPos);
+                    ps.setString(4, "VERB");
                     ps.execute();
                     if (pos.equals("adv.")){
                         collocation = word + " " + collocationMatcher.group()
@@ -267,34 +270,36 @@ public class SaveCollocationFromDict {
                         ps.setString(1, word);
                         ps.setString(2, pos);
                         ps.setString(3, collocation);
-                        ps.setString(4, collocationPos);
+                        ps.setString(4, "VERB");
                         ps.execute();
                     }
                 }
             }
             else if (line.contains("is used with these adjectives")) {
-                Pattern collocationPattern = Pattern.compile("<a href='entry://[A-Za-z]+'>");
+                Pattern collocationPattern = Pattern.compile("<a href='entry://[A-Za-z\\- ]+'>");
                 Matcher collocationMatcher = collocationPattern.matcher(line);
                 while (collocationMatcher.find()) {
-                    collocation = collocationMatcher.group()
-                            .replace("<a href='entry://", "")
-                            .replace("'>", "")
-                            .trim() + " " + word;
-                    System.out.println(collocation);
-                    PreparedStatement ps = con.prepareStatement("INSERT INTO tb_dict_collocation(word, pos, collocation, collocation_pos) " +
-                            "VALUES(?, ?, ?, ?) ");
-                    ps.setString(1, word);
-                    ps.setString(2, pos);
-                    ps.setString(3, collocation);
-                    ps.setString(4, collocationPos);
-                    ps.execute();
                     if (pos.equals("adv.")){
                         collocation = word + " " + collocationMatcher.group()
                                 .replace("<a href='entry://", "")
                                 .replace("'>", "")
                                 .trim();
                         System.out.println(collocation);
-                        ps = con.prepareStatement("INSERT INTO tb_dict_collocation(word, pos, collocation, collocation_pos) " +
+                        PreparedStatement ps = con.prepareStatement("INSERT INTO tb_dict_collocation(word, pos, collocation, collocation_pos) " +
+                                "VALUES(?, ?, ?, ?) ");
+                        ps.setString(1, word);
+                        ps.setString(2, pos);
+                        ps.setString(3, collocation);
+                        ps.setString(4, "ADJECTIVE");
+                        ps.execute();
+                    }
+                    else {
+                        collocation = collocationMatcher.group()
+                                .replace("<a href='entry://", "")
+                                .replace("'>", "")
+                                .trim() + " " + word;
+                        System.out.println(collocation);
+                        PreparedStatement ps = con.prepareStatement("INSERT INTO tb_dict_collocation(word, pos, collocation, collocation_pos) " +
                                 "VALUES(?, ?, ?, ?) ");
                         ps.setString(1, word);
                         ps.setString(2, pos);
@@ -305,7 +310,7 @@ public class SaveCollocationFromDict {
                 }
             }
             else if (line.contains("is used with these nouns as the subject")) {
-                Pattern collocationPattern = Pattern.compile("<a href='entry://[A-Za-z]+'>");
+                Pattern collocationPattern = Pattern.compile("<a href='entry://[A-Za-z\\- ]+'>");
                 Matcher collocationMatcher = collocationPattern.matcher(line);
                 while (collocationMatcher.find()) {
                     collocation = collocationMatcher.group()
@@ -318,12 +323,12 @@ public class SaveCollocationFromDict {
                     ps.setString(1, word);
                     ps.setString(2, pos);
                     ps.setString(3, collocation);
-                    ps.setString(4, collocationPos);
+                    ps.setString(4, "NOUN");
                     ps.execute();
                 }
             }
             else if (line.contains("is used with these nouns as the object")) {
-                Pattern collocationPattern = Pattern.compile("<a href='entry://[A-Za-z]+'>");
+                Pattern collocationPattern = Pattern.compile("<a href='entry://[A-Za-z\\- ]+'>");
                 Matcher collocationMatcher = collocationPattern.matcher(line);
                 while (collocationMatcher.find()) {
                     collocation = word + " " + collocationMatcher.group()
@@ -336,12 +341,12 @@ public class SaveCollocationFromDict {
                     ps.setString(1, word);
                     ps.setString(2, pos);
                     ps.setString(3, collocation);
-                    ps.setString(4, collocationPos);
+                    ps.setString(4, "NOUN");
                     ps.execute();
                 }
             }
             else if (line.contains("is used with these nouns")) {
-                Pattern collocationPattern = Pattern.compile("<a href='entry://[A-Za-z]+'>");
+                Pattern collocationPattern = Pattern.compile("<a href='entry://[A-Za-z\\- ]+'>");
                 Matcher collocationMatcher = collocationPattern.matcher(line);
                 while (collocationMatcher.find()) {
                     collocation = word + " " + collocationMatcher.group()
@@ -354,13 +359,13 @@ public class SaveCollocationFromDict {
                     ps.setString(1, word);
                     ps.setString(2, pos);
                     ps.setString(3, collocation);
-                    ps.setString(4, collocationPos);
+                    ps.setString(4, "NOUN");
                     ps.execute();
                 }
             }
 
             if (line.contains(word.toUpperCase() + " + VERB")) {
-                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z ]+</b></font>");
+                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z\\- ]+</b></font>");
                 Matcher collocationMatcher = collocationPattern.matcher(line);
                 while (collocationMatcher.find()) {
                     collocation = word + " " + collocationMatcher.group()
@@ -373,12 +378,12 @@ public class SaveCollocationFromDict {
                     ps.setString(1, word);
                     ps.setString(2, pos);
                     ps.setString(3, collocation);
-                    ps.setString(4, collocationPos);
+                    ps.setString(4, "VERB");
                     ps.execute();
                 }
             }
             else if (line.contains("VERB + " + word.toUpperCase())) {
-                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z ]+</b></font>");
+                Pattern collocationPattern = Pattern.compile("<font color=black><b>[a-zA-Z\\- ]+</b></font>");
                 Matcher collocationMatcher = collocationPattern.matcher(line);
                 while (collocationMatcher.find()) {
                     collocation = collocationMatcher.group()
@@ -391,22 +396,21 @@ public class SaveCollocationFromDict {
                     ps.setString(1, word);
                     ps.setString(2, pos);
                     ps.setString(3, collocation);
-                    ps.setString(4, collocationPos);
+                    ps.setString(4, "VERB");
                     ps.execute();
                 }
             }
 
             // 词组，直接存储
             if (line.matches("[a-zA-Z ]+") && line.contains(" ")) {
-                word = line.split(" ")[0];
                 collocation = line;
                 System.out.println(collocation);
                 PreparedStatement ps = con.prepareStatement("INSERT INTO tb_dict_collocation(word, pos, collocation, collocation_pos) " +
                         "VALUES(?, ?, ?, ?) ");
-                ps.setString(1, word);
-                ps.setString(2, pos);
+                ps.setString(1, line.split(" ")[0]);
+                ps.setString(2, "verb");
                 ps.setString(3, collocation);
-                ps.setString(4, collocationPos);
+                ps.setString(4, StringUtils.isBlank(collocationPos)?"PREPOSITION":collocationPos);
                 ps.execute();
             }
         }

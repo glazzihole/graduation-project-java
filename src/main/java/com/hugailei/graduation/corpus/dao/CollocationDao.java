@@ -23,5 +23,5 @@ public interface CollocationDao extends JpaRepository<Collocation, Long> {
      * @param thirdWord
      * @return
      */
-    List<Collocation> findAllByFirstWordAndSecondWordAndThirdWordOOrderByFreqDesc(String firstWord, String secondWord, String thirdWord);
+    List<Collocation> findAllByFirstWordAndSecondWordAndThirdWordOrderByFreqDesc(String firstWord, String secondWord, String thirdWord);
 }

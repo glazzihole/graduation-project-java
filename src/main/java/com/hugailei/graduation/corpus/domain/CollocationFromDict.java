@@ -18,7 +18,11 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "tb_dict_collocation")
+@Table(name = "tb_dict_collocation",
+        indexes = {
+                @Index(name = "word", columnList = "word", unique = true),
+                @Index(name = "collocation", columnList = "collocation", unique = true)
+        })
 public class CollocationFromDict implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id

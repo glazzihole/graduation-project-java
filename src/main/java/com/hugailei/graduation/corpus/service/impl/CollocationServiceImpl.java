@@ -14,6 +14,7 @@ import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.service.CollocationService;
 import com.hugailei.graduation.corpus.util.SentencePatternUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
+import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
@@ -162,51 +163,119 @@ public class CollocationServiceImpl implements CollocationService {
             Optional<WordExtension> tempResult = wordExtensionDao.findOne(example);
             String words = tempResult.isPresent() ? tempResult.get().getResults() : "";
 
-            // 将每个同义词和相似词和原来的搭配词进行组合，进行搭配查询，看是否存在该搭配f，若存在，则放入结果集中
-            List<CollocationDto> resultList = new ArrayList<>();
+            // 将每个同义词和相似词和原来的搭配词进行组合，进行搭配查询，看是否存在该搭配，若存在，则放入结果集中
+            List<CollocationDto> resultListFromCorpus = new ArrayList<>();
+            List<CollocationDto> resultListFromDict = new ArrayList<>();
             CollocationWithTopic collocationWithTopic = new CollocationWithTopic();
             BeanUtils.copyProperties(collocationDto, collocationWithTopic);
 
+            // 先根据搭配中的非变动部分进行一次查询，后续查询在此次查询的基础上进行子查询，提升效率
+            if (collocationDto.getPosition() == 1) {
+                collocationWithTopic.setFirstWord(null);
+            } else if (collocationDto.getPosition() == 2) {
+                collocationWithTopic.setSecondWord(null);
+            } else {
+                collocationWithTopic.setThirdWord(null);
+            }
+            List<Collocation> tempCollocationList = new ArrayList<>();
+            List<CollocationWithTopic> tempCollocationWithTopic = new ArrayList<>();
+            if (collocationDto.getTopic() == null) {
+                Collocation collocation = new Collocation();
+                BeanUtils.copyProperties(collocationWithTopic, collocation);
+                Example<Collocation> collocationExample = Example.of(collocation);
+                tempCollocationList = collocationDao.findAll(collocationExample);
+            } else {
+                Example<CollocationWithTopic> collocationWithTopicExample = Example.of(collocationWithTopic);
+                tempCollocationWithTopic = collocationWithTopicDao.findAll(collocationWithTopicExample);
+            }
+
             for (String word : words.split(",")) {
                 if (collocationDto.getPosition() == 1) {
+                    if (word.equals(collocationDto.getFirstWord())) {
+                        continue;
+                    }
                     collocationWithTopic.setFirstWord(word);
                 } else if (collocationDto.getPosition() == 2) {
+                    if (word.equals(collocationDto.getSecondWord())) {
+                        continue;
+                    }
                     collocationWithTopic.setSecondWord(word);
                 } else {
+                    if (word.equals(collocationDto.getThirdWord())) {
+                        continue;
+                    }
                     collocationWithTopic.setThirdWord(word);
                 }
 
                 // 不带主题的查询
                 if (collocationDto.getTopic() == null) {
-                    Collocation collocation = new Collocation();
-                    BeanUtils.copyProperties(collocationWithTopic, collocation);
-                    Example<Collocation> collocationExample = Example.of(collocation);
-
-                    List<Collocation> collocationList = collocationDao.findAll(collocationExample);
-                    if (collocationList.size() >= 1) {
-                        CollocationDto result = new CollocationDto();
-                        collocationList.forEach(coll -> {
-                            BeanUtils.copyProperties(coll, result);
-                            resultList.add(result);
-                        });
+                    // 若未指定语料库，则先查询搭配词典，若搭配词典中查询不到再查询语料库
+                    if (collocationDto.getCorpus() == null) {
+                        String collocation = collocationWithTopic.getFirstWord() + " " + collocationWithTopic.getSecondWord();
+                        if (StringUtils.isBlank(collocationWithTopic.getThirdWord())) {
+                            collocation = collocation + " " + collocationWithTopic.getThirdWord();
+                        }
+                        CollocationFromDict collocationFromDict = collocationFromDictDao.findFirstByCollocation(collocation);
+                        if (collocationFromDict != null) {
+                            CollocationDto result = new CollocationDto();
+                            String[] wordArray = collocationFromDict.getCollocation().split(" ");
+                            if (wordArray.length == 2) {
+                                result.setFirstWord(wordArray[0]);
+                                result.setSecondWord(wordArray[1]);
+                            }
+                            else if (wordArray.length == 3) {
+                                result.setFirstWord(wordArray[0]);
+                                result.setSecondWord(wordArray[1]);
+                                result.setThirdWord(wordArray[2]);
+                            }
+                            result.setCorpus("Oxford Collocations Dictionary");
+                            resultListFromDict.add(result);
+                            continue;
+                        }
+                    }
+                    // 在上面templist中进行子查询
+                    for (Collocation collocation : tempCollocationList) {
+                        String synWord;
+                        if (collocationDto.getPosition() == 1) {
+                            synWord = collocation.getFirstWord();
+                        } else if (collocationDto.getPosition() == 2) {
+                            synWord = collocation.getSecondWord();
+                        } else {
+                            synWord = collocation.getThirdWord();
+                        }
+                        if (word.equals(synWord)) {
+                            CollocationDto coll = new CollocationDto();
+                            BeanUtils.copyProperties(collocation, coll);
+                            resultListFromCorpus.add(coll);
+                        }
                     }
                 }
                 // 带主题的查询
                 else {
-                    List<CollocationWithTopic> collocationWithTopicList = collocationWithTopicDao.findAll(Example.of(collocationWithTopic));
-                    if (!collocationWithTopicList.isEmpty()) {
-                        CollocationDto result = new CollocationDto();
-                        collocationWithTopicList.forEach(coll -> {
-                            BeanUtils.copyProperties(coll, result);
-                            resultList.add(result);
-                        });
+                    // 在上面templist中进行子查询
+                    for (CollocationWithTopic collWithTopic : tempCollocationWithTopic) {
+                        String synWord;
+                        if (collocationDto.getPosition() == 1) {
+                            synWord = collWithTopic.getFirstWord();
+                        } else if (collocationDto.getPosition() == 2) {
+                            synWord = collWithTopic.getSecondWord();
+                        } else {
+                            synWord = collWithTopic.getThirdWord();
+                        }
+                        if (word.equals(synWord)) {
+                            CollocationDto coll = new CollocationDto();
+                            BeanUtils.copyProperties(collWithTopic, coll);
+                            resultListFromCorpus.add(coll);
+                        }
                     }
                 }
             }
-            sortCollocationDtoList(resultList);
+            List<CollocationDto> resultList = new ArrayList<>();
+            sortCollocationDtoList(resultListFromCorpus);
+            resultList.addAll(resultListFromDict);
+            resultList.addAll(resultListFromCorpus);
             log.info("searchSynonymousCollocation | result size: {}", (resultList != null ? resultList.size() : 0));
             return resultList;
-
         } catch (Exception e) {
             log.error("searchSynonymousCollocation | error: {}", e);
             return null;
@@ -447,6 +516,7 @@ public class CollocationServiceImpl implements CollocationService {
      * @param wordPair
      * @return
      */
+    @Cacheable(value = "corpus", key = "'collocation_check' + #wordPair", unless = "#result eq null")
     @Override
     public Boolean checkCollocation(String wordPair) {
         try {
@@ -454,7 +524,7 @@ public class CollocationServiceImpl implements CollocationService {
             // 去除收尾及多余空格
             wordPair = wordPair.trim().replaceAll(" +", " ");
             // 先查找搭配词典
-            CollocationFromDict dictCollocation = collocationFromDictDao.findOneByCollocation(wordPair);
+            CollocationFromDict dictCollocation = collocationFromDictDao.findFirstByCollocation(wordPair);
             if (dictCollocation != null) {
                 return true;
             }
@@ -471,11 +541,11 @@ public class CollocationServiceImpl implements CollocationService {
                 secondWord = wordArray[1];
                 thirdWord = wordArray[2];
             }
-            List<Collocation> collocationList = collocationDao.findAllByFirstWordAndSecondWordAndThirdWordOOrderByFreqDesc(firstWord, secondWord, thirdWord);
+            List<Collocation> collocationList = collocationDao.findAllByFirstWordAndSecondWordAndThirdWordOrderByFreqDesc(firstWord, secondWord, thirdWord);
             if (!CollectionUtils.isEmpty(collocationList)) {
                 // 判断搭配出现的次数是否达到一定数量标准
                 int maxFreq = collocationList.get(0).getFreq();
-                if (maxFreq >= 5) {
+                if (maxFreq >= 3) {
                     return true;
                 }
             }
@@ -483,6 +553,131 @@ public class CollocationServiceImpl implements CollocationService {
 
         } catch (Exception e) {
             log.error("checkCollocation | error: {}", e);
+            return null;
+        }
+    }
+
+    /**
+     * 同义搭配推荐，暂时只对二词搭配作推荐
+     *
+     * @param wordPair
+     * @param posPair
+     * @return
+     */
+    @Cacheable(value = "corpus", key = "'collocation_syn_recommend' + #wordPair + '-' + #posPair", unless = "#result eq null")
+    @Override
+    public List<CollocationDto> recommendSynonym(String wordPair, String posPair) {
+        try {
+            log.info("recommendSynonym | words: {}, pos{}", wordPair, posPair);
+            // 仅支持二词搭配
+            if (wordPair.split(",").length != 2 || (!StringUtils.isBlank(posPair) && posPair.split(",").length != 2)) {
+                throw new Exception("only two-words' collocation is supported");
+            }
+            // 获取搭配中各词的原型和词性
+            List<CoreMap> coreMapList = StanfordParserUtil.parse(wordPair.replace(",", " "));
+            String firstWord = coreMapList
+                    .get(0)
+                    .get(CoreAnnotations.TokensAnnotation.class)
+                    .get(0)
+                    .get(CoreAnnotations.LemmaAnnotation.class);
+            String secondWord = coreMapList
+                    .get(0)
+                    .get(CoreAnnotations.TokensAnnotation.class)
+                    .get(1)
+                    .get(CoreAnnotations.LemmaAnnotation.class);
+            String firstWordPos = coreMapList
+                    .get(0)
+                    .get(CoreAnnotations.TokensAnnotation.class)
+                    .get(0)
+                    .get(CoreAnnotations.PartOfSpeechAnnotation.class);
+            String secondWordPos = coreMapList
+                    .get(0)
+                    .get(CoreAnnotations.TokensAnnotation.class)
+                    .get(1)
+                    .get(CoreAnnotations.PartOfSpeechAnnotation.class);
+            if (!StringUtils.isBlank(posPair)) {
+                firstWordPos = posPair.split(",")[0];
+                secondWordPos = posPair.split(",")[1];
+            }
+            String wordPairPos = firstWordPos + "-" + secondWordPos;
+            // 根据词性组合情况获取同义搭配
+            List<CollocationDto> resultList = new ArrayList<>();
+            // 形容词 + 名词、动词 + 名词、副词 + 形容词、动词 + 副词、副词 + 动词的组合，查找第一个词的同义词
+            if (wordPairPos.matches("JJ-NN") ||
+                wordPairPos.matches("VB-NN") ||
+                wordPairPos.matches("RB-JJ") ||
+                wordPairPos.matches("VB-RB") ||
+                wordPairPos.matches("RB-VB") ||
+                wordPairPos.matches("JJ-IN")) {
+                CollocationDto collocationDto = new CollocationDto();
+                collocationDto.setFirstPos(firstWordPos);
+                collocationDto.setFirstWord(firstWord);
+                collocationDto.setSecondPos(secondWordPos);
+                collocationDto.setSecondWord(secondWord);
+                collocationDto.setPosition(1);
+                resultList.addAll(searchSynonymousCollocation(collocationDto));
+            }
+            // 名词 + 动词、副词 + 形容词、动词 + 副词、副词 + 动词的组合，查找第二个词的同义词
+            else if (wordPairPos.matches("NN-VB")||
+                    wordPairPos.matches("RB-JJ") ||
+                    wordPairPos.matches("VB-RB") ||
+                    wordPairPos.matches("RB-VB")) {
+                CollocationDto collocationDto = new CollocationDto();
+                collocationDto.setSecondPos(secondWordPos);
+                collocationDto.setSecondWord(secondWord);
+                collocationDto.setFirstPos(firstWordPos);
+                collocationDto.setFirstWord(firstWord);
+                collocationDto.setPosition(2);
+                resultList.addAll(searchSynonymousCollocation(collocationDto));
+            }
+            return resultList;
+        } catch (Exception e) {
+            log.error("recommendSynonym | error: {}", e);
+            return null;
+        }
+    }
+
+    /**
+     * 查找搭配词典中的搭配，查找单词在搭配词典中的搭配，按照词性、搭配词词性及搭配分类
+     *
+     * @param word
+     * @return
+     */
+    @Cacheable(value = "corpus", key = "'collocation_search_dict' + #word", unless = "#result eq null")
+    @Override
+    public Map<String, Map<String, Set<String>>> searchCollocationInDict(String word) {
+        try {
+            log.info("searchCollocationInDict | word: {}", word);
+            List<CollocationFromDict> collocationFromDictList = collocationFromDictDao.findAllByWord(word);
+            Map<String, Map<String, Set<String>>> pos2collocationPos2Collocation = new LinkedHashMap<>();
+            for (CollocationFromDict collocationInfo : collocationFromDictList) {
+                String pos = collocationInfo.getPos();
+                String collocationPos = collocationInfo.getCollocationPos();
+                String collocation = collocationInfo.getCollocation();
+                if (pos2collocationPos2Collocation.containsKey(pos)) {
+                    Map<String, Set<String>> collocationPos2Collocation = pos2collocationPos2Collocation.get(pos);
+                    if (collocationPos2Collocation.containsKey(collocationPos)) {
+                        Set<String> collocationSet = collocationPos2Collocation.get(collocationPos);
+                        collocationSet.add(collocation);
+                        collocationPos2Collocation.put(collocationPos, collocationSet);
+                        pos2collocationPos2Collocation.put(pos, collocationPos2Collocation);
+                    } else {
+                        Set<String> collocationSet = new LinkedHashSet<>();
+                        collocationSet.add(collocation);
+                        collocationPos2Collocation.put(collocationPos, collocationSet);
+                        pos2collocationPos2Collocation.put(pos, collocationPos2Collocation);
+                    }
+                } else {
+                    Map<String, Set<String>> collocationPos2Collocation = new LinkedHashMap<>();
+                    Set<String> collocationSet = new LinkedHashSet<>();
+                    collocationSet.add(collocation);
+                    collocationPos2Collocation.put(collocationPos, collocationSet);
+                    pos2collocationPos2Collocation.put(pos, collocationPos2Collocation);
+                }
+            }
+            return pos2collocationPos2Collocation;
+        } catch (Exception e) {
+            log.error("searchCollocationInDict | error: {}", e);
             return null;
         }
     }
@@ -512,7 +707,7 @@ public class CollocationServiceImpl implements CollocationService {
                                              Map<String, Integer> posCollocationKey2Freq) {
         int freq = 1;
         String[] temp = key.split("_");
-        String firstWord,  firstPos, secondWord, secondPos, thirdWord = null, thirdPos = null;
+        String firstWord,  firstPos, secondWord, secondPos, thirdPos;
         firstWord = temp[0];
         firstPos = temp[1].toUpperCase();
         secondWord = temp[2];

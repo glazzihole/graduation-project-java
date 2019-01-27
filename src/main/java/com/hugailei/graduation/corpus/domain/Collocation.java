@@ -27,37 +27,37 @@ public class Collocation implements Serializable {
     /**
      * 搭配中的第一个单词
      */
-    @Column(name = "first_word")
+    @Column(name = "first_word", length = 30)
     private String firstWord;
 
     /**
      * 搭配中的第一个单词的词性
      */
-    @Column(name = "first_pos")
+    @Column(name = "first_pos", length = 5)
     private String firstPos;
 
     /**
      * 搭配中的第二个单词
      */
-    @Column(name = "second_word")
+    @Column(name = "second_word", length = 30)
     private String secondWord;
 
     /**
      * 搭配中的第二个单词的词性
      */
-    @Column(name = "second_pos")
+    @Column(name = "second_pos", length = 5)
     private String secondPos;
 
     /**
      * 搭配中的第三个单词
      */
-    @Column(name = "third_word")
+    @Column(name = "third_word", length = 30)
     private String thirdWord;
 
     /**
      * 搭配中的第三个单词的词性
      */
-    @Column(name = "third_pos")
+    @Column(name = "third_pos", length = 5)
     private String thirdPos;
 
     /**

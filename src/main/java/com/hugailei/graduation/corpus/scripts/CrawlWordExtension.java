@@ -27,7 +27,7 @@ import java.util.Set;
  **/
 public class CrawlWordExtension {
     public static final String URL = "https://tuna.thesaurus.com/relatedWords/{1}?limit=9&offset=0";
-    public static final String WORD_LIST_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\word\\allwords.txt";
+    public static final String WORD_LIST_FILE_PATH = "E:\\毕业论文相关\\word\\allwords.txt";
 
     private static final String DB_HOST = "192.168.99.100";
     private static final String DB_PORT = "3307";

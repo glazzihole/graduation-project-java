@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author HU Gailei
@@ -80,4 +82,33 @@ public class CollocationController {
         return ResponseUtil.success(result);
     }
 
+    /**
+     * 同义搭配词推荐
+     *
+     * @param wordPair
+     * @param posPair
+     * @return
+     */
+    @GetMapping("/synonym/recommend")
+    @ResponseBody
+    public ResponseVO recommendSynonym(@RequestParam("word_pair") String wordPair,
+                                       @RequestParam("pos_pair") String posPair) {
+        log.info("recommendSynonym | request to recommend synonym collocation");
+        List<CollocationDto> result = collocationService.recommendSynonym(wordPair, posPair);
+        if (result == null) {
+            ResponseUtil.error();
+        }
+        return ResponseUtil.success(result);
+    }
+
+    @GetMapping("/dict")
+    @ResponseBody
+    public ResponseVO searchCollocationInDict(@RequestParam String word) {
+        log.info("searchDict | request to search collocation in dict");
+        Map<String, Map<String, Set<String>>> result = collocationService.searchCollocationInDict(word);
+        if (result == null) {
+            ResponseUtil.error();
+        }
+        return ResponseUtil.success(result);
+    }
 }
