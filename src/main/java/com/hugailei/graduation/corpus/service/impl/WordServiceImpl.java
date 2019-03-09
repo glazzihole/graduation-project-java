@@ -15,10 +15,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -40,10 +37,10 @@ public class WordServiceImpl implements WordService {
     private WordWithTopicDao wordWithTopicDao;
 
     @Override
-    @Cacheable(value = "corpus", key = "#corpus + '_' + #topic", unless = "#result eq null")
-    public List<WordDto> wordList(String corpus, int topic) {
+    @Cacheable(value = "corpus", key = "#corpus + '_' + #topic + '_' + rankNum", unless = "#result eq null")
+    public List<WordDto> wordList(String corpus, int topic, Integer rankNum) {
         try {
-            log.info("wordList | corpus: {}, topic: {}", corpus, topic);
+            log.info("wordList | corpus: {}, topic: {}, rank num: {}", corpus, topic, rankNum);
             List<WordDto> resultList = new ArrayList<>();
             // 不分主题查询
             if (topic == 0) {
@@ -68,6 +65,19 @@ public class WordServiceImpl implements WordService {
                         )
                         .collect(Collectors.toList());
             }
+            if (rankNum != null) {
+                Set<String> rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
+                int i = 0;
+                for (WordDto wordDto : resultList) {
+                    String form = wordDto.getForm();
+                    if (rankWordSet.contains(form)) {
+                        form = CorpusConstant.STRENGTHEN_OPEN_LABEL + form + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
+                    }
+                    wordDto.setForm(form);
+                    resultList.set(i, wordDto);
+                    i++;
+                }
+            }
             return resultList;
         } catch (Exception e) {
             log.error("wordList | error: {}", e);
@@ -79,7 +89,6 @@ public class WordServiceImpl implements WordService {
     public List<WordDto> searchAll(String query, String corpus, String searchType) {
         try {
             log.info("searchAll | query: {}, corpus: {}, searchType: {}", query, corpus, searchType);
-
             Map<String, Integer> key2Freq = new HashMap<>();
             Word word = new Word();
             word.setCorpus(corpus);

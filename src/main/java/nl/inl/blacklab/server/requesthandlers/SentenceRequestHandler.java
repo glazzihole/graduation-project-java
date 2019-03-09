@@ -180,18 +180,16 @@ public class SentenceRequestHandler extends RequestHandler {
 
             ds.startEntry("page").startList();
             Map<Integer, String> pids = new HashMap<>();
-
-            // 从session中获取用户信息
-            long studentId = 2345678L;
-
+            Set<String> rankWordSet = null;
             // 获取等级
-            int rankNum = Integer.valueOf(request.getParameter("rankNum"));
+            int rankNum = 0;
+            if (request.getParameter("rank_num") != null) {
+                // 获取等级
+                rankNum = Integer.valueOf(request.getParameter("rank_num"));
 
-            // 获取当前级别及当前级别之上的所有词汇
-            Set<String> rankWordSet = rankWordService.findMoreDifficultRankWord(rankNum);
-
-            // 获取用户在当前级别的熟悉词汇集合
-            Set<String> studentWordSet = studentRankWordService.getStudentRankWord(studentId, rankNum);
+                // 获取当前级别及当前级别之上的所有词汇
+                rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
+            }
 
             for (Hit hit: window) {
                 ds.startItem("hit").startMap();
@@ -219,20 +217,20 @@ public class SentenceRequestHandler extends RequestHandler {
                         Kwic c = window.getKwic(hit);
                         List<String> sentenceWordList = new ArrayList<>();
                         sentenceWordList.addAll(c.getMatch( "word" ));
-                        List<String> sentenceLemmaList = c.getMatch("lemma");
-                        for (int i = 0; i < sentenceLemmaList.size(); i++) {
-                            if (rankWordSet.contains(sentenceLemmaList.get(i))) {
-                                if (!studentWordSet.contains(sentenceLemmaList.get(i))) {
+                        if (request.getParameter("rank_num") != null) {
+                            List<String> sentenceLemmaList = c.getMatch("lemma");
+                            for (int i = 0; i < sentenceLemmaList.size(); i++) {
+                                if (rankWordSet.contains(sentenceLemmaList.get(i))) {
                                     String temp = sentenceWordList.get(i);
                                     sentenceWordList.set(i, CorpusConstant.STRENGTHEN_OPEN_LABEL + temp + CorpusConstant.STRENGTHEN_CLOSE_LABEL);
                                 }
                             }
                         }
-
                         for (String word : sentenceWordList) {
                             match = match + word + " ";
                         }
                     }
+                    match = match.trim();
                     ds.entry("sentence", match);
 
                 }

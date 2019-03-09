@@ -1,5 +1,6 @@
 package com.hugailei.graduation.corpus.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
@@ -18,6 +19,7 @@ public class StudentTextDto implements Serializable {
     private Long id;
 
     @NotNull
+    @JsonProperty("student_id")
     private Long studentId;
 
     private String title;
@@ -28,9 +30,12 @@ public class StudentTextDto implements Serializable {
     private String topic;
 
     @NotNull
+    @JsonProperty("rank_num")
     private Integer rankNum;
 
+    @JsonProperty("create_time")
     private Long createTime;
 
+    @JsonProperty("update_time")
     private Long updateTime;
 }

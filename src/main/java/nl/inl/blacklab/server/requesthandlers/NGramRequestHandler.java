@@ -22,6 +22,7 @@ import nl.inl.blacklab.server.util.BlsUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -76,12 +77,34 @@ public class NGramRequestHandler extends RequestHandler {
             ds.entry("totalElements", totalResults);
 
             ds.startEntry("page").startList();
+            Set<String> rankWordSet = null;
+            // 获取等级
+            int rankNum = 0;
+            if (request.getParameter("rank_num") != null) {
+                // 获取等级
+                rankNum = Integer.valueOf(request.getParameter("rank_num"));
+
+                // 获取当前级别及当前级别之上的所有词汇
+                rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
+            }
             int i = 1;
             for (NgramDto ngram : ngramInfo) {
                 if (i > first && i <= first + pageSize) {
                     ds.startItem("chunk").startMap();
                     ds  .entry("id", ngram.getId());
-                    ds  .entry("ngramStr", ngram.getNgramStr());
+                    if (request.getParameter("rank_num") == null) {
+                        ds  .entry("ngramStr", ngram.getNgramStr());
+                    } else {
+                        String newNgramString = "";
+                        for (String word : ngram.getNgramStr().split(" ")) {
+                            if (rankWordSet.contains(word)) {
+                                word = CorpusConstant.STRENGTHEN_OPEN_LABEL + word + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
+                                newNgramString = newNgramString + word + " ";
+                            }
+                        }
+                        newNgramString = newNgramString.trim();
+                        ds  .entry("ngramStr", newNgramString);
+                    }
                     ds  .entry("nValue", ngram.getNValue());
                     ds  .entry("freq", ngram.getFreq());
                     ds  .entry("corpus", indexName);

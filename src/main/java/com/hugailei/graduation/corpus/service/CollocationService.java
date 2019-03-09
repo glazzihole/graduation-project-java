@@ -1,11 +1,8 @@
 package com.hugailei.graduation.corpus.service;
 
-import com.hugailei.graduation.corpus.domain.Collocation;
 import com.hugailei.graduation.corpus.dto.CollocationDto;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author HU Gailei
@@ -48,19 +45,29 @@ public interface CollocationService {
     Boolean checkCollocation(String wordPair);
 
     /**
+     * 验证多个词对是否为正确搭配，是则对应位置的list为true，否则返回false
+     *
+     * @param wordPair
+     * @return
+     */
+    List<Boolean> checkCollocationList(String wordPair);
+
+    /**
      * 推荐该搭配的同义搭配
      *
      * @param wordPair
      * @param posPair
+     * @param rankNum
      * @return
      */
-    List<CollocationDto> recommendSynonym(String wordPair, String posPair);
+    List<CollocationDto> recommendSynonym(String wordPair, String posPair, Integer rankNum);
 
     /**
      * 查找单词在搭配词典中的搭配，按照搭配词词性及搭配分类
      *
      * @param word
+     * @param rankNum
      * @return
      */
-    Map<String, Map<String, Set<String>>> searchCollocationInDict(String word);
+    List<CollocationDto.CollocationDictInfo> searchCollocationInDict(String word, Integer rankNum);
 }

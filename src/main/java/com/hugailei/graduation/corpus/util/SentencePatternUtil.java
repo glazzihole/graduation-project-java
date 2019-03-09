@@ -1,6 +1,7 @@
 package com.hugailei.graduation.corpus.util;
 
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
+import com.hugailei.graduation.corpus.domain.Sentence;
 import com.hugailei.graduation.corpus.domain.SentencePattern;
 import com.hugailei.graduation.corpus.enums.SentencePatternType;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -17,6 +18,7 @@ import edu.stanford.nlp.util.CoreMap;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.logging.log4j.core.Core;
 
 import java.util.*;
 
@@ -496,14 +498,14 @@ public class SentencePatternUtil {
                 int type = SentencePatternType.PASSIVE_VOICE.getType();
                 int passiveVerbIndex = edge.getGovernor().index();
                 int subjectIndex = edge.getDependent().index();
-                Edge temp = getRealNounEdge(subjectIndex, dependency);
+                Edge temp = getRealNounEdge(subjectIndex, sentence);
                 String subject = (temp == null ? edge.getDependent().word() : temp.getWord());
                 boolean hasAgent = false;
                 // 寻找nmod:agent依存关系，找出施事者
                 for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
                     if (semanticGraphEdge.getRelation().toString().equals("nmod:agent") &&
                         semanticGraphEdge.getGovernor().index() == passiveVerbIndex) {
-                        Edge tempEdge = getRealNounEdge(semanticGraphEdge.getDependent().index(), dependency);
+                        Edge tempEdge = getRealNounEdge(semanticGraphEdge.getDependent().index(), sentence);
                         String agent = (tempEdge == null ? semanticGraphEdge.getDependent().word() : tempEdge.getWord());
                         hasAgent = true;
                         sentencePatternList.add(new SentencePattern(type, null, null, null, subject, null, null, agent));
@@ -536,20 +538,20 @@ public class SentencePatternUtil {
             String relation = edge.getRelation().toString();
             if (relation.startsWith("iobj")) {
                 int verbIndex = edge.getGovernor().index();
-                Edge temp = getRealNounEdge(edge.getDependent().index(), dependency);
+                Edge temp = getRealNounEdge(edge.getDependent().index(), sentence);
                 String indirectObject = (temp == null ? edge.getDependent().word() : temp.getWord());
 
                 // 寻找nsubj依存关系，找出主语
                 for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
                     if (semanticGraphEdge.getRelation().toString().equals("nsubj") &&
                             semanticGraphEdge.getGovernor().index() == verbIndex) {
-                        temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), dependency);
+                        temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), sentence);
                         String subject = (temp == null ? semanticGraphEdge.getDependent().word() : temp.getWord());
                         // 寻找dobj关系，找出直接宾语
                         for (SemanticGraphEdge se : dependency.edgeListSorted()) {
                             if (se.getRelation().toString().equals("dobj") &&
                                     se.getGovernor().index() == verbIndex) {
-                                temp = getRealNounEdge(se.getDependent().index(), dependency);
+                                temp = getRealNounEdge(se.getDependent().index(), sentence);
                                 String directObject = (temp == null ? se.getDependent().word() : temp.getWord());
                                 sentencePatternList.add(new SentencePattern(type, null, null, null, subject, directObject, indirectObject, null));
                             }
@@ -564,7 +566,7 @@ public class SentencePatternUtil {
                     CorpusConstant.DOUBLE_OBJECT_VERB_SET.contains(edge.getGovernor().lemma().toLowerCase())){
                     int verbIndex = edge.getGovernor().index();
                     int directObjectIndex = edge.getDependent().index();
-                    Edge temp = getRealNounEdge(directObjectIndex, dependency);
+                    Edge temp = getRealNounEdge(directObjectIndex, sentence);
                     directObjectIndex = (temp == null ? directObjectIndex : temp.getIndex());
                     String directObject = (temp == null ? edge.getDependent().word() : temp.getWord());
                     // 寻找nsubj依存关系，找出主语
@@ -582,10 +584,10 @@ public class SentencePatternUtil {
                                         se.getGovernor().index() == verbIndex))
                                 ) {
                                     int subjectIndex = semanticGraphEdge.getDependent().index();
-                                    temp = getRealNounEdge(subjectIndex, dependency);
+                                    temp = getRealNounEdge(subjectIndex, sentence);
                                     String subject = (temp == null ? semanticGraphEdge.getDependent().word() : temp.getWord());
                                     int indirectObjectIndex = se.getDependent().index();
-                                    temp = getRealNounEdge(indirectObjectIndex, dependency);
+                                    temp = getRealNounEdge(indirectObjectIndex, sentence);
                                     int tempIndirectObjectIndex = (temp == null ? indirectObjectIndex : temp.getIndex());
                                     if (tempIndirectObjectIndex == verbIndex + 1) {
                                         String indirectObject = (temp == null ? se.getDependent().word() : temp.getWord());
@@ -1155,19 +1157,19 @@ public class SentencePatternUtil {
         for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
             String relation = edge.getRelation().toString();
             if (relation.startsWith("nsubj") && !relation.startsWith("nsubjpass")) {
-                dealNsubj(edge, dependency, resultList);
+                dealNsubj(edge, sentence, resultList);
             }
             else if (relation.startsWith("cop")) {
-                dealCop(edge, dependency, resultList);
+                dealCop(edge, sentence, resultList);
             }
             else if (relation.startsWith("xcomp")) {
-                dealXcomp(edge, dependency, resultList);
+                dealXcomp(edge, sentence, resultList);
             }
             else if (relation.startsWith("iobj")) {
-                dealIobj(edge, dependency, resultList);
+                dealIobj(edge, sentence, resultList);
             }
             else if (relation.startsWith("nsubjpass")) {
-                dealNsubjpass(edge, dependency, resultList);
+                dealNsubjpass(edge, sentence, resultList);
             }
         }
         if (resultList.isEmpty()) {
@@ -1177,26 +1179,37 @@ public class SentencePatternUtil {
     }
 
     /**
-     * 获取真正的主语、宾语等词（因为会有a tape of, a box of等修饰名词的情况）
+     * 获取真正的主语、宾语等词（因为会有a tape of, a box of等修饰名词的情况），并且识别专有名词，将其用NER表示代替
      *
      * @param index  名词的位置
-     * @param dependency
+     * @param sentenceCoreMap
      * @return
      */
-    public static Edge getRealNounEdge(int index, SemanticGraph dependency) {
+    public static Edge getRealNounEdge(int index, CoreMap sentenceCoreMap) {
         Edge result = new Edge();
         // 查找nmod:of关系
+        SemanticGraph dependency = sentenceCoreMap.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
         for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
             if (edge.getRelation().toString().equals("nmod:of") &&
                 edge.getGovernor().index() == index) {
                 if (CorpusConstant.PARTITIVE_NOUN_SET.contains(edge.getDependent().lemma()) &&
                     edge.getDependent().tag().matches("NN.*")) {
                     result.setWord(edge.getDependent().word());
+                    result.setLemma(edge.getDependent().lemma());
                     result.setIndex(edge.getDependent().index());
                     return result;
                 }
             }
         }
+        CoreLabel token = sentenceCoreMap.get(CoreAnnotations.TokensAnnotation.class).get(index - 1);
+        String ner = token.get(CoreAnnotations.NamedEntityTagAnnotation.class);
+        if (!ner.equals("O")) {
+            result.setWord(ner);
+            result.setLemma(ner);
+            result.setIndex(index);
+            return result;
+        }
+
         return null;
     }
 
@@ -1330,11 +1343,13 @@ public class SentencePatternUtil {
      * 提取句子主干中，对“nsubj”的关系进行处理。因方法体较长，所以单独抽取出来。
      *
      * @param edge
-     * @param dependency
+     * @param sentenceCoreMap
      * @param resultList
      */
-    private static void dealNsubj(SemanticGraphEdge edge, SemanticGraph dependency, List<String> resultList) {
+    private static void dealNsubj(SemanticGraphEdge edge, CoreMap sentenceCoreMap, List<String> resultList) {
+        SemanticGraph dependency = sentenceCoreMap.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
         String govAndDep = edge.getGovernor().tag() + "-" + edge.getDependent().tag();
+
         // 匹配是否包含主谓宾结构
         if (govAndDep.matches("(VB[A-Z]{0,1})-(NN[A-Z]{0,1})") ||
             govAndDep.matches("(VB[A-Z]{0,1})-PRP")) {
@@ -1354,7 +1369,7 @@ public class SentencePatternUtil {
                 }
             }
             String predicate = beforePredicate + edge.getGovernor().word();
-            Edge temp = getRealNounEdge(edge.getDependent().index(), dependency);
+            Edge temp = getRealNounEdge(edge.getDependent().index(), sentenceCoreMap);
             String subject = (temp == null ? edge.getDependent().word() : temp.getWord());
             String object = "";
 
@@ -1369,7 +1384,7 @@ public class SentencePatternUtil {
                         objGovAndDep.matches("(VB[A-Z]{0,1})-PRP")) {
                         // 通过单词位置判断是否为同一个谓语
                         if (semanticGraphEdge.getGovernor().index() == predicateIndex) {
-                            temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), dependency);
+                            temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), sentenceCoreMap);
                             object = (temp == null ? semanticGraphEdge.getDependent().word() : temp.getWord());
                             hasObject = true;
 
@@ -1439,13 +1454,14 @@ public class SentencePatternUtil {
      * 提取句子主干中，对“cop”的关系进行处理。。
      *
      * @param edge
-     * @param dependency
+     * @param sentenceCoreMap
      * @param resultList
      */
-    private static void dealCop (SemanticGraphEdge edge, SemanticGraph dependency, List<String> resultList) {
+    private static void dealCop (SemanticGraphEdge edge, CoreMap sentenceCoreMap, List<String> resultList) {
+        SemanticGraph dependency = sentenceCoreMap.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
         // 匹配是否包含主系表结构
         String copula = edge.getDependent().word();
-        Edge temp = getRealNounEdge(edge.getGovernor().index(), dependency);
+        Edge temp = getRealNounEdge(edge.getGovernor().index(), sentenceCoreMap);
         String predicative = (temp == null ? edge.getGovernor().word() : temp.getWord());
         int predicativeIndex = edge.getGovernor().index();
         // 寻找否定结构，判断系动词前是否有否定结构
@@ -1461,7 +1477,7 @@ public class SentencePatternUtil {
             if (semanticGraphEdge.getRelation().toString().equals("nsubj")) {
                 // 通过单词位置判断是否是同一个表语
                 if (semanticGraphEdge.getGovernor().index() == predicativeIndex) {
-                    temp =  getRealNounEdge(semanticGraphEdge.getDependent().index(), dependency);
+                    temp =  getRealNounEdge(semanticGraphEdge.getDependent().index(), sentenceCoreMap);
                     String subject = (temp == null ? semanticGraphEdge.getDependent().word() : temp.getWord());
                     System.out.println("主系表：" + subject + " " + copula + " " + predicative);
                     resultList.add(subject + " " + copula + " " + predicative);
@@ -1474,28 +1490,29 @@ public class SentencePatternUtil {
      * 提取句子主干中，对“iobj”的关系进行处理。。
      *
      * @param edge
-     * @param dependency
+     * @param sentenceCoreMap
      * @param resultList
      */
-    private static void dealIobj (SemanticGraphEdge edge, SemanticGraph dependency, List<String> resultList) {
+    private static void dealIobj (SemanticGraphEdge edge, CoreMap sentenceCoreMap, List<String> resultList) {
+        SemanticGraph dependency = sentenceCoreMap.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
         // 匹配是否为双宾语句
         String subject;
         String verb = edge.getGovernor().word();
         int verbIndex = edge.getGovernor().index();
-        Edge temp = getRealNounEdge(edge.getDependent().index(), dependency);
+        Edge temp = getRealNounEdge(edge.getDependent().index(), sentenceCoreMap);
         String indirectObject = (temp == null ? edge.getDependent().word() : temp.getWord());
         String directObject;
         // 寻找nsubj依存关系，找出主语
         for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
             if (semanticGraphEdge.getRelation().toString().equals("nsubj") &&
                 semanticGraphEdge.getGovernor().index() == verbIndex) {
-                temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), dependency);
+                temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), sentenceCoreMap);
                 subject = (temp == null ? semanticGraphEdge.getDependent().word() : temp.getWord());
                 // 寻找dobj关系，找出直接宾语
                 for (SemanticGraphEdge se : dependency.edgeListSorted()) {
                     if (se.getRelation().toString().equals("dobj") &&
                             se.getGovernor().index() == verbIndex) {
-                        temp = getRealNounEdge(se.getDependent().index(), dependency);
+                        temp = getRealNounEdge(se.getDependent().index(), sentenceCoreMap);
                         directObject = (temp == null ? se.getDependent().word() : temp.getWord());
                         System.out.println("双宾语" + subject + " " + verb + " " + indirectObject + " " + directObject);
                         resultList.add(subject + " " + verb + " " + indirectObject + " " + directObject);
@@ -1509,30 +1526,32 @@ public class SentencePatternUtil {
      * 提取句子主干中，对“xcomp”的关系进行处理。因方法体较长，所以单独抽取出来。
      *
      * @param edge
-     * @param dependency
+     * @param sentenceCoreMap
      * @param resultList
      */
-    private static void dealXcomp(SemanticGraphEdge edge, SemanticGraph dependency, List<String> resultList) {
+    private static void dealXcomp(SemanticGraphEdge edge, CoreMap sentenceCoreMap, List<String> resultList) {
         String govAndDep = edge.getGovernor().tag() + "-" + edge.getDependent().tag();
+        SemanticGraph dependency = sentenceCoreMap.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
+
         // 匹配是否为双宾语结构
         if (govAndDep.matches("(VB[A-Z]{0,1})-(NN[A-Z]{0,1})") &&
                 CorpusConstant.DOUBLE_OBJECT_VERB_SET.contains(edge.getGovernor().lemma().toLowerCase())){
             String verb = edge.getGovernor().word();
             int verbIndex = edge.getGovernor().index();
             int directObjectIndex = edge.getDependent().index();
-            Edge temp = getRealNounEdge(directObjectIndex, dependency);
+            Edge temp = getRealNounEdge(directObjectIndex, sentenceCoreMap);
             String directObject = (temp == null ? edge.getDependent().word() : temp.getWord());
             // 寻找nsubj依存关系，找出主语
             for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
                 if (semanticGraphEdge.getRelation().toString().equals("nsubj") &&
                         semanticGraphEdge.getGovernor().index() == verbIndex) {
-                    temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), dependency);
+                    temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), sentenceCoreMap);
                     String subject = (temp == null ? semanticGraphEdge.getDependent().word() : temp.getWord());
                     // 寻找nsubj依存关系，找出间接宾语
                     for (SemanticGraphEdge se : dependency.edgeListSorted()) {
                         if (se.getRelation().toString().equals("nsubj") &&
                                 se.getGovernor().index() == directObjectIndex) {
-                            temp = getRealNounEdge(se.getDependent().index(), dependency);
+                            temp = getRealNounEdge(se.getDependent().index(), sentenceCoreMap);
                             String inderectObject = (temp == null ? se.getDependent().word() : temp.getWord());
                             System.out.println("双宾语：" + subject + " " + verb + " " + inderectObject + " " + directObject);
                             resultList.add(subject + " " + verb + " " + inderectObject + " " + directObject);
@@ -1548,7 +1567,7 @@ public class SentencePatternUtil {
 
             String copula = edge.getGovernor().word();
             int copulaIndex = edge.getGovernor().index();
-            Edge temp = getRealNounEdge(edge.getDependent().index(), dependency);
+            Edge temp = getRealNounEdge(edge.getDependent().index(), sentenceCoreMap);
             String predicative = (temp == null ? edge.getDependent().word() : temp.getWord());
             int predicativeIndex =  (temp == null ? edge.getDependent().index() : temp.getIndex());
             String complement = "";
@@ -1559,7 +1578,7 @@ public class SentencePatternUtil {
                 // 通过单词位置判断是否是同一个系动词
                 if (semanticGraphEdge.getRelation().toString().equals("nsubj") &&
                         semanticGraphEdge.getGovernor().index() == copulaIndex) {
-                    temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), dependency);
+                    temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), sentenceCoreMap);
                     String subject = (temp == null ? semanticGraphEdge.getDependent().word() : temp.getWord());
                     System.out.println("主系表：" + subject + " " + copula + " " + predicative + " " + complement);
                     resultList.add(subject + " " + copula + " " + predicative + " " + complement);
@@ -1576,13 +1595,13 @@ public class SentencePatternUtil {
             for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
                 if (semanticGraphEdge.getRelation().toString().equals("nsubj") &&
                         semanticGraphEdge.getGovernor().index() == verbIndex) {
-                    Edge temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), dependency);
+                    Edge temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), sentenceCoreMap);
                     String subject = (temp == null ? semanticGraphEdge.getDependent().word() : temp.getWord());
                     // 寻找nsubj依存关系，找出宾语
                     for (SemanticGraphEdge se : dependency.edgeListSorted()) {
                         if (se.getRelation().toString().equals("nsubj") &&
                                 se.getGovernor().index() == complementIndex) {
-                            temp = getRealNounEdge(se.getDependent().index(), dependency);
+                            temp = getRealNounEdge(se.getDependent().index(), sentenceCoreMap);
                             String object = (temp == null ? se.getDependent().word() : temp.getWord());
                             System.out.println("主谓宾+宾补：" + subject + " " + verb + " " + object + " " + complement);
                             resultList.add(subject + " " + verb + " " + object + " " + complement);
@@ -1597,12 +1616,13 @@ public class SentencePatternUtil {
      * 提取句子主干中，对“nsubjpass”的关系进行处理。因方法体较长，所以单独抽取出来。
      *
      * @param edge
-     * @param dependency
+     * @param sentenceCoreMap
      * @param resultList
      */
-    private static void dealNsubjpass(SemanticGraphEdge edge, SemanticGraph dependency, List<String> resultList) {
+    private static void dealNsubjpass(SemanticGraphEdge edge, CoreMap sentenceCoreMap, List<String> resultList) {
+        SemanticGraph dependency = sentenceCoreMap.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
         // 识别被动语态
-        Edge temp = getRealNounEdge(edge.getDependent().index(), dependency);
+        Edge temp = getRealNounEdge(edge.getDependent().index(), sentenceCoreMap);
         String subject = (temp == null ? edge.getDependent().word() : temp.getWord());
         String passiveVerb = edge.getGovernor().word();
         int passiveVerbIndex = edge.getGovernor().index();
@@ -1619,7 +1639,7 @@ public class SentencePatternUtil {
                 for (SemanticGraphEdge se : dependency.edgeListSorted()) {
                     if (se.getRelation().toString().equals("nmod:agent") &&
                             se.getGovernor().index() == passiveVerbIndex) {
-                        Edge tempEdge = getRealNounEdge(se.getDependent().index(), dependency);
+                        Edge tempEdge = getRealNounEdge(se.getDependent().index(), sentenceCoreMap);
                         String agent = (tempEdge == null ? se.getDependent().word() : tempEdge.getWord());
                         int agentIndex = (tempEdge == null ? se.getDependent().index() : tempEdge.getIndex());
                         hasAgent = true;
@@ -1653,12 +1673,12 @@ public class SentencePatternUtil {
 //        String text = "This is such an interesting book that we all enjoy reading it. ";
 //        String text = "It was yesterday that he met Li Ping.";
 //        String text = "Lucky is she who was admitted to a famous university last year.";
-        String text = "She opened the shop in March 2009 after finding it hard to obtain parts in China for specialty fixed-gear bikes - which have wheels that are always in motion when the bikes are moving , as opposed to ordinary bikes that can coast .";
+        String text = "I have to take care of him.";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         for(CoreMap sentence : result) {
             String shorterText = abstractSentence(sentence.toString());
             System.out.println("抽象后的句子：" + shorterText);
-            System.out.println("句子主干：" + getPrincipalClause(StanfordParserUtil.parse(shorterText).get(0)));
+            System.out.println("句子主干：" + getPrincipalClause(StanfordParserUtil.parse(text).get(0)));
 
             System.out.println("sothat句型" + hasSoThat(sentence));
             shorterText = shorterText.replaceAll("\\.", "");

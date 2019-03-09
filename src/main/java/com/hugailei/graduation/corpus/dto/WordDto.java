@@ -1,5 +1,6 @@
 package com.hugailei.graduation.corpus.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,10 +25,12 @@ public class WordDto {
 
     private Integer freq;
 
+    @JsonProperty("sentence_ids")
     private String sentenceIds;
 
     private String corpus;
 
+    @JsonProperty("ref_corpus")
     private String refCorpus;
 
     /**

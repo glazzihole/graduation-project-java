@@ -1,10 +1,12 @@
 package com.hugailei.graduation.corpus.service.impl;
 
 import com.hugailei.graduation.corpus.dao.RankWordDao;
+import com.hugailei.graduation.corpus.domain.Collocation;
 import com.hugailei.graduation.corpus.domain.RankWord;
 import com.hugailei.graduation.corpus.service.RankWordService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -40,6 +42,26 @@ public class RankWordServiceImpl implements RankWordService {
             return rankWordSet;
         } catch (Exception e) {
             log.error("findMoreDifficultRankWord | error: {}", e);
+            return null;
+        }
+    }
+
+    @Override
+    public List<String> findWordByRankNum(int rankNum) {
+        try {
+            log.info("findWordByRankNum | rank num: {}", rankNum);
+            RankWord rankWord = new RankWord();
+            rankWord.setRankNum(rankNum);
+            Example<RankWord> rankWordExample = Example.of(rankWord);
+            List<String> rankWordList = rankWordDao.findAll(rankWordExample)
+                    .stream()
+                    .map(e -> {
+                        return e.getWord();
+                    })
+                    .collect(Collectors.toList());
+            return rankWordList;
+        } catch (Exception e) {
+            log.error("findWordByRankNum | error: {}", e);
             return null;
         }
     }

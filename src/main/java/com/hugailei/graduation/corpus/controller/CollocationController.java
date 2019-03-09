@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author HU Gailei
@@ -26,7 +24,6 @@ import java.util.Set;
 @Slf4j
 public class CollocationController {
 
-
     @Autowired
     private CollocationService collocationService;
 
@@ -34,6 +31,7 @@ public class CollocationController {
      * 单词在语料库中的搭配词查询
      *
      * @param collocationDto
+     * @param pageable
      * @return
      */
     @PostMapping
@@ -43,7 +41,7 @@ public class CollocationController {
         log.info("searchCollocationOfWord | request to search collocation of word");
         List<CollocationDto> result = collocationService.searchCollocationOfWord(collocationDto);
         if (result == null) {
-            ResponseUtil.error();
+            return ResponseUtil.error();
         }
         return ResponseUtil.createPageResponse(result, pageable);
     }
@@ -63,6 +61,7 @@ public class CollocationController {
             ResponseUtil.error();
         }
         return ResponseUtil.success(result);
+
     }
 
     /**
@@ -83,31 +82,61 @@ public class CollocationController {
     }
 
     /**
-     * 同义搭配词推荐
+     * 查询搭配词典及语料库，判断多个词对是否为正确、常用搭配
      *
-     * @param wordPair
-     * @param posPair
+     * @param wordPairList
      * @return
      */
-    @GetMapping("/synonym/recommend")
+    @PostMapping("/check")
     @ResponseBody
-    public ResponseVO recommendSynonym(@RequestParam("word_pair") String wordPair,
-                                       @RequestParam("pos_pair") String posPair) {
-        log.info("recommendSynonym | request to recommend synonym collocation");
-        List<CollocationDto> result = collocationService.recommendSynonym(wordPair, posPair);
+    public ResponseVO checkCollocationList(@RequestParam("word_pair_list") String wordPairList) {
+        log.info("checkCollocationList | request to check collocation list");
+        List<Boolean> result = collocationService.checkCollocationList(wordPairList);
         if (result == null) {
             ResponseUtil.error();
         }
         return ResponseUtil.success(result);
     }
 
-    @GetMapping("/dict")
+    /**
+     * 同义搭配词推荐
+     *
+     * @param wordPair
+     * @param posPair
+     * @param rankNum
+     * @return
+     */
+    @GetMapping("/synonym/recommend")
     @ResponseBody
-    public ResponseVO searchCollocationInDict(@RequestParam String word) {
-        log.info("searchDict | request to search collocation in dict");
-        Map<String, Map<String, Set<String>>> result = collocationService.searchCollocationInDict(word);
+    public ResponseVO recommendSynonym(@RequestParam("word_pair") String wordPair,
+                                       @RequestParam("pos_pair") String posPair,
+                                       @RequestParam(value = "rank_num", required = false) Integer rankNum) {
+        log.info("recommendSynonym | request to recommend synonym collocation");
+        List<CollocationDto> result = collocationService.recommendSynonym(wordPair, posPair, rankNum);
         if (result == null) {
             ResponseUtil.error();
+        }
+        return ResponseUtil.success(result);
+    }
+
+    /**
+     * 查询词典中该单词的搭配信息
+     *
+     * @param word
+     * @param rankNum
+     * @return
+     */
+    @GetMapping("/dict")
+    @ResponseBody
+    public ResponseVO searchCollocationInDict(@RequestParam String word,
+                                              @RequestParam(value = "rank_num", required = false) Integer rankNum) {
+        log.info("searchDict | request to search collocation in dict");
+        List<CollocationDto.CollocationDictInfo> result = collocationService.searchCollocationInDict(word, rankNum);
+        if (result == null) {
+            ResponseUtil.error();
+        }
+        if (rankNum == null) {
+            return ResponseUtil.success(result);
         }
         return ResponseUtil.success(result);
     }

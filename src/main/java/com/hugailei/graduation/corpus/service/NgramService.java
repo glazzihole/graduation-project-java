@@ -19,7 +19,8 @@ public interface NgramService {
      * @param corpus
      * @param nValue
      * @param topic
+     * @param rankNum
      * @return
      */
-    List<NgramDto> ngramList(String corpus, int nValue, int topic);
+    List<NgramDto> ngramList(String corpus, int nValue, int topic, Integer rankNum);
 }

@@ -42,6 +42,7 @@ public class WordController {
      *
      * @param corpus
      * @param topic
+     * @param rankNum
      * @param pageable
      * @return
      */
@@ -49,9 +50,10 @@ public class WordController {
     @ResponseBody
     public ResponseVO wordList(@RequestParam String corpus,
                                @RequestParam(required = false, defaultValue = "0") int topic,
+                               @RequestParam(value = "rank_num", required = false) Integer rankNum,
                                Pageable pageable) {
         log.info("wordList | request to get word list of corpus");
-        List<WordDto> result = wordService.wordList(corpus, topic);
+        List<WordDto> result = wordService.wordList(corpus, topic, rankNum);
         if (result == null) {
             ResponseUtil.error();
         }
@@ -66,7 +68,7 @@ public class WordController {
      * @param corpus
      * @return
      */
-    @GetMapping("/lemma")
+    @GetMapping("/distribution/lemma")
     @ResponseBody
     public ResponseVO searchAllLemma(@RequestParam String word,
                                      @RequestParam String corpus) {
@@ -85,7 +87,7 @@ public class WordController {
      * @param corpus
      * @return
      */
-    @GetMapping("/pos")
+    @GetMapping("/distribution/pos")
     @ResponseBody
     public ResponseVO searchAllPos(@RequestParam String word,
                                    @RequestParam String corpus) {
@@ -104,7 +106,7 @@ public class WordController {
      * @param corpus
      * @return
      */
-    @GetMapping("/form")
+    @GetMapping("/distribution/form")
     @ResponseBody
     public ResponseVO searchAllForm(@RequestParam String lemma,
                                     @RequestParam String corpus) {
@@ -150,7 +152,8 @@ public class WordController {
                            HttpServletRequest request,
                            HttpServletResponse response,
                            @RequestParam String corpus,
-                           @RequestParam String patt) {
+                           @RequestParam String patt,
+                           @RequestParam(value = "rank_num", required = false) Integer rankNum) {
         log.info("searchWord | request to search word by patt: {}", patt);
         User user = User.loggedIn("admin", "1");
         request.setAttribute( "group", "hit:word:i" );

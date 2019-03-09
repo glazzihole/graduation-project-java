@@ -1,9 +1,11 @@
 package com.hugailei.graduation.corpus.constants;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import com.hugailei.graduation.corpus.service.RankWordService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import java.util.*;
 
 /**
  * @author HU Gailei
@@ -12,6 +14,7 @@ import java.util.Set;
  * description:
  * </p>
  **/
+@Component
 public class CorpusConstant {
     public static final String DEFAULT_CORPUS_NAME = "bnc";
 
@@ -349,6 +352,8 @@ public class CorpusConstant {
             add("nmod:agent");
             add("compound:prt");
             add("xcomp");
+            add("nmod");
+            add("dep");
         }
     };
 
@@ -366,6 +371,7 @@ public class CorpusConstant {
             add("nmod:without");
             add("nmod:within");
             add("nmod:of");
+            add("nmod:off");
             add("nmod:on");
             add("nmod:from");
             add("nmod:across");
@@ -382,6 +388,7 @@ public class CorpusConstant {
             add("nmod:before");
             add("nmod:behind");
             add("nmod:among");
+            add("nmod:over");
         }
     };
 
@@ -407,4 +414,47 @@ public class CorpusConstant {
             add(" nor be ");
         }
     };
+
+    @Autowired
+    private RankWordService rankWordService;
+
+    public static Map<Integer, Set<String>> RANK_NUM_TO_WORD_SET = new HashMap<>();
+
+    @PostConstruct
+    public void init(){
+        List<String> level1WordList = rankWordService.findWordByRankNum(1);
+        List<String> level2WordList = rankWordService.findWordByRankNum(2);
+        List<String> level3WordList = rankWordService.findWordByRankNum(3);
+        List<String> level4WordList = rankWordService.findWordByRankNum(4);
+        List<String> level5WordList = rankWordService.findWordByRankNum(5);
+        List<String> level6WordList = rankWordService.findWordByRankNum(6);
+        Set<String> level1WordSet = new HashSet<>(level1WordList);
+        level1WordSet.addAll(level2WordList);
+        level1WordSet.addAll(level3WordList);
+        level1WordSet.addAll(level4WordList);
+        level1WordSet.addAll(level5WordList);
+        level1WordSet.addAll(level6WordList);
+        Set<String> level2WordSet = new HashSet<>(level2WordList);
+        level2WordSet.addAll(level2WordList);
+        level2WordSet.addAll(level3WordList);
+        level2WordSet.addAll(level4WordList);
+        level2WordSet.addAll(level5WordList);
+        level2WordSet.addAll(level6WordList);
+        Set<String> level3WordSet = new HashSet<>(level3WordList);
+        level3WordSet.addAll(level4WordList);
+        level3WordSet.addAll(level5WordList);
+        level3WordSet.addAll(level6WordList);
+        Set<String> level4WordSet = new HashSet<>(level4WordList);
+        level4WordSet.addAll(level5WordList);
+        level4WordSet.addAll(level6WordList);
+        Set<String> level5WordSet = new HashSet<>(level5WordList);
+        level5WordSet.addAll(level6WordList);
+        Set<String> level6WordSet = new HashSet<>(level6WordList);
+        RANK_NUM_TO_WORD_SET.put(1, level1WordSet);
+        RANK_NUM_TO_WORD_SET.put(2, level2WordSet);
+        RANK_NUM_TO_WORD_SET.put(3, level3WordSet);
+        RANK_NUM_TO_WORD_SET.put(4, level4WordSet);
+        RANK_NUM_TO_WORD_SET.put(5, level5WordSet);
+        RANK_NUM_TO_WORD_SET.put(6, level6WordSet);
+    }
 }

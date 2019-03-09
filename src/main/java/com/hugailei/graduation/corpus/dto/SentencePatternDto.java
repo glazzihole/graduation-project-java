@@ -1,5 +1,6 @@
 package com.hugailei.graduation.corpus.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,7 @@ public class SentencePatternDto implements Serializable {
     /**
      * 句型类型名称
      */
+    @JsonProperty("pattern_type_name")
     private String patternTypeName;
 
     /**
@@ -31,5 +33,6 @@ public class SentencePatternDto implements Serializable {
     /**
      * 包含该句型的句子列表
      */
+    @JsonProperty("sentences")
     private Set<String> sentenceSet;
 }

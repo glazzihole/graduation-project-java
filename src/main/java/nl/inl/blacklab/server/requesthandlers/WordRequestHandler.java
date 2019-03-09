@@ -13,6 +13,7 @@ import nl.inl.blacklab.server.jobs.User;
 import nl.inl.blacklab.server.search.BlsConfig;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Set;
 
 /**
  * @author HU Gailei
@@ -39,6 +40,11 @@ public class WordRequestHandler extends RequestHandler {
             // If search is not done yet, indicate this to the user
             if (!search.finished()) {
                 return Response.busy(ds, servlet);
+            }
+
+            Set<String> rankWordSet = null;
+            if (request.getParameter("rank_num") != null) {
+                rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(request.getParameter("rank_num"));
             }
 
             // Search is done; construct the results object
@@ -70,7 +76,18 @@ public class WordRequestHandler extends RequestHandler {
                 if (i >= searchParam.getInteger("first") && i < searchParam.getInteger("first") + pageSize) {
                     ds.startItem("item").startMap();
                     ds  .entry( "id", i );
-                    ds  .entry("word", group.getIdentity().toString());
+                    if (request.getParameter("rank_num") != null) {
+                        String wordString = "";
+                        for (String word : group.getIdentity().toString().split(" ")) {
+                            if (rankWordSet.contains(word)) {
+                                wordString = wordString + word + " ";
+                            }
+                        }
+                        wordString = wordString.trim();
+                        ds  .entry("word", wordString);
+                    } else {
+                        ds  .entry("word", group.getIdentity().toString());
+                    }
                     ds  .entry("lemma", "");
                     ds  .entry("pos", "");
                     ds  .entry("freq", group.size());

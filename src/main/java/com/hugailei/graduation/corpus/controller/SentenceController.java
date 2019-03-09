@@ -67,7 +67,7 @@ public class SentenceController {
                                       HttpServletResponse response,
                                       @RequestParam String corpus,
                                       @RequestParam String patt,
-                                      @RequestParam(defaultValue = "2") Integer rankNum) {
+                                      @RequestParam(value = "rank_num", required = false) Integer rankNum) {
         log.info("searchSentenceByPatt | request to search sentence, patt: {}, corpus: {}", patt, corpus);
         User user = User.loggedIn("admin", "1");
         handler.checkConfig(request, response, blackLabServer);

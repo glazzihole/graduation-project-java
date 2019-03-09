@@ -60,7 +60,8 @@ public class ConcordanceController {
                             @RequestParam String level1,
                             @RequestParam String level2,
                             @RequestParam String level3,
-                            @RequestParam(value = "type", defaultValue = "word") String type) {
+                            @RequestParam(value = "type", defaultValue = "word") String type,
+                            @RequestParam(value = "rank_num", required = false) Integer rankNum) {
         String sort = "context:" + type + ":i" + ":" + level1 + ";" + level2 + ";" + level3;
         log.info("searchSentence | request to search concordance sort by {}", sort);
         request.setAttribute("sort", sort);

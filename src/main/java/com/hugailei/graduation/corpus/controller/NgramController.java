@@ -49,7 +49,8 @@ public class NgramController {
                                   HttpServletRequest request,
                                   HttpServletResponse response,
                                   @RequestParam String corpus,
-                                  @RequestParam String patt) {
+                                  @RequestParam String patt,
+                                  @RequestParam(value = "rank_num", required = false) Integer rankNum) {
         log.info("searchNgramByPatt | request to search ngram in corpus {} by patt: {}", corpus, patt);
         User user = User.loggedIn("admin", "1");
         handler.checkConfig(request, response, blackLabServer);
@@ -63,6 +64,7 @@ public class NgramController {
      * @param corpus
      * @param nValue
      * @param topic     主题
+     * @param rankNum   难度等级
      * @param pageable
      * @return
      */
@@ -71,9 +73,10 @@ public class NgramController {
     public ResponseVO ngramList(@RequestParam String corpus,
                                 @RequestParam("n_value") int nValue,
                                 @RequestParam(required = false, defaultValue = "0") int topic,
+                                @RequestParam(value = "rank_num", required = false) Integer rankNum,
                                 Pageable pageable) {
         log.info("ngramList | request to get ngram list of corpus");
-        List<NgramDto> result = ngramService.ngramList(corpus, nValue, topic);
+        List<NgramDto> result = ngramService.ngramList(corpus, nValue, topic, rankNum);
         if (result == null) {
             ResponseUtil.error();
         }

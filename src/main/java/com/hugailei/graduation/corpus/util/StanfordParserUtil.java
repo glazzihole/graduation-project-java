@@ -4,7 +4,6 @@ import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import edu.stanford.nlp.ie.util.RelationTriple;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
@@ -30,7 +29,7 @@ public class StanfordParserUtil {
     static {
         props = new Properties();
         // 总共可以有tokenize, ssplit, pos, lemma, parse, ner, dcoref七中属性
-        props.put("annotators", "tokenize, ssplit, parse, pos, lemma");
+        props.put("annotators", "tokenize, ssplit, parse, pos, lemma, ner");
         pipeline = new StanfordCoreNLP(props);
     }
 
@@ -125,59 +124,79 @@ public class StanfordParserUtil {
 
 
     public static void main(String[] args) {
-        String text = "open door";
-        List<CoreMap> result = StanfordParserUtil.parse(text);
-        StringBuilder stringBuilder = new StringBuilder();
-        // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
-        for (CoreMap sentence : result) {
-            // 原型、词性等信息
-            for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
-                // 获取单词
-                String word = token.get(CoreAnnotations.TextAnnotation.class);
-                stringBuilder.append("word = " + word + " | ");
-                // 获取词性标注
-                String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
-                stringBuilder.append("pos = " + pos + " | ");
-                //获取原型标注结果
-                String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
-                stringBuilder.append("lemma = " + lemma + " " + "\r\n");
-            }
-            System.out.println(stringBuilder.toString());
+        String[] textArray = {"David said that he will arrive United States on Sunday."};
+        int i = 0;
+        for (String text : textArray) {
+            List<CoreMap> result = StanfordParserUtil.parse(text);
+            StringBuilder stringBuilder = new StringBuilder();
+            // 下面的sentences 中包含了所有分析结果，遍历即可获知结果。
+            for (CoreMap sentence : result) {
+                // 原型、词性等信息
+                for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
+                    // 获取单词
+                    String word = token.get(CoreAnnotations.TextAnnotation.class);
+                    stringBuilder.append("word = " + word + " | ");
+                    // 获取词性标注
+                    String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+                    stringBuilder.append("pos = " + pos + " | ");
+                    //获取原型标注结果
+                    String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
+                    stringBuilder.append("lemma = " + lemma + " " + "\r\n");
+                    String ne = token.get(CoreAnnotations.NormalizedNamedEntityTagAnnotation.class);
+                    stringBuilder.append("ne = " + ne + " " + "\r\n");
+                    String ner = token.get(CoreAnnotations.NamedEntityTagAnnotation.class);
+                    stringBuilder.append("ner = " + ner + " " + "\r\n");
+                }
+                System.out.println(stringBuilder.toString());
 
-            // 依存关系信息
-            List<SemanticGraphEdge> semanticGraphEdgeList = getDependency(sentence.toString());
-            for (SemanticGraphEdge edge : semanticGraphEdgeList) {
-                System.out.println(edge.toString() + "  " + edge.getGovernor() + "  " + edge.getGovernor().index());
-            }
+                // 依存关系信息
+                List<SemanticGraphEdge> semanticGraphEdgeList = getDependency(sentence.toString());
+                for (SemanticGraphEdge edge : semanticGraphEdgeList) {
+                    System.out.println(edge.toString() + "  " + edge.getGovernor() + "  " + edge.getGovernor().index());
+                }
 
-            // 关系提取
-//            result = relationParse(sentence.toString());
-//            for (CoreMap s : result) {
-//                List<RelationTriple> realtions = new ArrayList<>(s.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class));
-//                sortRelationTripleList(realtions);
-//                double confidence = 0;
-//                // 最短的句子
-//                String shortest = s.toString();
-//                // 最长的句子
-//                String longest = "";
-//                for (RelationTriple relation : realtions) {
-//                    // 找出“可信度”最高的一批
-//                    if (relation.confidence >= confidence) {
-//                        confidence = relation.confidence;
+                // 关系提取
+//                result = relationParse(sentence.toString());
+//                for (CoreMap s : result) {
+//                    List<RelationTriple> realtions = new ArrayList<>(s.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class));
+//                    sortRelationTripleList(realtions);
+//                    double confidence = 0;
+//                    // 最短的句子长度
+//                    int shortest = s.toString().length();
+//                    // 最长的句子长度
+//                    int longest = 0;
+//                    for (RelationTriple relation : realtions) {
 //                        String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
-//                        if (temp.split(" ").length >= longest.split(" ").length) {
-//                            longest = temp;
+//                        System.out.println(temp);
+//                        // 找出“可信度”最高的一批
+//                        if (relation.confidence >= confidence) {
+//                            confidence = relation.confidence;
+//                            if (temp.split(" ").length >= longest) {
+//                                longest = temp.split(" ").length;
+//                            }
+//                            if (temp.split(" ").length <= shortest) {
+//                                shortest =temp.split(" ").length;
+//                            }
 //                        }
-//                        if (temp.split(" ").length <= shortest.split(" ").length) {
-//                            shortest = temp;
+//                    }
+//                    System.out.println("__________");
+//                    for (RelationTriple relation : realtions) {
+//                        String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
+//                        if (relation.confidence >= confidence) {
+//                            System.out.println(temp);
+////                            if (temp.split(" ").length == longest) {
+////                                System.out.println(temp);
+////                            }
+////                            if (temp.split(" ").length == shortest) {
+////                                System.out.println(temp);
+////                            }
+//                        } else {
+//                            break;
 //                        }
-//                    } else {
-//                        break;
 //                    }
 //                }
-//                System.out.println(shortest);
-//                System.out.println(longest);
-//            }
+            }
         }
+
     }
 }

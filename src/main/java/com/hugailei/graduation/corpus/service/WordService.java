@@ -18,9 +18,10 @@ public interface WordService {
      *
      * @param corpus    语料库名称
      * @param topic     主题标号
+     * @param rankNum   难度等级
      * @return
      */
-    List<WordDto> wordList(String corpus, int topic);
+    List<WordDto> wordList(String corpus, int topic, Integer rankNum);
 
     /**
      * 单词的词性、原型及形态查询

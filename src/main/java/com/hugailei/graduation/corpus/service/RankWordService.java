@@ -1,5 +1,6 @@
 package com.hugailei.graduation.corpus.service;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -17,4 +18,12 @@ public interface RankWordService {
      * @return
      */
     Set<String> findMoreDifficultRankWord(int rankNum);
+
+    /**
+     * 查询指定等级的词汇
+     *
+     * @param rankNum
+     * @return
+     */
+    List<String> findWordByRankNum(int rankNum);
 }

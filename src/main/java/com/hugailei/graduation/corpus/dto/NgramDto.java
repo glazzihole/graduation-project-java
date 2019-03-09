@@ -1,5 +1,6 @@
 package com.hugailei.graduation.corpus.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,11 +24,13 @@ public class NgramDto implements Serializable {
     /**
      * ngram 单词串
      */
+    @JsonProperty("ngram_string")
     private String ngramStr;
 
     /**
      * n值
      */
+    @JsonProperty("n_value")
     private int nValue;
 
     /**

@@ -1,5 +1,8 @@
 package com.hugailei.graduation.corpus.scripts;
 
+import com.hugailei.graduation.corpus.domain.Ngram;
+import com.hugailei.graduation.corpus.domain.Sentence;
+import com.hugailei.graduation.corpus.domain.Text;
 import com.hugailei.graduation.corpus.domain.WordWithTopic;
 import com.hugailei.graduation.corpus.dto.TopicDto;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
@@ -10,6 +13,7 @@ import edu.stanford.nlp.util.CoreMap;
 
 import java.io.*;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,8 +41,7 @@ public class LabelTopic {
 
     private static Connection con;
 
-    static {
-
+    public static void main(String[] args) throws Exception {
         try {
             //连接mysql数据库
             String driver = "com.mysql.jdbc.Driver";
@@ -53,12 +56,11 @@ public class LabelTopic {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-    public static void main(String[] args) throws Exception {
+
 //        formatText();
 //        labelTextTopic();
 //        labelSentenceTopic();
-//        labelCollocationTopic();
+        labelCollocationTopic();
         labelNgramTopic();
 //        labelWordTopic();
     }
@@ -259,29 +261,62 @@ public class LabelTopic {
         // 从数据库中读取ngram信息
         PreparedStatement preparedStatement = con.prepareStatement("SELECT * FROM tb_ngram");
         ResultSet resultSet = preparedStatement.executeQuery();
+        List<Ngram> ngramList = new ArrayList<>();
         while (resultSet.next()) {
             String corpus = resultSet.getString("corpus");
             int nValue = resultSet.getInt("n_value");
             String nGramString = resultSet.getString("ngram_str");
+            Ngram ngram = new Ngram();
+            ngram.setCorpus(corpus);
+            ngram.setNValue(nValue);
+            ngram.setNgramStr(nGramString);
+            ngramList.add(ngram);
+        }
 
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM tb_sentence WHERE corpus = '" + corpus + "'");
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                String text = rs.getString("sentence");
-                int topic = rs.getInt("topic");
+        PreparedStatement ps = con.prepareStatement("SELECT * FROM tb_text");
+        ResultSet rs = ps.executeQuery();
+        List<Text> textList = new ArrayList<>();
+        while (rs.next()) {
+            String corpus = rs.getString("corpus");
+            String text = rs.getString("text");
+            int topic = rs.getInt("topic");
+            Text t = new Text();
+            t.setCorpus(corpus);
+            t.setText(text);
+            t.setTopic(topic);
+            textList.add(t);
+        }
 
-                if (text.toLowerCase().contains(nGramString)) {
-                    int temp = text.toLowerCase().split(nGramString).length;
-                    int freq =  temp == 1 ? 1 : temp - 1;
-                    String key = nGramString + "~" + nValue + "~" + corpus + "~" + topic;
-                    if (key2Freq.containsKey(key)) {
-                        freq = key2Freq.get(key) + freq;
+        for (Ngram ngram : ngramList) {
+            String corpus = ngram.getCorpus();
+            String nGramString = ngram.getNgramStr();
+            int nValue = ngram.getNValue();
+            for (Text text : textList) {
+                if (text.getCorpus().equals(corpus)) {
+                    String textContent = text.getText();
+                    int topic = text.getTopic();
+                    if (textContent.toLowerCase().contains(nGramString + " ") ||
+                        textContent.toLowerCase().contains(nGramString + ".") ||
+                        textContent.toLowerCase().contains(nGramString + ",") ||
+                        textContent.toLowerCase().contains(nGramString + "?") ||
+                        textContent.toLowerCase().contains(nGramString + "!") ||
+                        textContent.toLowerCase().contains(nGramString + ":") ||
+                        textContent.toLowerCase().contains(nGramString + ";") ||
+                        textContent.toLowerCase().contains(nGramString + "'") ||
+                        textContent.toLowerCase().contains(nGramString + "\"")) {
+                        int temp = textContent.toLowerCase().split(nGramString).length;
+                        int freq =  temp == 1 ? 1 : temp - 1;
+                        String key = nGramString + "~" + nValue + "~" + corpus + "~" + topic;
+                        if (key2Freq.containsKey(key)) {
+                            freq = key2Freq.get(key) + freq;
+                        }
+                        key2Freq.put(key, freq);
+                        System.out.println(key2Freq.toString());
                     }
-                    key2Freq.put(key, freq);
-                    System.out.println(key2Freq.toString());
                 }
             }
         }
+
         System.out.println("分析完成，开始存入数据库");
         try {
             for (Map.Entry entry : key2Freq.entrySet()) {
@@ -291,7 +326,7 @@ public class LabelTopic {
                 int nValue = Integer.valueOf(key.split("~")[1]);
                 String corpus = key.split("~")[2];
                 int topic = Integer.valueOf(key.split("~")[3]);
-                PreparedStatement ps = con.prepareStatement("INSERT INTO tb_ngram_with_topic(" +
+                ps = con.prepareStatement("INSERT INTO tb_ngram_with_topic(" +
                         "ngram_str, " +
                         "n_value, " +
                         "freq, " +
@@ -323,7 +358,6 @@ public class LabelTopic {
     public static void labelWordTopic() throws Exception {
         Map<String, WordWithTopic> key2WordWithTopic = new HashMap<>();
         ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File("E:\\word_with_topic.txt")));
-
         try {
             key2WordWithTopic = (Map<String, WordWithTopic>)ois.readObject();
         } catch (Exception e) {

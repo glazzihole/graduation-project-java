@@ -16,7 +16,8 @@ public interface KeyWordService {
      * 查询指定语料库相对于参考语料库的关键词
      * @param corpus    语料库
      * @param refCorpus 参考语料库
+     * @param rankNum   等级
      * @return
      */
-    List<WordDto> keyWordList(String corpus, String refCorpus);
+    List<WordDto> keyWordList(String corpus, String refCorpus, Integer rankNum);
 }

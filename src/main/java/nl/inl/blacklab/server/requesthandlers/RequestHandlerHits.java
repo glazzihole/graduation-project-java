@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 文档匹配查询
@@ -187,25 +188,45 @@ public class RequestHandlerHits extends RequestHandler {
                         .startEntry("right").plain(c.right()).endEntry();
                 } 
                 else {
+                    Set<String> rankWordSet = null;
+                    if (request.getParameter("rank_num") != null) {
+                        rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(request.getParameter("rank_num"));
+                    }
                     String left = "", match = "", right = "";
                     // Add KWIC info
                     if(window!=null) {
                         Kwic c = window.getKwic(hit);
-                        List<String> leftWordsList = c.getLeft( "word" ),matchWordsList = c.getMatch( "word" ),rightWordsList = c.getRight( "word" );
+                        List<String> leftWordsList = c.getLeft( "word" ), matchWordsList = c.getMatch( "word" ), rightWordsList = c.getRight( "word" );
                         
                         for(String word : leftWordsList) {
+                            if (request.getParameter("rank_num") != null) {
+                                if (rankWordSet.contains(word)) {
+                                    word = CorpusConstant.STRENGTHEN_OPEN_LABEL + word + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
+                                }
+                            }
                             left = left + word + " ";
+
                         }
                         for(String word : matchWordsList) {
+                            if (request.getParameter("rank_num") != null) {
+                                if (rankWordSet.contains(word)) {
+                                    word = CorpusConstant.STRENGTHEN_OPEN_LABEL + word + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
+                                }
+                            }
                             match = match + word + " ";
                         }
                         for(String word : rightWordsList) {
+                            if (request.getParameter("rank_num") != null) {
+                                if (rankWordSet.contains(word)) {
+                                    word = CorpusConstant.STRENGTHEN_OPEN_LABEL + word + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
+                                }
+                            }
                             right = right + word + " ";
                         }
                     }
-                    ds.entry("left", left);
-                    ds.entry("match", match);
-                    ds.entry("right", right);
+                    ds.entry("left", left.trim());
+                    ds.entry("match", match.trim());
+                    ds.entry("right", right.trim());
                     
                 }
                 ds.entry("corpus", searchParam.getIndexName());

@@ -16,12 +16,10 @@ import java.util.List;
 @Repository
 public interface CollocationDao extends JpaRepository<Collocation, Long> {
     /**
-     * 按照第一个单词，第二个单词，第三个单词的内容查询所有搭配，并按照频率降序排序
+     * 按照词对查询搭配，并按照频率降序排序
      *
-     * @param firstWord
-     * @param secondWord
-     * @param thirdWord
+     * @param wordPair
      * @return
      */
-    List<Collocation> findAllByFirstWordAndSecondWordAndThirdWordOrderByFreqDesc(String firstWord, String secondWord, String thirdWord);
+    List<Collocation> findAllByWordPairOrderByFreqDesc(String wordPair);
 }

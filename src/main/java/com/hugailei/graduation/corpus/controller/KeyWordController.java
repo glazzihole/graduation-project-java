@@ -1,5 +1,7 @@
 package com.hugailei.graduation.corpus.controller;
 
+import com.hugailei.graduation.corpus.constants.CorpusConstant;
+import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.dto.WordDto;
 import com.hugailei.graduation.corpus.service.KeyWordService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;
@@ -10,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author HU Gailei
@@ -31,6 +34,7 @@ public class KeyWordController {
      *
      * @param corpus    指定语料库
      * @param refCorpus 参考语料库
+     * @param rankNum   等级
      * @param pageable
      * @return
      */
@@ -38,9 +42,10 @@ public class KeyWordController {
     @ResponseBody
     public ResponseVO keyWordList(@RequestParam String corpus,
                                   @RequestParam("ref_corpus") String refCorpus,
+                                  @RequestParam(value = "rank_num", required = false) Integer rankNum,
                                   Pageable pageable) {
         log.info("keyWordList | request to get keyword list");
-        List<WordDto> result = keyWordService.keyWordList(corpus, refCorpus);
+        List<WordDto> result = keyWordService.keyWordList(corpus, refCorpus, rankNum);
         if (result == null) {
             ResponseUtil.error();
         }

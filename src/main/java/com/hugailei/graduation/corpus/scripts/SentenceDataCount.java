@@ -19,7 +19,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author HU Gailei
@@ -29,9 +31,9 @@ import java.util.List;
  * </p>
  **/
 public class SentenceDataCount {
-    private static final String ARTICLE_FILE_PATH = "E:\\毕业论文相关\\作文\\ielts.txt";
-    private static final String OUTPUT_FILE_PATH = "E:\\毕业论文相关\\作文\\统计结果\\ielts.txt";
-    private static final int LEVEL = 5;
+    private static final String ARTICLE_FILE_PATH = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\训练集\\6.txt";
+    private static final String OUTPUT_FILE_PATH = "E:\\毕业论文相关\\作文\\阅读\\结果统计\\6.txt";
+    private static final int LEVEL =6;
     private static final String DB_HOST = "192.168.99.100";
     private static final String DB_PORT = "3307";
     private static final String DB_NAME="corpus";
@@ -60,7 +62,6 @@ public class SentenceDataCount {
                 List<CoreMap> result = StanfordParserUtil.parse(line);
                 for (CoreMap sentence : result) {
                     // 计算句子长度
-                    int sentenceLength = sentence.toString().split(" ").length;
                     int clauseCount = 0;
                     // 计算平均词长及各级单词数
                     int totalWordLength = 0;
@@ -68,6 +69,11 @@ public class SentenceDataCount {
                     int level1WordCount = 0, level2WordCount = 0, level3WordCount = 0;
                     int level4WordCount = 0, level5WordCount = 0, level6WordCount = 0;
 
+                    // 专有名词数量
+                    int properNounCount = 0;
+                    // 名词数量，动词数量，代词数量
+                    int nounCount = 0, verbCount = 0, pronounCount = 0, adjCount = 0, advCount = 0, prepCount = 0;
+                    Set<String> wordSet = new HashSet<>();
                     for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
                         String word = token.get(CoreAnnotations.TextAnnotation.class);
                         wordCount ++;
@@ -144,26 +150,109 @@ public class SentenceDataCount {
                                 break;
                             }
                         }
+
+                        // 计算专有名词数量
+                        String ner = token.get(CoreAnnotations.NamedEntityTagAnnotation.class);
+                        if (!ner.equals("O")) {
+                            properNounCount++;
+                        }
+
+                        // 计算各词性词汇数量
+                        String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+                        if (pos.matches("NN.*")) {
+                            nounCount ++;
+                        }
+                        else if (pos.matches("VB.*")) {
+                            verbCount ++;
+                        }
+                        else if (pos.matches("RB.*")) {
+                            advCount ++;
+                        }
+                        else if (pos.matches("JJ.*")) {
+                            adjCount ++;
+                        }
+                        else if (pos.equals("PRP")) {
+                            pronounCount ++;
+                        }
+                        else if (pos.equals("IN") || pos.equals("RP")) {
+                            prepCount ++;
+                        }
+
+                        wordSet.add(word.toLowerCase());
+
+                    } //  for (CoreLabel token )
+
+                    // 计算从句个数及最大从句长度
+                    int maxClauseLength = 0;
+                    Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+                    TregexMatcher matcher = TregexPattern.compile("SBAR | S").matcher(tree);
+                    while (matcher.findNextMatchingNode()) {
+                        clauseCount ++;
+                        int clauseLength = matcher.getMatch().getLeaves().size();
+                        if (clauseLength >= maxClauseLength) {
+                            maxClauseLength = clauseLength;
+                        }
                     }
 
-                    // 计算从句个数
-                    Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-                    TregexMatcher soThatClauseMatcher = TregexPattern.compile("SBAR | S").matcher(tree);
-                    while (soThatClauseMatcher.findNextMatchingNode()) {
-                        clauseCount ++;
+                    // 计算句法树深度
+                    int treeDepth = tree.depth();
+
+                    // 计算各短语的数量
+                    int nounPhraseCount = 0, verbPhraseCount = 0, adjPhraseCount = 0, advPhraseCount = 0, prepPhraseCount = 0;
+                    matcher = TregexPattern.compile("NP").matcher(tree);
+                    while (matcher.findNextMatchingNode()) {
+                         nounPhraseCount ++;
                     }
+                    matcher = TregexPattern.compile("PP").matcher(tree);
+                    while (matcher.findNextMatchingNode()) {
+                        prepPhraseCount ++;
+                    }
+                    matcher = TregexPattern.compile("VP").matcher(tree);
+                    while (matcher.findNextMatchingNode()) {
+                        verbPhraseCount ++;
+                    }
+                    matcher = TregexPattern.compile("ADJP").matcher(tree);
+                    while (matcher.findNextMatchingNode()) {
+                        adjPhraseCount ++;
+                    }
+                    matcher = TregexPattern.compile("ADVP").matcher(tree);
+                    while (matcher.findNextMatchingNode()) {
+                        advPhraseCount ++;
+                    }
+
+                    // 计算类符/形符比
+                    int typeCount = wordSet.size();
+                    double ratio = typeCount / wordCount;
+
+                    // 计算平均词长
                     int avgWordLength = totalWordLength / wordCount;
 
-                    // 写入到文件 句长，平均词长，从句数，四级单词数，六级单词数，专4单词数，专8单词数，托福雅思单词数，GRE/GMAT单词数
-                    String out = sentenceLength + "\t" +
-                                avgWordLength + "\t" +
-                                clauseCount + "\t" +
-                                level1WordCount + "\t" +
+                    // 写入到文件
+                    String out = level1WordCount + "\t" +
                                 level2WordCount + "\t" +
                                 level3WordCount + "\t" +
                                 level4WordCount + "\t" +
                                 level5WordCount + "\t" +
-                                level6WordCount;
+                                level6WordCount + "\t" +
+                                wordCount + "\t" +
+                                ratio + "\t" +
+                                avgWordLength + "\t" +
+                                clauseCount + "\t" +
+                                properNounCount + "\t" +
+                                nounCount + "\t" +
+                                verbCount + "\t" +
+                                adjCount + "\t" +
+                                advCount + "\t" +
+                                pronounCount + "\t" +
+                                prepCount + "\t" +
+                                nounPhraseCount + "\t" +
+                                verbPhraseCount + "\t" +
+                                adjPhraseCount + "\t" +
+                                advCount + "\t" +
+                                prepPhraseCount + "\t" +
+                                treeDepth + "\t" +
+                                maxClauseLength + "\t" +
+                                LEVEL;
                     System.out.println(out);
                     fileWriter.write(out + "\r\n");
                     fileWriter.flush();
