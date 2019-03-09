@@ -470,7 +470,11 @@ public class CollocationServiceImpl implements CollocationService {
 
                     if (found) {
                         // 查询搭配中的动词是否存在词组搭配，若存在，则需要将所有搭配中的改动次替换为词组
-                        if (firstPos.matches("VB.*") || secondPos.matches("VB.*")) {
+                        if (
+                            (firstPos.matches("VB.*") || secondPos.matches("VB.*"))
+                                &&
+                            (!relation.equals("compound:prt"))
+                        ){
                             int verbIndex = edge.getGovernor().index();
                             for (SemanticGraphEdge e : dependency.edgeListSorted()) {
                                 if (e.getGovernor().index() == verbIndex && e.getRelation().toString().equals("compound:prt")) {
@@ -483,6 +487,7 @@ public class CollocationServiceImpl implements CollocationService {
                                         secondWord = verbPhrase;
                                         secondPos = "PHRASE";
                                     }
+                                    break;
                                 }
                             }
                         }

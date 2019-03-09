@@ -124,7 +124,7 @@ public class StanfordParserUtil {
 
 
     public static void main(String[] args) {
-        String[] textArray = {"David said that he will arrive United States on Sunday."};
+        String[] textArray = {"He wouldn't have enough sense of self-preservation to come in out of the rain."};
         int i = 0;
         for (String text : textArray) {
             List<CoreMap> result = StanfordParserUtil.parse(text);
