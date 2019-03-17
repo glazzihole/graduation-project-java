@@ -1,7 +1,7 @@
 package com.hugailei.graduation.corpus.scripts;
 
 import com.hugailei.graduation.corpus.domain.SentencePattern;
-import com.hugailei.graduation.corpus.util.SentencePatternUtil;
+import com.hugailei.graduation.corpus.util.SentenceAnalysisUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import edu.stanford.nlp.util.CoreMap;
 
@@ -73,7 +73,7 @@ public class CountSententenceTypeInText {
                             break;
                     }
                     List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
-                    List<SentencePattern> sentencePatternList = SentencePatternUtil.findAllClauseType(coreMapList.get(0));
+                    List<SentencePattern> sentencePatternList = SentenceAnalysisUtil.findAllClauseType(coreMapList.get(0));
                     if (sentencePatternList != null) {
                         for (SentencePattern sentencePattern : sentencePatternList) {
                             int type = sentencePattern.getType();

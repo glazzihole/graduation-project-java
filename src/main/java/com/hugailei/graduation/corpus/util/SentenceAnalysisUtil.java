@@ -1,12 +1,13 @@
 package com.hugailei.graduation.corpus.util;
 
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.hugailei.graduation.corpus.domain.Sentence;
 import com.hugailei.graduation.corpus.domain.SentencePattern;
 import com.hugailei.graduation.corpus.enums.SentencePatternType;
+import edu.stanford.nlp.ie.util.RelationTriple;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Label;
+import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
@@ -18,7 +19,7 @@ import edu.stanford.nlp.util.CoreMap;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.logging.log4j.core.Core;
+import org.apache.commons.collections.SetUtils;
 
 import java.util.*;
 
@@ -26,10 +27,10 @@ import java.util.*;
  * @author HU Gailei
  * @date 2018/11/11
  * <p>
- * description: 各类句型匹配及提取
+ * description: 各类句子分析结果
  * </p>
  **/
-public class SentencePatternUtil {
+public class SentenceAnalysisUtil {
 
     @Data
     @NoArgsConstructor
@@ -88,14 +89,14 @@ public class SentencePatternUtil {
             sentencePatternList.addAll(tempList);
         }
 
-        if (SentencePatternUtil.hasSoThat(sentence)) {
+        if (SentenceAnalysisUtil.hasSoThat(sentence)) {
             int type = SentencePatternType.S_THAT.getType();
             SentencePattern sentencePattern = new SentencePattern();
             sentencePattern.setType(type);
             sentencePatternList.add(sentencePattern);
         }
 
-        if (SentencePatternUtil.hasTooTo(sentence)) {
+        if (SentenceAnalysisUtil.hasTooTo(sentence)) {
             int type = SentencePatternType.TOO_TO.getType();
             SentencePattern sentencePattern = new SentencePattern();
             sentencePattern.setType(type);
@@ -104,15 +105,15 @@ public class SentencePatternUtil {
 
         String shorterText = abstractSentence(sentence.toString()).replace(".", "");
         CoreMap shorterTextCoreMap = StanfordParserUtil.parse(shorterText).get(0);
-        if (SentencePatternUtil.hasInvertedStructure(sentence) ||
-            SentencePatternUtil.hasInvertedStructure(shorterTextCoreMap)) {
+        if (SentenceAnalysisUtil.hasInvertedStructure(sentence) ||
+            SentenceAnalysisUtil.hasInvertedStructure(shorterTextCoreMap)) {
             int type = SentencePatternType.INVERTED_STRUCTURE.getType();
             SentencePattern sentencePattern = new SentencePattern();
             sentencePattern.setType(type);
             sentencePatternList.add(sentencePattern);
         }
 
-        if (SentencePatternUtil.hasEmphaticStructure(sentence)) {
+        if (SentenceAnalysisUtil.hasEmphaticStructure(sentence)) {
             int type = SentencePatternType.EMPHATIC_STRUCTURE.getType();
             SentencePattern sentencePattern = new SentencePattern();
             sentencePattern.setType(type);
@@ -1151,7 +1152,7 @@ public class SentencePatternUtil {
      *
      * @param sentence 句法分析结果
      */
-    public static List<String> getPrincipalClause(CoreMap sentence) {
+    public static List<String> getSimpleSentence(CoreMap sentence) {
         SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
         List<String> resultList = new ArrayList<>();
         for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
@@ -1175,7 +1176,21 @@ public class SentencePatternUtil {
         if (resultList.isEmpty()) {
             return null;
         }
-        return resultList;
+
+        Set<String> sentenceSet1 = new HashSet<>(resultList);
+        // 对句子进行关系提取
+        Set<String> sentenceSet2 = new HashSet<>();
+        CoreMap s = StanfordParserUtil.relationParse(sentence.toString()).get(0);
+        List<RelationTriple> realtions = new ArrayList<>(s.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class));
+        for (RelationTriple relation : realtions) {
+            String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
+            if (temp.split(" ").length <= 15) {
+                sentenceSet2.add(temp);
+            }
+        }
+        sentenceSet2.retainAll(sentenceSet1);
+        return new ArrayList<>(sentenceSet2);
+
     }
 
     /**
@@ -1673,12 +1688,15 @@ public class SentencePatternUtil {
 //        String text = "This is such an interesting book that we all enjoy reading it. ";
 //        String text = "It was yesterday that he met Li Ping.";
 //        String text = "Lucky is she who was admitted to a famous university last year.";
-        String text = "I have to take care of him.";
+        String text = "They consider that fresh water can be got from the rain , \" +\n" +
+                "                \"the river , \" +\n" +
+                "                \"the will , etc. and these resources of fresh water will never dry up , \" +\n" +
+                "                \"so they can use fresh water freely as they want .";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         for(CoreMap sentence : result) {
             String shorterText = abstractSentence(sentence.toString());
             System.out.println("抽象后的句子：" + shorterText);
-            System.out.println("句子主干：" + getPrincipalClause(StanfordParserUtil.parse(text).get(0)));
+            System.out.println("句子主干：" + getSimpleSentence(StanfordParserUtil.parse(text).get(0)));
 
             System.out.println("sothat句型" + hasSoThat(sentence));
             shorterText = shorterText.replaceAll("\\.", "");

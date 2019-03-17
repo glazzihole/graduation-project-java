@@ -4,7 +4,6 @@ import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import com.hugailei.graduation.corpus.dao.KeywordDao;
 import com.hugailei.graduation.corpus.dto.WordDto;
 import com.hugailei.graduation.corpus.service.KeyWordService;
-import com.hugailei.graduation.corpus.util.ResponseUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,12 +45,12 @@ public class KeyWordServiceImpl implements KeyWordService {
                     })
                     .collect(Collectors.toList());
             if (rankNum != null) {
-                Set<String> rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
+                Set<String> rankWordSet = CorpusConstant.RANK_NUM_TO_DIFFICULT_WORD_SET.get(rankNum);
                 for (int i = 0; i < wordDtoList.size(); i++) {
                     WordDto wordDto = wordDtoList.get(i);
                     String word = wordDto.getForm();
                     if (rankWordSet.contains(word)) {
-                        word = CorpusConstant.STRENGTHEN_OPEN_LABEL + word + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
+                        word = CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + word + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL;
                     }
                     wordDto.setForm(word);
                     wordDtoList.set(i, wordDto);

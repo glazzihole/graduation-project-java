@@ -1,7 +1,7 @@
 package com.hugailei.graduation.corpus.scripts;
 
 import com.hugailei.graduation.corpus.util.FileUtil;
-import com.hugailei.graduation.corpus.util.SentencePatternUtil;
+import com.hugailei.graduation.corpus.util.SentenceAnalysisUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import edu.stanford.nlp.util.CoreMap;
 import org.jdom.Document;
@@ -46,11 +46,11 @@ public class CreatePhraseXmlFile {
                 List<CoreMap> sentenceList = StanfordParserUtil.parse(line);
 
                 for (CoreMap sentence : sentenceList) {
-                    List<List<SentencePatternUtil.Edge>> edgeListList = SentencePatternUtil.matchPhrase(sentence);
+                    List<List<SentenceAnalysisUtil.Edge>> edgeListList = SentenceAnalysisUtil.matchPhrase(sentence);
 
                     // 将短语及标注信息写入XML文件
                     int phraseId = 0;
-                    for (List<SentencePatternUtil.Edge> edgeList : edgeListList) {
+                    for (List<SentenceAnalysisUtil.Edge> edgeList : edgeListList) {
 
                         // XML处理相关
                         Element tei = new Element("TEI");
@@ -64,7 +64,7 @@ public class CreatePhraseXmlFile {
                         s.setAttribute("n", textId + "-" + sentenceId + "-" + phraseId );
 
                         int wordNum = 0;
-                        for (SentencePatternUtil.Edge edge : edgeList) {
+                        for (SentenceAnalysisUtil.Edge edge : edgeList) {
                             Element w = new Element("w");
                             w.setAttribute("lemma", edge.getLemma());
                             w.setAttribute("type", edge.getPos());

@@ -61,6 +61,12 @@ public class CollocationWithTopic implements Serializable {
     private String thirdPos;
 
     /**
+     * 搭配整体的表示
+     */
+    @Column(name = "word_pair")
+    private String wordPair;
+
+    /**
      * 该搭配在语料库中出现的频次
      */
     @Column(name = "freq")

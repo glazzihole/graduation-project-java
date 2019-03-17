@@ -29,11 +29,8 @@ public class StudentTextController {
     @Autowired
     private StudentTextService studentTextService;
 
-    @Autowired
-    private CollocationService collocationService;
-
     /**
-     * 存储学生作文
+     * 存储学生作文，同时更新学生已掌握的词汇
      *
      * @param studentTextDto
      * @return
@@ -50,7 +47,7 @@ public class StudentTextController {
     }
 
     /**
-     * 更新学生作文
+     * 更新学生作文，同时更新学习已掌握的等级词汇
      *
      * @param studentTextDto
      * @return
@@ -88,23 +85,6 @@ public class StudentTextController {
     }
 
     /**
-     * 获取学生作文中的所有搭配
-     *
-     * @param text
-     * @return
-     */
-    @PostMapping("/collocation")
-    @ResponseBody
-    public ResponseVO getCollocationInText(@RequestParam String text) {
-        log.info("getCollocationInText | request to get collocation in student's text");
-        CollocationDto.CollocationInfo result = collocationService.getCollocationInText(text);
-        if (result == null) {
-            return ResponseUtil.error();
-        }
-        return ResponseUtil.success(result);
-    }
-
-    /**
      * 获取学生作文中的所有句型
      *
      * @param text
@@ -121,6 +101,12 @@ public class StudentTextController {
         return ResponseUtil.success(result);
     }
 
+    /**
+     * 计算学生作文的主题性
+     *
+     * @param text
+     * @return
+     */
     @PostMapping("/topic")
     @ResponseBody
     public ResponseVO getTextTopic(@RequestParam String text) {

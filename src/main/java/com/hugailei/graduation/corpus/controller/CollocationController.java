@@ -1,5 +1,6 @@
 package com.hugailei.graduation.corpus.controller;
 
+import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.service.CollocationService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -32,14 +34,16 @@ public class CollocationController {
      *
      * @param collocationDto
      * @param pageable
+     * @param request
      * @return
      */
     @PostMapping
     @ResponseBody
     public ResponseVO searchCollocationOfWord(@RequestBody @Valid CollocationDto collocationDto,
-                                              Pageable pageable) {
+                                              Pageable pageable,
+                                              HttpServletRequest request) {
         log.info("searchCollocationOfWord | request to search collocation of word");
-        List<CollocationDto> result = collocationService.searchCollocationOfWord(collocationDto);
+        List<CollocationDto> result = collocationService.searchCollocationOfWord(collocationDto, request);
         if (result == null) {
             return ResponseUtil.error();
         }
@@ -50,13 +54,15 @@ public class CollocationController {
      * 获取同义搭配
      *
      * @param collocationDto
+     * @param request
      * @return
      */
     @PostMapping("/synonym")
     @ResponseBody
-    public ResponseVO searchSynonymousCollocation(@RequestBody @Valid CollocationDto collocationDto) {
+    public ResponseVO searchSynonymousCollocation(@RequestBody @Valid CollocationDto collocationDto,
+                                                  HttpServletRequest request) {
         log.info("searchSynonymousCollocation | request to search synonymous collocation");
-        List<CollocationDto> result = collocationService.searchSynonymousCollocation(collocationDto);
+        List<CollocationDto> result = collocationService.searchSynonymousCollocation(collocationDto, request);
         if (result == null) {
             ResponseUtil.error();
         }
@@ -104,15 +110,18 @@ public class CollocationController {
      * @param wordPair
      * @param posPair
      * @param rankNum
+     * @param request
      * @return
      */
     @GetMapping("/synonym/recommend")
     @ResponseBody
     public ResponseVO recommendSynonym(@RequestParam("word_pair") String wordPair,
                                        @RequestParam("pos_pair") String posPair,
-                                       @RequestParam(value = "rank_num", required = false) Integer rankNum) {
+                                       @RequestParam(value = "rank_num", required = false) Integer rankNum,
+                                       @RequestParam("topic") Integer topic,
+                                       HttpServletRequest request) {
         log.info("recommendSynonym | request to recommend synonym collocation");
-        List<CollocationDto> result = collocationService.recommendSynonym(wordPair, posPair, rankNum);
+        List<CollocationDto> result = collocationService.recommendSynonym(wordPair, posPair, rankNum, topic, request);
         if (result == null) {
             ResponseUtil.error();
         }
@@ -137,6 +146,62 @@ public class CollocationController {
         }
         if (rankNum == null) {
             return ResponseUtil.success(result);
+        }
+        return ResponseUtil.success(result);
+    }
+
+    /**
+     * 搭配的主题分布查询
+     *
+     * @param word_pair
+     * @param corpus
+     * @return
+     */
+    @GetMapping("/distribution/topic")
+    @ResponseBody
+    public ResponseVO topicDistribution(@RequestParam String word_pair,
+                                        @RequestParam String corpus) {
+        log.info("topicDistribution | request to get topic distribution of collocation");
+        List<CollocationDto> result = collocationService.topicDistribution(word_pair, corpus);
+        if (result == null) {
+            ResponseUtil.error();
+        }
+        return ResponseUtil.success(result);
+    }
+
+    /**
+     * 搭配的语体（语料库）分布查询
+     *
+     * @param word_pair
+     * @return
+     */
+    @GetMapping("/distribution/corpus")
+    @ResponseBody
+    public ResponseVO corpusDistribution(@RequestParam String word_pair) {
+        log.info("topicDistribution | request to get corpus distribution of collocation");
+        List<CollocationDto> result = collocationService.corpusDistribution(word_pair);
+        if (result == null) {
+            ResponseUtil.error();
+        }
+        return ResponseUtil.success(result);
+    }
+
+    /**
+     * 获取文本中的所有搭配
+     *
+     * @param text
+     * @return
+     */
+    @PostMapping("/text-analysis")
+    @ResponseBody
+    public ResponseVO getCollocationInSentence(@RequestParam String text) {
+        log.info("getCollocationInSentence | request to get collocation in sentence");
+        text = text
+                .replaceAll(CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL, "")
+                .replaceAll(CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL, "");
+        CollocationDto.CollocationInfo result = collocationService.getCollocationInText(text);
+        if (result == null) {
+            return ResponseUtil.error();
         }
         return ResponseUtil.success(result);
     }

@@ -44,13 +44,45 @@ public class DeleteSomeCollocation {
         if (!con.isClosed()) {
             System.out.println("成功连接至数据库!");
         }
-        String[] lines = {"It fed itself, except when poor harvests compelled the importation of grain, and it supplemented agriculture by grazing, fishing, and commerce, chiefly with the Netherlands, but growing in many directions.\n" +
-                "Such variations in size, shape, chemistry, conduction speed, excitation threshold, and the like -- as had been demonstrated in nerve cells -- remained negligible in significance for any possible correlation with the manifold dimensions of mental experience.\n" +
-                "In one experiment, when an electric stimulus was applied to a given sensory field of the cerebral cortex of a conscious human subject, it produced a sensation of the appropriate modality for that particular locus, that is, a visual sensation from the visual cortex, an auditory sensation from the auditory cortex, and so on.\n" +
-                "Public hospitals, boons to the poor and still a distinguishing feature of the American medical industry, are among those institutions under threat of the budgetary ax.\n" +
-                "Citigroup's board was locked in debate over its new leader yesterday, with no clear consensus over who would be tapped. Vikram S.Pandit, the former Morgan Stanley investment banker who joined Citigroup in July, remains the leading candidate, according to people briefed on the situation. \n" +
-                "Leadinu water scientists have issued one of the sternest warnings yet about global food supplies, saying that the world's population may have to switch almost completely to avegetarian diet over the next 40 years to avoid catastrophic shortages.",};
+        String[] lines = {"Studies of plants have now identified a new class of regulatory molecules called oligosaccharins.",};
 
+        // 读取数据库，存储各级词汇
+        Set<String> rank1WordSet = new HashSet<>();
+        Set<String> rank2WordSet = new HashSet<>();
+        Set<String> rank3WordSet = new HashSet<>();
+        Set<String> rank4WordSet = new HashSet<>();
+        Set<String> rank5WordSet = new HashSet<>();
+        Set<String> rank6WordSet = new HashSet<>();
+        PreparedStatement ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 1");
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            rank1WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 2");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank2WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 3");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank3WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 4");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank4WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 5");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank5WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 6");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank6WordSet.add(rs.getString("word"));
+        }
        for (String line : lines) {
            List<CoreMap> result = StanfordParserUtil.parse(line);
            for (CoreMap sentence : result) {
@@ -73,74 +105,38 @@ public class DeleteSomeCollocation {
                    totalWordLength += word.length();
 
                    String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
-                   PreparedStatement ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                           "and rank_num = ?");
-                   ps.setString(1, lemma);
-                   ps.setInt(2, 1);
-                   ResultSet rs = ps.executeQuery();
                    boolean found = false;
-                   while (rs.next()) {
+                   if (rank1WordSet.contains(lemma)) {
                        level1WordCount ++;
                        found = true;
-                       break;
                    }
                    if (!found) {
-                       ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                               "and rank_num = ?");
-                       ps.setString(1, lemma);
-                       ps.setInt(2, 2);
-                       rs = ps.executeQuery();
-                       while (rs.next()) {
+                      if (rank2WordSet.contains(lemma)) {
                            level2WordCount ++;
                            found = true;
-                           break;
                        }
                    }
                    if (!found) {
-                       ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                               "and rank_num = ?");
-                       ps.setString(1, lemma);
-                       ps.setInt(2, 3);
-                       rs = ps.executeQuery();
-                       while (rs.next()) {
-                           level3WordCount ++;
-                           found = true;
-                           break;
-                       }
+                      if (rank3WordSet.contains(lemma)) {
+                          level3WordCount ++;
+                          found = true;
+                      }
                    }
                    if (!found) {
-                       ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                               "and rank_num = ?");
-                       ps.setString(1, lemma);
-                       ps.setInt(2, 4);
-                       rs = ps.executeQuery();
-                       while (rs.next()) {
-                           level4WordCount ++;
-                           found = true;
-                           break;
-                       }
+                      if (rank4WordSet.contains(lemma)) {
+                          level4WordCount ++;
+                          found = true;
+                      }
                    }
                    if (!found) {
-                       ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                               "and rank_num = ?");
-                       ps.setString(1, lemma);
-                       ps.setInt(2, 5);
-                       rs = ps.executeQuery();
-                       while (rs.next()) {
+                       if (rank5WordSet.contains(lemma)) {
                            level5WordCount ++;
                            found = true;
-                           break;
                        }
                    }
                    if (!found) {
-                       ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                               "and rank_num = ?");
-                       ps.setString(1, lemma);
-                       ps.setInt(2, 6);
-                       rs = ps.executeQuery();
-                       while (rs.next()) {
+                       if (rank6WordSet.contains(lemma)) {
                            level6WordCount ++;
-                           break;
                        }
                    }
 
@@ -215,22 +211,22 @@ public class DeleteSomeCollocation {
 
                // 计算类符/形符比
                int typeCount = wordSet.size();
-               double ratio = typeCount / wordCount;
+               double ratio = Double.valueOf(String.valueOf(typeCount)) / Double.valueOf(String.valueOf(wordCount));
 
                // 计算平均词长
                int avgWordLength = totalWordLength / wordCount;
 
                // 写入到文件
                double out = level1WordCount*1 +
-                       level2WordCount*2 +
-                       level3WordCount*3 +
-                       level4WordCount*4 +
-                       level5WordCount*5 +
-                       level6WordCount*6 +
+                       level2WordCount*3 +
+                       level3WordCount*5 +
+                       level4WordCount*6 +
+                       level5WordCount*10 +
+                       level6WordCount*15 +
                        wordCount +
                        ratio +
                        avgWordLength +
-                       clauseCount +
+                       clauseCount*10 +
                        properNounCount +
                        nounCount +
                        verbCount +
@@ -244,7 +240,7 @@ public class DeleteSomeCollocation {
                        advCount +
                        prepPhraseCount +
                        treeDepth +
-                       maxClauseLength;
+                       maxClauseLength * 2;
                System.out.println(out);
            } // for (CoreMap sentence : result)
        }

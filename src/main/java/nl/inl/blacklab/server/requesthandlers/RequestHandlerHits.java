@@ -1,6 +1,7 @@
 package nl.inl.blacklab.server.requesthandlers;
 
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
+import com.hugailei.graduation.corpus.service.StudentRankWordService;
 import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.search.*;
 import nl.inl.blacklab.search.grouping.HitGroup;
@@ -13,13 +14,11 @@ import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.jobs.*;
 import nl.inl.blacklab.server.search.BlsConfig;
 import org.apache.lucene.document.Document;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 文档匹配查询
@@ -28,6 +27,10 @@ import java.util.Set;
  */
 @Slf4j
 public class RequestHandlerHits extends RequestHandler {
+
+    @Autowired
+    private StudentRankWordService studentRankWordService;
+
     public RequestHandlerHits(BlackLabServer servlet, HttpServletRequest request, User user, String indexName, String urlResource, String urlPathPart) {
         super(servlet, request, user, indexName, urlResource, urlPathPart);
     }
@@ -152,6 +155,23 @@ public class RequestHandlerHits extends RequestHandler {
             int pageNo = (searchParam.getInteger("first")/searchParam.getInteger("number")) + 1 ;
             int pageSize =  searchParam.getInteger("number") < 0 || searchParam.getInteger("number") > searchMan.config().maxPageSize() ? searchMan.config().defaultPageSize() : searchParam.getInteger("number");
             double totalPages = Math.ceil( (double)totalHits/ (double)pageSize );
+            Set<String> difficultWordSet = new HashSet<>();
+            Set<String> rankWordSet = new HashSet<>();
+            Set<String> studentRankWordSet = new HashSet<>();
+
+            // 获取等级
+            int rankNum = 0;
+            if (request.getParameter("rank_num") != null) {
+                // 获取等级
+                rankNum = Integer.valueOf(request.getParameter("rank_num"));
+                // 获取高难度词汇
+                difficultWordSet = CorpusConstant.RANK_NUM_TO_DIFFICULT_WORD_SET.get(rankNum);
+                // 获取当前等级下的词汇
+                rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
+                // 获取学生已掌握的等级词汇
+                Long studentId = (Long)request.getSession().getAttribute("student_id");
+                studentRankWordSet = studentRankWordService.getStudentRankWord(studentId, rankNum);
+            }
 
             ds.startItem("result").startMap();
             ds.entry("status", CorpusConstant.SUCCESS);
@@ -167,7 +187,6 @@ public class RequestHandlerHits extends RequestHandler {
             ds.startEntry("page").startList();
             Map<Integer, String> pids = new HashMap<>();
             for (Hit hit: window) {
-                ds.startItem("hit").startMap();
 
                 // Find pid
                 String pid = pids.get(hit.doc);
@@ -177,60 +196,45 @@ public class RequestHandlerHits extends RequestHandler {
                     pids.put(hit.doc, pid);
                 }
 
-                boolean useOrigContent = searchParam.getString("usecontent").equals("orig");
+                ds.entry("id", pid + hit.start + hit.end);
 
-                ds.entry("id", pid+hit.start+hit.end);
-                if (useOrigContent) {
-                    // Add concordance from original XML
-                    Concordance c = window.getConcordance(hit);
-                    ds  .startEntry("left").plain(c.left()).endEntry()
-                        .startEntry("match").plain(c.match()).endEntry()
-                        .startEntry("right").plain(c.right()).endEntry();
-                } 
-                else {
-                    Set<String> rankWordSet = null;
-                    if (request.getParameter("rank_num") != null) {
-                        rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(request.getParameter("rank_num"));
-                    }
-                    String left = "", match = "", right = "";
-                    // Add KWIC info
-                    if(window!=null) {
-                        Kwic c = window.getKwic(hit);
-                        List<String> leftWordsList = c.getLeft( "word" ), matchWordsList = c.getMatch( "word" ), rightWordsList = c.getRight( "word" );
-                        
-                        for(String word : leftWordsList) {
-                            if (request.getParameter("rank_num") != null) {
-                                if (rankWordSet.contains(word)) {
-                                    word = CorpusConstant.STRENGTHEN_OPEN_LABEL + word + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
-                                }
-                            }
-                            left = left + word + " ";
+                String left = "", match = "", right = "";
+                // Add KWIC info
+                if(window!=null) {
+                    Kwic c = window.getKwic(hit);
+                    List<String> leftWordsList = c.getLeft( "word" ), matchWordsList = c.getMatch( "word" ), rightWordsList = c.getRight( "word" );
 
+                    for(String word : leftWordsList) {
+                        if (rankWordSet.contains(word) && !studentRankWordSet.contains(word)) {
+                            word = CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + word + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL;
+                        } else if (difficultWordSet.contains(word) && !studentRankWordSet.contains(word)) {
+                            word = CorpusConstant.DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL + word + CorpusConstant.DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL;
                         }
-                        for(String word : matchWordsList) {
-                            if (request.getParameter("rank_num") != null) {
-                                if (rankWordSet.contains(word)) {
-                                    word = CorpusConstant.STRENGTHEN_OPEN_LABEL + word + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
-                                }
-                            }
-                            match = match + word + " ";
-                        }
-                        for(String word : rightWordsList) {
-                            if (request.getParameter("rank_num") != null) {
-                                if (rankWordSet.contains(word)) {
-                                    word = CorpusConstant.STRENGTHEN_OPEN_LABEL + word + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
-                                }
-                            }
-                            right = right + word + " ";
-                        }
+                        left = left + word + " ";
+
                     }
-                    ds.entry("left", left.trim());
-                    ds.entry("match", match.trim());
-                    ds.entry("right", right.trim());
-                    
+                    for(String word : matchWordsList) {
+                        if (rankWordSet.contains(word) && !studentRankWordSet.contains(word)) {
+                            word = CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + word + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL;
+                        } else if (difficultWordSet.contains(word) && !studentRankWordSet.contains(word)) {
+                            word = CorpusConstant.DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL + word + CorpusConstant.DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL;
+                        }
+                        match = match + word + " ";
+                    }
+                    for(String word : rightWordsList) {
+                        if (rankWordSet.contains(word) && !studentRankWordSet.contains(word)) {
+                            word = CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + word + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL;
+                        } else if (difficultWordSet.contains(word) && !studentRankWordSet.contains(word)) {
+                            word = CorpusConstant.DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL + word + CorpusConstant.DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL;
+                        }
+                        right = right + word + " ";
+                    }
                 }
+                ds.entry("left", left.trim());
+                ds.entry("match", match.trim());
+                ds.entry("right", right.trim());
+
                 ds.entry("corpus", searchParam.getIndexName());
-                ds.endMap().endItem();
             }
             ds.endList().endEntry();
             ds.endDataEntry("data");

@@ -53,8 +53,6 @@ public class PhraseController {
         handler.checkConfig(request, response, blackLabServer);
         RequestHandler requestHandler = new SentenceRequestHandler(
                 blackLabServer,
-                null,
-                null,
                 request, user,
                 INDEX_PREFIX + corpus,
                 null,

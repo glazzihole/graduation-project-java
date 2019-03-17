@@ -66,17 +66,19 @@ public class NgramController {
      * @param topic     主题
      * @param rankNum   难度等级
      * @param pageable
+     * @param request
      * @return
      */
     @GetMapping("/list")
     @ResponseBody
     public ResponseVO ngramList(@RequestParam String corpus,
                                 @RequestParam("n_value") int nValue,
-                                @RequestParam(required = false, defaultValue = "0") int topic,
+                                @RequestParam(required = false) Integer topic,
                                 @RequestParam(value = "rank_num", required = false) Integer rankNum,
-                                Pageable pageable) {
+                                Pageable pageable,
+                                HttpServletRequest request) {
         log.info("ngramList | request to get ngram list of corpus");
-        List<NgramDto> result = ngramService.ngramList(corpus, nValue, topic, rankNum);
+        List<NgramDto> result = ngramService.ngramList(corpus, nValue, topic, rankNum, request);
         if (result == null) {
             ResponseUtil.error();
         }

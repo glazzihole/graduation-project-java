@@ -44,7 +44,7 @@ public class WordRequestHandler extends RequestHandler {
 
             Set<String> rankWordSet = null;
             if (request.getParameter("rank_num") != null) {
-                rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(request.getParameter("rank_num"));
+                rankWordSet = CorpusConstant.RANK_NUM_TO_DIFFICULT_WORD_SET.get(request.getParameter("rank_num"));
             }
 
             // Search is done; construct the results object

@@ -12,10 +12,9 @@ import com.hugailei.graduation.corpus.domain.CollocationWithTopic;
 import com.hugailei.graduation.corpus.domain.WordExtension;
 import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.service.CollocationService;
-import com.hugailei.graduation.corpus.util.ResponseUtil;
-import com.hugailei.graduation.corpus.util.SentencePatternUtil;
+import com.hugailei.graduation.corpus.service.StudentRankWordService;
+import com.hugailei.graduation.corpus.util.SentenceAnalysisUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
-import com.hugailei.graduation.corpus.vo.ResponseVO;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
@@ -27,12 +26,14 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author HU Gailei
@@ -58,19 +59,22 @@ public class CollocationServiceImpl implements CollocationService {
     @Autowired
     private CollocationFromDictDao collocationFromDictDao;
 
+    @Autowired
+    private StudentRankWordService studentRankWordService;
+
     private final static String NOT_IMPORTANT = "notsoimportant";
 
     @Override
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     @Cacheable(value = "corpus", key = "#collocationDto.toString()", unless = "#result eq null")
-    public List<CollocationDto> searchCollocationOfWord(CollocationDto collocationDto) {
+    public List<CollocationDto> searchCollocationOfWord(CollocationDto collocationDto, HttpServletRequest request) {
         try {
             log.info("searchCollocationOfWord | collocationDto:{}", collocationDto.toString());
             Sort sort = new Sort(Sort.Direction.DESC, "freq");
             List<CollocationDto> resultList = new ArrayList<>();
             CollocationDto temp = new CollocationDto();
             // 不带主题的查询
-            if (collocationDto.getTopic() == null ) {
+            if (collocationDto.getTopic() == null) {
                 Collocation collocation = new Collocation();
                 BeanUtils.copyProperties(collocationDto, collocation);
                 collocationDao.findAll(Example.of(collocation), sort)
@@ -90,7 +94,9 @@ public class CollocationServiceImpl implements CollocationService {
             }
             log.info("searchCollocationOfWord | result size: {}", (resultList != null ? resultList.size() : 0));
             if (collocationDto.getRankNum() != null) {
-                labelCollocationDtoRankWord(resultList, collocationDto.getRankNum());
+                HttpSession session = request.getSession();
+                Long studentId = (Long)session.getAttribute("studentId");
+                labelWord(resultList, collocationDto.getRankNum(), studentId);
             }
             return resultList;
         } catch (Exception e) {
@@ -106,7 +112,8 @@ public class CollocationServiceImpl implements CollocationService {
             key = "'synonymous_collocation_' + #collocationDto.toString()",
             unless = "#result eq null"
     )
-    public List<CollocationDto> searchSynonymousCollocation(CollocationDto collocationDto) {
+    public List<CollocationDto> searchSynonymousCollocation(CollocationDto collocationDto,
+                                                            HttpServletRequest request) {
         try {
             log.info("searchSynonymousCollocation | collocationDto: {}", collocationDto.toString());
             // 对各单词的词性进行基本类型还原
@@ -185,12 +192,15 @@ public class CollocationServiceImpl implements CollocationService {
             }
             List<Collocation> tempCollocationList = new ArrayList<>();
             List<CollocationWithTopic> tempCollocationWithTopic = new ArrayList<>();
+            // 未指定主题的查询
             if (collocationDto.getTopic() == null) {
                 Collocation collocation = new Collocation();
                 BeanUtils.copyProperties(collocationWithTopic, collocation);
                 Example<Collocation> collocationExample = Example.of(collocation);
                 tempCollocationList = collocationDao.findAll(collocationExample);
-            } else {
+            }
+            // 指定了查询主题
+            else {
                 Example<CollocationWithTopic> collocationWithTopicExample = Example.of(collocationWithTopic);
                 tempCollocationWithTopic = collocationWithTopicDao.findAll(collocationWithTopicExample);
             }
@@ -282,7 +292,8 @@ public class CollocationServiceImpl implements CollocationService {
             resultList.addAll(resultListFromCorpus);
             log.info("searchSynonymousCollocation | result size: {}", (resultList != null ? resultList.size() : 0));
             if (collocationDto.getRankNum() != null) {
-                labelCollocationDtoRankWord(resultList, collocationDto.getRankNum());
+                Long studentId = (Long)request.getSession().getAttribute("studentId");
+                labelWord(resultList, collocationDto.getRankNum(), studentId);
             }
             return resultList;
         } catch (Exception e) {
@@ -315,7 +326,7 @@ public class CollocationServiceImpl implements CollocationService {
                                 "nmod:agent".equals(relation)) {
                             String adjNounRegex = "(JJ[A-Z]{0,1})-(NN[A-Z]{0,1})";
                             String nounverbRegex = "((NN[A-Z]{0,1})|(PRP))-(VB[A-Z]{0,1})";
-                            SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), sentence);
+                            SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                             if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(adjNounRegex)) {
                                 firstWord = edge.getGovernor().lemma();
                                 firstIndex = edge.getGovernor().index();
@@ -334,7 +345,7 @@ public class CollocationServiceImpl implements CollocationService {
                         }
                         else if (relation.startsWith("dobj") || relation.startsWith("nsubjpass")) {
                             String verbNounRegex = "(VB[A-Z]{0,1})-((NN[A-Z]{0,1})|(PRP))";
-                            SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), sentence);
+                            SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                             if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbNounRegex)) {
                                 firstWord = edge.getGovernor().lemma();
                                 firstIndex = edge.getGovernor().index();
@@ -346,7 +357,7 @@ public class CollocationServiceImpl implements CollocationService {
                         }
                         else if (relation.startsWith("csubj")) {
                             String verbNounRegex = "(VB[A-Z]{0,1})-((NN[A-Z]{0,1})|(PRP))";
-                            SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getGovernor().index(), sentence);
+                            SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getGovernor().index(), sentence);
                             if ((edge.getDependent().tag() + "-" + edge.getGovernor().tag()).matches(verbNounRegex)) {
                                 firstWord = edge.getDependent().lemma();
                                 firstIndex = edge.getDependent().index();
@@ -358,7 +369,7 @@ public class CollocationServiceImpl implements CollocationService {
                         }
                         else if (relation.startsWith("amod")) {
                             String adjNounRegex = "(JJ[A-Z]{0,1})-(NN[A-Z]{0,1})";
-                            SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getGovernor().index(), sentence);
+                            SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getGovernor().index(), sentence);
                             if ((edge.getDependent().tag() + "-" + edge.getGovernor().tag()).matches(adjNounRegex)) {
                                 firstWord = edge.getDependent().lemma();
                                 firstIndex = edge.getDependent().index();
@@ -403,9 +414,9 @@ public class CollocationServiceImpl implements CollocationService {
                             String verbNounRegex = "(VB[A-Z]{0,1})-((NN[A-Z]{0,1})|(PRP))";
                             if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbAdjRegex) ||
                                     (edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbNounRegex)) {
-                                SentencePatternUtil.Edge temp = null;
+                                SentenceAnalysisUtil.Edge temp = null;
                                 if (edge.getDependent().tag().startsWith("NN")) {
-                                    temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), sentence);
+                                    temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                                 }
                                 firstWord = edge.getGovernor().lemma();
                                 firstIndex = edge.getGovernor().index();
@@ -428,7 +439,7 @@ public class CollocationServiceImpl implements CollocationService {
                                             firstPos = "JJ";
 
                                             int subjectIndex = semanticGraphEdge.getDependent().index();
-                                            SentencePatternUtil.Edge subjectTemp = SentencePatternUtil.getRealNounEdge(subjectIndex, sentence);
+                                            SentenceAnalysisUtil.Edge subjectTemp = SentenceAnalysisUtil.getRealNounEdge(subjectIndex, sentence);
                                             secondWord = (subjectTemp == null ? semanticGraphEdge.getDependent().lemma() : subjectTemp.getLemma());
                                             secondPos = "NN";
                                             found = true;
@@ -445,7 +456,7 @@ public class CollocationServiceImpl implements CollocationService {
                                 secondWord = edge.getDependent().lemma();
                                 secondPos = edge.getDependent().tag();
                                 if (edge.getDependent().tag().startsWith("NN")) {
-                                    SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), sentence);
+                                    SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                                     secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
                                 }
                                 found = true;
@@ -460,7 +471,7 @@ public class CollocationServiceImpl implements CollocationService {
                         thirdWord = edge.getDependent().lemma();
                         thirdPos = edge.getDependent().tag();
                         if (thirdPos.startsWith("NN")) {
-                            SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), sentence);
+                            SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                             if (temp != null) {
                                 thirdWord = temp.getLemma();
                             }
@@ -623,13 +634,19 @@ public class CollocationServiceImpl implements CollocationService {
      * @param wordPair
      * @param posPair
      * @param rankNum
+     * @param topic
+     * @param request
      * @return
      */
     @Cacheable(value = "corpus", key = "'collocation_syn_recommend' + #wordPair + '-' + #posPair + '-' + #rankNum", unless = "#result eq null")
     @Override
-    public List<CollocationDto> recommendSynonym(String wordPair, String posPair, Integer rankNum) {
+    public List<CollocationDto> recommendSynonym(String wordPair,
+                                                 String posPair,
+                                                 Integer rankNum,
+                                                 Integer topic,
+                                                 HttpServletRequest request) {
         try {
-            log.info("recommendSynonym | words: {}, pos: {}, rank num: {}", wordPair, posPair, rankNum);
+            log.info("recommendSynonym | words: {}, pos: {}, rank num: {}, topic: {}", wordPair, posPair, rankNum, topic);
             // 仅支持二词搭配
             if (wordPair.split(",").length != 2 || (!StringUtils.isBlank(posPair) && posPair.split(",").length != 2)) {
                 throw new Exception("only two-words' collocation is supported");
@@ -663,6 +680,13 @@ public class CollocationServiceImpl implements CollocationService {
             String wordPairPos = firstWordPos + "-" + secondWordPos;
             // 根据词性组合情况获取同义搭配
             List<CollocationDto> resultList = new ArrayList<>();
+            CollocationDto collocationDto = new CollocationDto();
+            collocationDto.setFirstPos(firstWordPos);
+            collocationDto.setFirstWord(firstWord);
+            collocationDto.setSecondPos(secondWordPos);
+            collocationDto.setSecondWord(secondWord);
+            collocationDto.setTopic(topic);
+            collocationDto.setRankNum(rankNum);
             // 形容词 + 名词、动词 + 名词、副词 + 形容词、动词 + 副词、副词 + 动词的组合，查找第一个词的同义词
             if (wordPairPos.matches("JJ-NN") ||
                 wordPairPos.matches("VB-NN") ||
@@ -670,30 +694,16 @@ public class CollocationServiceImpl implements CollocationService {
                 wordPairPos.matches("VB-RB") ||
                 wordPairPos.matches("RB-VB") ||
                 wordPairPos.matches("JJ-IN")) {
-                CollocationDto collocationDto = new CollocationDto();
-                collocationDto.setFirstPos(firstWordPos);
-                collocationDto.setFirstWord(firstWord);
-                collocationDto.setSecondPos(secondWordPos);
-                collocationDto.setSecondWord(secondWord);
                 collocationDto.setPosition(1);
-                resultList.addAll(searchSynonymousCollocation(collocationDto));
             }
             // 名词 + 动词、副词 + 形容词、动词 + 副词、副词 + 动词的组合，查找第二个词的同义词
             else if (wordPairPos.matches("NN-VB")||
                     wordPairPos.matches("RB-JJ") ||
                     wordPairPos.matches("VB-RB") ||
                     wordPairPos.matches("RB-VB")) {
-                CollocationDto collocationDto = new CollocationDto();
-                collocationDto.setSecondPos(secondWordPos);
-                collocationDto.setSecondWord(secondWord);
-                collocationDto.setFirstPos(firstWordPos);
-                collocationDto.setFirstWord(firstWord);
                 collocationDto.setPosition(2);
-                resultList.addAll(searchSynonymousCollocation(collocationDto));
             }
-            if (rankNum != null) {
-                labelCollocationDtoRankWord(resultList, rankNum);
-            }
+            resultList.addAll(searchSynonymousCollocation(collocationDto, request));
             return resultList;
         } catch (Exception e) {
             log.error("recommendSynonym | error: {}", e);
@@ -712,7 +722,7 @@ public class CollocationServiceImpl implements CollocationService {
     @Override
     public List<CollocationDto.CollocationDictInfo> searchCollocationInDict(String word, Integer rankNum) {
         try {
-            log.info("searchCollocationInDict | word: {}", word);
+            log.info("searchCollocationInDict | word: {}, rank num: {}", word, rankNum);
             List<CollocationFromDict> collocationFromDictList = collocationFromDictDao.findAllByWord(word);
             Map<String, Map<String, Set<String>>> pos2collocationPos2Collocation = new LinkedHashMap<>();
             for (CollocationFromDict collocationInfo : collocationFromDictList) {
@@ -760,7 +770,7 @@ public class CollocationServiceImpl implements CollocationService {
                 collocationDictInfoList.add(collocationDictInfo);
             }
             if (rankNum != null) {
-                Set<String> rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
+                Set<String> rankWordSet = CorpusConstant.RANK_NUM_TO_DIFFICULT_WORD_SET.get(rankNum);
                 for (int i = 0; i < collocationDictInfoList.size(); i++) {
                     CollocationDto.CollocationDictInfo collocationDictInfo = collocationDictInfoList.get(i);
                     List<CollocationDto.CollocationWordInfo> collocationWordInfoList = collocationDictInfo.getCollocationWordInfoList();
@@ -772,7 +782,7 @@ public class CollocationServiceImpl implements CollocationService {
                             String labeledCollocationString = "";
                             for (String collocationWord : collocationString.split(" ")) {
                                 if (rankWordSet.contains(collocationWord)) {
-                                    collocationWord = CorpusConstant.STRENGTHEN_OPEN_LABEL + collocationWord + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
+                                    collocationWord = CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + collocationWord + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL;
                                 }
                                 labeledCollocationString = labeledCollocationString + collocationWord + " ";
                             }
@@ -789,6 +799,64 @@ public class CollocationServiceImpl implements CollocationService {
             return collocationDictInfoList;
         } catch (Exception e) {
             log.error("searchCollocationInDict | error: {}", e);
+            return null;
+        }
+    }
+
+    /**
+     * 搭配主题分布统计
+     *
+     * @param word_pair
+     * @param corpus
+     * @return
+     */
+    @Override
+    public List<CollocationDto> topicDistribution(String word_pair, String corpus) {
+        try {
+            log.info("topicDistribution | word pair: {}, corpus: {}", word_pair, corpus);
+            // 替换多余空格
+            word_pair = word_pair.replaceAll(" +", " ");
+            List<CollocationDto> collocationDtoList = collocationWithTopicDao
+                    .findByWordPairAndCorpus(word_pair, corpus)
+                    .stream()
+                    .map(c -> {
+                        CollocationDto cDto = new CollocationDto();
+                        cDto.setCorpus(corpus);
+                        cDto.setTopic(c.getTopic());
+                        cDto.setFreq(c.getFreq());
+                        return cDto;
+                    })
+                    .collect(Collectors.toList());
+            return collocationDtoList;
+        } catch (Exception e) {
+            log.error("topicDistribution | error: {}", e);
+            return null;
+        }
+    }
+
+    /**
+     * 搭配的语料库分布
+     *
+     * @param word_pair
+     * @return
+     */
+    @Override
+    public List<CollocationDto> corpusDistribution(String word_pair) {
+        try {
+            log.info("corpusDistribution | word pair: {}", word_pair);
+            List<CollocationDto> collocationDtoList = collocationDao
+                    .findByWordPair(word_pair)
+                    .stream()
+                    .map(c -> {
+                        CollocationDto cDto = new CollocationDto();
+                        cDto.setCorpus(c.getCorpus());
+                        cDto.setFreq(c.getFreq());
+                        return cDto;
+                    })
+                    .collect(Collectors.toList());
+            return collocationDtoList;
+        } catch (Exception e) {
+            log.error("corpusDistribution | error: {}", e);
             return null;
         }
     }
@@ -956,23 +1024,40 @@ public class CollocationServiceImpl implements CollocationService {
         });
     }
 
-
-    private void labelCollocationDtoRankWord(List<CollocationDto> result, int rankNum) {
+    /**
+     * 对检索内容进行重构标注
+     *
+     * @param result
+     * @param rankNum
+     * @param studentId
+     */
+    private void labelWord(List<CollocationDto> result, int rankNum, long studentId) {
+        Set<String> difficultRankWordSet = CorpusConstant.RANK_NUM_TO_DIFFICULT_WORD_SET.get(rankNum);
         Set<String> rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
+        Set<String> studentRankWordSet = studentRankWordService.getStudentRankWord(studentId, rankNum);
         for (int i = 0; i < result.size(); i++) {
             CollocationDto coll = result.get(i);
             String firstWord = coll.getFirstWord();
             String secondWord = coll.getSecondWord();
             String thirdWord = coll.getThirdWord();
-            if (rankWordSet.contains(firstWord)) {
-                firstWord = CorpusConstant.STRENGTHEN_OPEN_LABEL + firstWord + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
+            if (rankWordSet.contains(firstWord) && !studentRankWordSet.contains(firstWord)) {
+                firstWord = CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + firstWord + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL;
+            } else if (difficultRankWordSet.contains(firstWord) && !difficultRankWordSet.contains(firstWord)) {
+                firstWord = CorpusConstant.DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL + firstWord + CorpusConstant.DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL;
             }
-            if (rankWordSet.contains(secondWord)) {
-                secondWord = CorpusConstant.STRENGTHEN_OPEN_LABEL + secondWord + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
+
+            if (rankWordSet.contains(secondWord) && !studentRankWordSet.contains(secondWord)) {
+                secondWord = CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + secondWord + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL;
+            } else if (difficultRankWordSet.contains(secondWord) && !difficultRankWordSet.contains(secondWord)) {
+                secondWord = CorpusConstant.DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL + secondWord + CorpusConstant.DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL;
             }
-            if (rankWordSet.contains(thirdWord)) {
-                thirdWord = CorpusConstant.STRENGTHEN_OPEN_LABEL + thirdWord + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
+
+            if (rankWordSet.contains(thirdWord) && !studentRankWordSet.contains(thirdWord)) {
+                thirdWord = CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + thirdWord + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL;
+            } else if (difficultRankWordSet.contains(thirdWord) && !difficultRankWordSet.contains(thirdWord)) {
+                thirdWord = CorpusConstant.DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL + thirdWord + CorpusConstant.DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL;
             }
+
             coll.setFirstWord(firstWord);
             coll.setSecondWord(secondWord);
             coll.setThirdWord(thirdWord);

@@ -19,11 +19,11 @@ import java.sql.PreparedStatement;
  **/
 public class SaveRankWord {
 
-    private static final String DICT_FILE_PATH = "E:\\资源\\ShanBei\\托福\\book54";
+    private static final String DICT_DIRECTORY_PATH = "E:\\资源\\ShanBei\\英专";
 
     private static final int RANK_NUM = 5;
 
-    private static final String RANK_NAME = "TOEFL";
+    private static final String RANK_NAME = "TEM8";
 
     private static final String DB_HOST = "192.168.99.100";
 
@@ -47,7 +47,19 @@ public class SaveRankWord {
             System.out.println("成功连接至数据库!");
         }
 
-        File rootFile = new File(DICT_FILE_PATH);
+        File directoryPath = new File(DICT_DIRECTORY_PATH);
+        File[] directorys = directoryPath.listFiles();
+        long maxFileSize = 0;
+        String maxFilePath = "";
+        for (File directory : directorys) {
+            long directorySize = directory.length();
+            if (directorySize >= maxFileSize) {
+                maxFileSize = directorySize;
+                maxFilePath = directory.getCanonicalPath();
+            }
+        }
+        System.out.println(maxFilePath);
+        File rootFile = new File("E:\\资源\\ShanBei\\英专\\book2");
         File[] files = rootFile.listFiles();
         for(File file:files){
             if(file.getName().endsWith( ".json" )){

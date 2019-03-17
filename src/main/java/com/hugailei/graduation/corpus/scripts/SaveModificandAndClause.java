@@ -1,7 +1,7 @@
 package com.hugailei.graduation.corpus.scripts;
 
 import com.hugailei.graduation.corpus.domain.SentencePattern;
-import com.hugailei.graduation.corpus.util.SentencePatternUtil;
+import com.hugailei.graduation.corpus.util.SentenceAnalysisUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import edu.stanford.nlp.util.CoreMap;
 
@@ -81,7 +81,7 @@ public class SaveModificandAndClause {
                     System.out.println("sentence: " + sentence);
                     String sentenceId = resultSet.getString("id");
                     List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
-                    List<SentencePattern> sentencePatternList = SentencePatternUtil.matchAppositiveClauseOrAttributiveClause(coreMapList.get(0));
+                    List<SentencePattern> sentencePatternList = SentenceAnalysisUtil.matchAppositiveClauseOrAttributiveClause(coreMapList.get(0));
                     // 判断是否包含定语从句或同位语从句
                     if (sentencePatternList != null) {
                         for (SentencePattern sp : sentencePatternList) {

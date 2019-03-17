@@ -2,6 +2,7 @@ package com.hugailei.graduation.corpus.service;
 
 import com.hugailei.graduation.corpus.dto.StudentTextDto;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Set;
 
 /**
@@ -29,4 +30,14 @@ public interface StudentRankWordService {
      * @return
      */
     Set<String> getStudentRankWord(long studentId, int rankNum);
+
+    /**
+     * 将学生已掌握的等级大于等于指定等级的所有词汇存储到redis中
+     *
+     * @param studentId
+     * @param rankNum
+     * @param request
+     * @return
+     */
+    Set<String> saveStudentRankWordInSession(long studentId, int rankNum, HttpServletRequest request);
 }

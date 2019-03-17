@@ -1,7 +1,7 @@
 package com.hugailei.graduation.corpus.scripts;
 
 import com.hugailei.graduation.corpus.domain.SentencePattern;
-import com.hugailei.graduation.corpus.util.SentencePatternUtil;
+import com.hugailei.graduation.corpus.util.SentenceAnalysisUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import edu.stanford.nlp.util.CoreMap;
 
@@ -30,7 +30,7 @@ public class CheckClauseTypeFunction {
         String sentence;
         while((sentence = bufferedReader.readLine()) != null) {
             List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
-            List<SentencePattern> sentencePatternList = SentencePatternUtil.matchAppositiveClauseOrAttributiveClause(coreMapList.get(0));
+            List<SentencePattern> sentencePatternList = SentenceAnalysisUtil.matchAppositiveClauseOrAttributiveClause(coreMapList.get(0));
             if (sentencePatternList != null){
                 SentencePattern sentencePattern = sentencePatternList.get(0);
                 int type = sentencePattern.getType();

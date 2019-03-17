@@ -29,13 +29,13 @@ import java.util.Set;
  * </p>
  **/
 public class ClassifySentence {
-    private static String INPUT_FILE_PATH = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\训练集\\2.txt";
-    private static String OUTPUT_FILE_PATH1 = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\训练集\\手动分级后的\\1.txt";
-    private static String OUTPUT_FILE_PATH2 = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\训练集\\手动分级后的\\2.txt";
-    private static String OUTPUT_FILE_PATH3 = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\训练集\\手动分级后的\\3.txt";
-    private static String OUTPUT_FILE_PATH4 = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\训练集\\手动分级后的\\4.txt";
-    private static String OUTPUT_FILE_PATH5 = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\训练集\\手动分级后的\\5.txt";
-    private static String OUTPUT_FILE_PATH6 = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\训练集\\手动分级后的\\6.txt";
+    private static String INPUT_FILE_PATH = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\测试集\\测试结果\\6.txt";
+    private static String OUTPUT_FILE_PATH1 = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\测试集\\1.txt";
+    private static String OUTPUT_FILE_PATH2 = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\测试集\\2.txt";
+    private static String OUTPUT_FILE_PATH3 = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\测试集\\3.txt";
+    private static String OUTPUT_FILE_PATH4 = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\测试集\\4.txt";
+    private static String OUTPUT_FILE_PATH5 = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\测试集\\5.txt";
+    private static String OUTPUT_FILE_PATH6 = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\测试集\\6.txt";
     private static final String DB_HOST = "192.168.99.100";
     private static final String DB_PORT = "3307";
     private static final String DB_NAME="corpus";
@@ -50,6 +50,45 @@ public class ClassifySentence {
         if (!con.isClosed()) {
             System.out.println("成功连接至数据库!");
         }
+
+        // 读取数据库，存储各级词汇
+        Set<String> rank1WordSet = new HashSet<>();
+        Set<String> rank2WordSet = new HashSet<>();
+        Set<String> rank3WordSet = new HashSet<>();
+        Set<String> rank4WordSet = new HashSet<>();
+        Set<String> rank5WordSet = new HashSet<>();
+        Set<String> rank6WordSet = new HashSet<>();
+        PreparedStatement ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 1");
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            rank1WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 2");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank2WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 3");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank3WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 4");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank4WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 5");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank5WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 6");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank6WordSet.add(rs.getString("word"));
+        }
+
         FileReader fileReader = new FileReader(new File(INPUT_FILE_PATH));
         BufferedReader bufferedReader = new BufferedReader(fileReader);
 
@@ -82,74 +121,38 @@ public class ClassifySentence {
                     totalWordLength += word.length();
 
                     String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
-                    PreparedStatement ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                            "and rank_num = ?");
-                    ps.setString(1, lemma);
-                    ps.setInt(2, 1);
-                    ResultSet rs = ps.executeQuery();
                     boolean found = false;
-                    while (rs.next()) {
+                    if (rank1WordSet.contains(lemma)) {
                         level1WordCount ++;
                         found = true;
-                        break;
                     }
                     if (!found) {
-                        ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                "and rank_num = ?");
-                        ps.setString(1, lemma);
-                        ps.setInt(2, 2);
-                        rs = ps.executeQuery();
-                        while (rs.next()) {
+                        if (rank2WordSet.contains(lemma)) {
                             level2WordCount ++;
                             found = true;
-                            break;
                         }
                     }
                     if (!found) {
-                        ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                "and rank_num = ?");
-                        ps.setString(1, lemma);
-                        ps.setInt(2, 3);
-                        rs = ps.executeQuery();
-                        while (rs.next()) {
+                        if (rank3WordSet.contains(lemma)) {
                             level3WordCount ++;
                             found = true;
-                            break;
                         }
                     }
                     if (!found) {
-                        ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                "and rank_num = ?");
-                        ps.setString(1, lemma);
-                        ps.setInt(2, 4);
-                        rs = ps.executeQuery();
-                        while (rs.next()) {
+                        if (rank4WordSet.contains(lemma)) {
                             level4WordCount ++;
                             found = true;
-                            break;
                         }
                     }
                     if (!found) {
-                        ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                "and rank_num = ?");
-                        ps.setString(1, lemma);
-                        ps.setInt(2, 5);
-                        rs = ps.executeQuery();
-                        while (rs.next()) {
+                        if (rank5WordSet.contains(lemma)) {
                             level5WordCount ++;
                             found = true;
-                            break;
                         }
                     }
                     if (!found) {
-                        ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                "and rank_num = ?");
-                        ps.setString(1, lemma);
-                        ps.setInt(2, 6);
-                        rs = ps.executeQuery();
-                        while (rs.next()) {
+                        if (rank6WordSet.contains(lemma)) {
                             level6WordCount ++;
-                            break;
                         }
                     }
 
@@ -224,18 +227,18 @@ public class ClassifySentence {
 
                 // 计算类符/形符比
                 int typeCount = wordSet.size();
-                double ratio = typeCount / wordCount;
+                double ratio = Double.valueOf(String.valueOf(typeCount)) / Double.valueOf(String.valueOf(wordCount));
 
                 // 计算平均词长
                 int avgWordLength = totalWordLength / wordCount;
 
                 // 分数
                 double total = level1WordCount*1 +
-                        level2WordCount*2 +
-                        level3WordCount*3 +
-                        level4WordCount*4 +
-                        level5WordCount*5 +
-                        level6WordCount*6 +
+                        level2WordCount*3 +
+                        level3WordCount*5 +
+                        level4WordCount*6 +
+                        level5WordCount*10 +
+                        level6WordCount*15 +
                         wordCount +
                         ratio +
                         avgWordLength +
@@ -245,30 +248,30 @@ public class ClassifySentence {
                         verbCount +
                         adjCount +
                         advCount +
-                        pronounCount +
+                        pronounCount*5 +
                         prepCount +
                         nounPhraseCount +
                         verbPhraseCount +
                         adjPhraseCount +
-                        advCount +
+                        advPhraseCount +
                         prepPhraseCount +
                         treeDepth +
                         maxClauseLength;
                 System.out.println(total);
 
-                if (total >= 185) {
+                if (total >= 210) {
                     fileWriter6.append(sentence.toString() + "\r\n");
                     fileWriter6.flush();
                 }
-                else if (total >= 160) {
+                else if (total >= 185) {
                     fileWriter5.append(sentence.toString() + "\r\n");
                     fileWriter5.flush();
                 }
-                else if (total >= 145) {
+                else if (total >= 155) {
                     fileWriter4.append(sentence.toString() + "\r\n");
                     fileWriter4.flush();
                 }
-                else if (total >= 125) {
+                else if (total >= 135) {
                     fileWriter3.append(sentence.toString() + "\r\n");
                     fileWriter3.flush();
                 }

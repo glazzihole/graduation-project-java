@@ -23,8 +23,11 @@ public class CorpusConstant {
     public static final int SUCCESS_CODE = 200;
     public static final int FAILED_CODE = 999999;
 
-    public static final String STRENGTHEN_OPEN_LABEL = "<b>";
-    public static final String STRENGTHEN_CLOSE_LABEL = "</b>";
+    public static final String RANK_WORD_STRENGTHEN_OPEN_LABEL = "<font color = \"green\">";
+    public static final String RANK_WORD_STRENGTHEN_CLOSE_LABEL = "</font>";
+
+    public static final String DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL = "<font color = \"yellow\">";
+    public static final String DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL = "</font>";
 
     public static final HashSet<String> SYNTACTIC_PRIMING_STRUCTURE_SET = new HashSet<String>(){
         {
@@ -418,6 +421,7 @@ public class CorpusConstant {
     @Autowired
     private RankWordService rankWordService;
 
+    public static Map<Integer, Set<String>> RANK_NUM_TO_DIFFICULT_WORD_SET = new HashMap<>();
     public static Map<Integer, Set<String>> RANK_NUM_TO_WORD_SET = new HashMap<>();
 
     @PostConstruct
@@ -428,33 +432,36 @@ public class CorpusConstant {
         List<String> level4WordList = rankWordService.findWordByRankNum(4);
         List<String> level5WordList = rankWordService.findWordByRankNum(5);
         List<String> level6WordList = rankWordService.findWordByRankNum(6);
-        Set<String> level1WordSet = new HashSet<>(level1WordList);
-        level1WordSet.addAll(level2WordList);
-        level1WordSet.addAll(level3WordList);
-        level1WordSet.addAll(level4WordList);
-        level1WordSet.addAll(level5WordList);
-        level1WordSet.addAll(level6WordList);
-        Set<String> level2WordSet = new HashSet<>(level2WordList);
-        level2WordSet.addAll(level2WordList);
-        level2WordSet.addAll(level3WordList);
-        level2WordSet.addAll(level4WordList);
-        level2WordSet.addAll(level5WordList);
-        level2WordSet.addAll(level6WordList);
-        Set<String> level3WordSet = new HashSet<>(level3WordList);
-        level3WordSet.addAll(level4WordList);
-        level3WordSet.addAll(level5WordList);
-        level3WordSet.addAll(level6WordList);
-        Set<String> level4WordSet = new HashSet<>(level4WordList);
-        level4WordSet.addAll(level5WordList);
-        level4WordSet.addAll(level6WordList);
-        Set<String> level5WordSet = new HashSet<>(level5WordList);
-        level5WordSet.addAll(level6WordList);
-        Set<String> level6WordSet = new HashSet<>(level6WordList);
-        RANK_NUM_TO_WORD_SET.put(1, level1WordSet);
-        RANK_NUM_TO_WORD_SET.put(2, level2WordSet);
-        RANK_NUM_TO_WORD_SET.put(3, level3WordSet);
-        RANK_NUM_TO_WORD_SET.put(4, level4WordSet);
-        RANK_NUM_TO_WORD_SET.put(5, level5WordSet);
-        RANK_NUM_TO_WORD_SET.put(6, level6WordSet);
+        RANK_NUM_TO_WORD_SET.put(1, new HashSet<>(level1WordList));
+        RANK_NUM_TO_WORD_SET.put(2, new HashSet<>(level2WordList));
+        RANK_NUM_TO_WORD_SET.put(3, new HashSet<>(level3WordList));
+        RANK_NUM_TO_WORD_SET.put(4, new HashSet<>(level4WordList));
+        RANK_NUM_TO_WORD_SET.put(5, new HashSet<>(level5WordList));
+        RANK_NUM_TO_WORD_SET.put(6, new HashSet<>(level6WordList));
+        Set<String> level1DifficultWordSet = new HashSet<>();
+        level1DifficultWordSet.addAll(level2WordList);
+        level1DifficultWordSet.addAll(level3WordList);
+        level1DifficultWordSet.addAll(level4WordList);
+        level1DifficultWordSet.addAll(level5WordList);
+        level1DifficultWordSet.addAll(level6WordList);
+        Set<String> level2DifficultWordSet = new HashSet<>();
+        level2DifficultWordSet.addAll(level3WordList);
+        level2DifficultWordSet.addAll(level4WordList);
+        level2DifficultWordSet.addAll(level5WordList);
+        level2DifficultWordSet.addAll(level6WordList);
+        Set<String> level3DifficultWordSet = new HashSet<>();
+        level3DifficultWordSet.addAll(level4WordList);
+        level3DifficultWordSet.addAll(level5WordList);
+        level3DifficultWordSet.addAll(level6WordList);
+        Set<String> level4DifficultWordSet = new HashSet<>();
+        level4DifficultWordSet.addAll(level5WordList);
+        level4DifficultWordSet.addAll(level6WordList);
+        Set<String> level5DifficultWordSet = new HashSet<>();
+        level5DifficultWordSet.addAll(level6WordList);
+        RANK_NUM_TO_DIFFICULT_WORD_SET.put(1, level1DifficultWordSet);
+        RANK_NUM_TO_DIFFICULT_WORD_SET.put(2, level2DifficultWordSet);
+        RANK_NUM_TO_DIFFICULT_WORD_SET.put(3, level3DifficultWordSet);
+        RANK_NUM_TO_DIFFICULT_WORD_SET.put(4, level4DifficultWordSet);
+        RANK_NUM_TO_DIFFICULT_WORD_SET.put(5, level5DifficultWordSet);
     }
 }

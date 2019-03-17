@@ -1,9 +1,6 @@
 package com.hugailei.graduation.corpus.controller;
 
-import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.hugailei.graduation.corpus.domain.RankWord;
 import com.hugailei.graduation.corpus.domain.SentencePattern;
-import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.dto.SentenceDto;
 import com.hugailei.graduation.corpus.service.CollocationService;
 import com.hugailei.graduation.corpus.service.RankWordService;
@@ -43,15 +40,6 @@ public class SentenceController {
     @Autowired
     private SentenceService sentenceService;
 
-    @Autowired
-    private StudentRankWordService studentRankWordService;
-
-    @Autowired
-    private RankWordService rankWordService;
-
-    @Autowired
-    private CollocationService collocationService;
-
     /**
      * 句子检索
      *
@@ -73,8 +61,6 @@ public class SentenceController {
         handler.checkConfig(request, response, blackLabServer);
         RequestHandler requestHandler = new SentenceRequestHandler(
                 blackLabServer,
-                studentRankWordService,
-                rankWordService,
                 request,
                 user,
                 corpus,
@@ -88,18 +74,23 @@ public class SentenceController {
      * 按句子ID进行查询
      *
      * @param sentenceIds
+     * @param rankNum
      * @param pageable
+     * @param request
      * @return
      */
     @PostMapping("/by_id")
     public ResponseVO searchSentenceById(@RequestParam String sentenceIds,
-                                         Pageable pageable) {
+                                         @RequestParam("topic") Integer topic,
+                                         @RequestParam(value = "rank_num", required = false) Integer rankNum,
+                                         Pageable pageable,
+                                         HttpServletRequest request) {
         log.info("searchSentenceById | request to search sentence by ids");
         List<Long> sentenceIdList = Arrays.asList(sentenceIds.split(","))
                 .stream()
                 .map(i -> Long.valueOf(i))
                 .collect(Collectors.toList());
-        List<SentenceDto> result = sentenceService.searchSentenceById(sentenceIdList);
+        List<String> result = sentenceService.searchSentenceById(sentenceIdList, topic, rankNum, request);
         if (result == null) {
             return ResponseUtil.error();
         }
@@ -164,19 +155,16 @@ public class SentenceController {
     }
 
     /**
-     * 获取句中的所有搭配
+     * 获取句子中的简单句
      *
      * @param sentence
      * @return
      */
-    @PostMapping("/collocation")
+    @PostMapping("/simple-sentence")
     @ResponseBody
-    public ResponseVO getCollocationInSentence(@RequestParam String sentence) {
-        log.info("getCollocationInSentence | request to get collocation in sentence");
-        sentence = sentence
-                .replaceAll(CorpusConstant.STRENGTHEN_OPEN_LABEL, "")
-                .replaceAll(CorpusConstant.STRENGTHEN_CLOSE_LABEL, "");
-        CollocationDto.CollocationInfo result = collocationService.getCollocationInText(sentence);
+    public ResponseVO simpleSentence(@RequestParam String sentence) {
+        log.info("simpleSentence | request to get simple sentences");
+        List<String> result = sentenceService.getSimpleSentence(sentence);
         if (result == null) {
             return ResponseUtil.error();
         }

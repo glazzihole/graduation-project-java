@@ -66,12 +66,12 @@ public class WordServiceImpl implements WordService {
                         .collect(Collectors.toList());
             }
             if (rankNum != null) {
-                Set<String> rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
+                Set<String> rankWordSet = CorpusConstant.RANK_NUM_TO_DIFFICULT_WORD_SET.get(rankNum);
                 int i = 0;
                 for (WordDto wordDto : resultList) {
                     String form = wordDto.getForm();
                     if (rankWordSet.contains(form)) {
-                        form = CorpusConstant.STRENGTHEN_OPEN_LABEL + form + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
+                        form = CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + form + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL;
                     }
                     wordDto.setForm(form);
                     resultList.set(i, wordDto);

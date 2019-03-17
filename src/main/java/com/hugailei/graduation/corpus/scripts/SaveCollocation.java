@@ -2,7 +2,7 @@ package com.hugailei.graduation.corpus.scripts;
 
 import com.bfsuolframework.core.utils.StringUtils;
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.hugailei.graduation.corpus.util.SentencePatternUtil;
+import com.hugailei.graduation.corpus.util.SentenceAnalysisUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
@@ -156,7 +156,7 @@ public class SaveCollocation {
                     "nmod:agent".equals(relation)) {
                     String adjNounRegex = "(JJ[A-Z]{0,1})-(NN[A-Z]{0,1})";
                     String nounverbRegex = "(NN[A-Z]{0,1})-(VB[A-Z]{0,1})";
-                    SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), sentence);
+                    SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                     if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(adjNounRegex)) {
                         found = true;
                         firstWord = edge.getGovernor().lemma();
@@ -173,7 +173,7 @@ public class SaveCollocation {
                 }
                 else if (relation.startsWith("dobj") || relation.startsWith("nsubjpass")) {
                     String verbNounRegex = "(VB[A-Z]{0,1})-(NN[A-Z]{0,1})";
-                    SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), sentence);
+                    SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                     if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbNounRegex)) {
                         found = true;
                         firstWord = edge.getGovernor().lemma();
@@ -184,7 +184,7 @@ public class SaveCollocation {
                 }
                 else if (relation.startsWith("csubj")) {
                     String verbNounRegex = "(VB[A-Z]{0,1})-(NN[A-Z]{0,1})";
-                    SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getGovernor().index(), sentence);
+                    SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getGovernor().index(), sentence);
                     if ((edge.getDependent().tag() + "-" + edge.getGovernor().tag()).matches(verbNounRegex)) {
                         found = true;
                         firstWord = edge.getDependent().lemma();
@@ -195,7 +195,7 @@ public class SaveCollocation {
                 }
                 else if (relation.startsWith("amod")) {
                     String adjNounRegex = "(JJ[A-Z]{0,1})-(NN[A-Z]{0,1})";
-                    SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getGovernor().index(), sentence);
+                    SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getGovernor().index(), sentence);
                     if ((edge.getDependent().tag() + "-" + edge.getGovernor().tag()).matches(adjNounRegex)) {
                         found = true;
                         firstWord = edge.getDependent().lemma();
@@ -236,9 +236,9 @@ public class SaveCollocation {
                     String verbNounRegex = "(VB[A-Z]{0,1})-(NN[A-Z]{0,1})";
                     if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbAdjRegex) ||
                         (edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbNounRegex)) {
-                        SentencePatternUtil.Edge temp = null;
+                        SentenceAnalysisUtil.Edge temp = null;
                         if (edge.getDependent().tag().startsWith("NN")) {
-                            temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), sentence);
+                            temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                         }
                         firstWord = edge.getGovernor().lemma();
                         secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
@@ -260,7 +260,7 @@ public class SaveCollocation {
                                     firstPos = "JJ";
 
                                     int subjectIndex = semanticGraphEdge.getDependent().index();
-                                    SentencePatternUtil.Edge subjectTemp = SentencePatternUtil.getRealNounEdge(subjectIndex, sentence);
+                                    SentenceAnalysisUtil.Edge subjectTemp = SentenceAnalysisUtil.getRealNounEdge(subjectIndex, sentence);
                                     secondWord = (subjectTemp == null ? semanticGraphEdge.getDependent().lemma() : subjectTemp.getLemma());
                                     secondPos = "NN";
                                     found = true;
@@ -277,7 +277,7 @@ public class SaveCollocation {
                         secondWord = edge.getDependent().lemma();
                         secondPos = edge.getDependent().tag();
                         if (edge.getDependent().tag().startsWith("NN")) {
-                            SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), sentence);
+                            SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                             secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
                         }
                     }
@@ -290,7 +290,7 @@ public class SaveCollocation {
                 thirdWord = edge.getDependent().lemma();
                 thirdPos = edge.getDependent().tag();
                 if (thirdPos.startsWith("NN")) {
-                    SentencePatternUtil.Edge temp = SentencePatternUtil.getRealNounEdge(edge.getDependent().index(), sentence);
+                    SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                     if (temp != null) {
                         thirdWord = temp.getLemma();
                     }
@@ -350,6 +350,10 @@ public class SaveCollocation {
                     Set<String> sentenceIdSet = KEY_TO_SENTENCEIDSET.get(key);
                     sentenceIdSet.add(sentenceId + "");
                     KEY_TO_SENTENCEIDSET.put(key, sentenceIdSet);
+                } else {
+                    Set<String> sentenceIdSet = new HashSet<>();
+                    sentenceIdSet.add(sentenceId + "");
+                    KEY_TO_SENTENCEIDSET.put(key, sentenceIdSet);
                 }
 
                 // 若搭配中存在第三个词，则三个词的搭配再存储一次
@@ -369,6 +373,10 @@ public class SaveCollocation {
                     // 更新例句
                     if (KEY_TO_SENTENCEIDSET.containsKey(key)) {
                         Set<String> sentenceIdSet = KEY_TO_SENTENCEIDSET.get(key);
+                        sentenceIdSet.add(sentenceId + "");
+                        KEY_TO_SENTENCEIDSET.put(key, sentenceIdSet);
+                    } else {
+                        Set<String> sentenceIdSet = new HashSet<>();
                         sentenceIdSet.add(sentenceId + "");
                         KEY_TO_SENTENCEIDSET.put(key, sentenceIdSet);
                     }

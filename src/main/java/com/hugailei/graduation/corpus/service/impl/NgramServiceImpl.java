@@ -5,6 +5,7 @@ import com.hugailei.graduation.corpus.dao.NgramDao;
 import com.hugailei.graduation.corpus.dao.NgramWithTopicDao;
 import com.hugailei.graduation.corpus.dto.NgramDto;
 import com.hugailei.graduation.corpus.service.NgramService;
+import com.hugailei.graduation.corpus.service.StudentRankWordService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,18 +36,25 @@ public class NgramServiceImpl implements NgramService {
     @Autowired
     private NgramWithTopicDao ngramWithTopicDao;
 
+    @Autowired
+    private StudentRankWordService studentRankWordService;
+
     @Override
     @Cacheable(
             value = "corpus",
             key = "#corpus + '_' + #nValue + '_' + #topic + '_' + #rankNum",
             unless = "#result eq null"
     )
-    public List<NgramDto> ngramList(String corpus, int nValue, int topic, Integer rankNum) {
+    public List<NgramDto> ngramList(String corpus,
+                                    int nValue,
+                                    Integer topic,
+                                    Integer rankNum,
+                                    HttpServletRequest request) {
         try {
-            log.info("ngramList | corpus: {}, nValue: {}", corpus, nValue);
+            log.info("ngramList | corpus: {}, nValue: {}, rank num: {}", corpus, nValue, rankNum);
             List<NgramDto> ngramDtoList;
             // 不带主题查询
-            if (topic == 0) {
+            if (topic == null) {
                 ngramDtoList = ngramDao.findByCorpusAndNValueOrderByFreqDesc(corpus, nValue)
                         .stream()
                         .map(n -> {
@@ -69,27 +77,41 @@ public class NgramServiceImpl implements NgramService {
             }
             log.info("ngramList | ngram list size: {}", ngramDtoList.size());
             if (rankNum != null) {
-                // 获取当前级别及当前级别之上的所有词汇
-                Set<String> rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
-                int i = 0;
-                for (NgramDto ngramDto : ngramDtoList) {
-                    String newNgramString = "";
-                    for (String ngram : ngramDto.getNgramStr().split(" ")) {
-                        if (rankWordSet.contains(ngram)) {
-                            ngram = CorpusConstant.STRENGTHEN_OPEN_LABEL + ngram + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
-                        }
-                        newNgramString = newNgramString + ngram + " ";
-                    }
-                    newNgramString = newNgramString.trim();
-                    ngramDto.setNgramStr(newNgramString);
-                    ngramDtoList.set(i, ngramDto);
-                    i++;
-                }
+                long studentId = (long)request.getSession().getAttribute("student_id");
+                labelWord(ngramDtoList, rankNum, studentId);
             }
             return ngramDtoList;
         } catch (Exception e) {
             log.error("ngramList | error: {}", e);
             return null;
+        }
+    }
+
+    /**
+     * 对检索内容进行重构标注
+     *
+     * @param result
+     * @param rankNum
+     * @param studentId
+     */
+    private void labelWord(List<NgramDto> result, int rankNum, long studentId) {
+        Set<String> difficultRankWordSet = CorpusConstant.RANK_NUM_TO_DIFFICULT_WORD_SET.get(rankNum);
+        Set<String> rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
+        Set<String> studentRankWordSet = studentRankWordService.getStudentRankWord(studentId, rankNum);
+        for (int i = 0; i < result.size(); i++) {
+            NgramDto ngramDto = result.get(i);
+            String ngramString = ngramDto.getNgramStr();
+            String labeledNgramString = "";
+            for (String word : ngramString.split(" ")) {
+                if (rankWordSet.contains(word) && !studentRankWordSet.contains(word)) {
+                    word = CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + word + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL;
+                } else if (difficultRankWordSet.contains(word) && !studentRankWordSet.contains(word)) {
+                    word = CorpusConstant.DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL + word + CorpusConstant.DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL;
+                }
+                labeledNgramString = ngramString + " " + word;
+            }
+            ngramDto.setNgramStr(labeledNgramString);
+            result.set(i, ngramDto);
         }
     }
 }

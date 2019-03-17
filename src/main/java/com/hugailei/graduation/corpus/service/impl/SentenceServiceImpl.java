@@ -1,13 +1,16 @@
 package com.hugailei.graduation.corpus.service.impl;
 
 import com.bfsuolframework.core.utils.StringUtils;
+import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import com.hugailei.graduation.corpus.dao.SentenceDao;
 import com.hugailei.graduation.corpus.domain.Sentence;
 import com.hugailei.graduation.corpus.domain.SentencePattern;
 import com.hugailei.graduation.corpus.dto.SentenceDto;
 import com.hugailei.graduation.corpus.elasticsearch.SentenceElasticSearch;
 import com.hugailei.graduation.corpus.service.SentenceService;
-import com.hugailei.graduation.corpus.util.SentencePatternUtil;
+import com.hugailei.graduation.corpus.service.StudentRankWordService;
+import com.hugailei.graduation.corpus.util.SentenceAnalysisUtil;
+import com.hugailei.graduation.corpus.util.SentenceRankUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import edu.stanford.nlp.util.CoreMap;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -43,6 +47,9 @@ public class SentenceServiceImpl implements SentenceService  {
 
     @Autowired
     private SentenceDao sentenceDao;
+
+    @Autowired
+    private StudentRankWordService studentRankWordService;
 
     @Override
     @Transactional(readOnly = true, rollbackFor = Exception.class)
@@ -72,14 +79,29 @@ public class SentenceServiceImpl implements SentenceService  {
     @Override
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     @Cacheable(value = "corpus", key = "#sentenceIdList.toString()", unless = "#result eq null")
-    public List<SentenceDto> searchSentenceById(List<Long> sentenceIdList) {
+    public List<String> searchSentenceById(List<Long> sentenceIdList,
+                                           Integer topic,
+                                           Integer rankNum,
+                                           HttpServletRequest request) {
         try {
-            log.info("searchSentenceById | sentence id list: {}", sentenceIdList.toString());
-            List<SentenceDto> resultList = sentenceDao.findAllById(sentenceIdList).stream().map(sentence -> {
-                SentenceDto sentenceDto = new SentenceDto();
-                BeanUtils.copyProperties(sentence, sentenceDto);
-                return sentenceDto;
-            }).collect(Collectors.toList());
+            log.info("searchSentenceById | sentence id list: {}, rank num: {}", sentenceIdList.toString(), rankNum);
+            List<String> sentenceStringList = new ArrayList<>();
+            List<Sentence> sentenceList = sentenceDao.findAllById(sentenceIdList);
+            for (Sentence sentence : sentenceList) {
+                if (topic == null) {
+                    sentenceStringList.add(sentence.getSentence());
+                } else {
+                    if (topic.intValue() == sentence.getTopic()) {
+                        sentenceStringList.add(sentence.getSentence());
+                    }
+                }
+            }
+
+            List<String> resultList = SentenceRankUtil.orderSentenceByRankNumAsc(sentenceStringList);
+            if (rankNum != null) {
+                long studentId = (long)request.getSession().getAttribute("student_id");
+                labelWord(resultList, rankNum, studentId);
+            }
             return resultList;
         } catch (Exception e) {
             log.error("searchSentenceById | error: {}", e);
@@ -151,11 +173,51 @@ public class SentenceServiceImpl implements SentenceService  {
         try {
             log.info("getSentencePattern | sentence: {}", sentence);
             List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
-            List<SentencePattern> result = SentencePatternUtil.findAllClauseType(coreMapList.get(0));
+            List<SentencePattern> result = SentenceAnalysisUtil.findAllClauseType(coreMapList.get(0));
             return result;
         } catch (Exception e) {
             log.error("getSentencePattern | error: {}", e);
             return null;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public List<String> getSimpleSentence(String sentence) {
+        try {
+            log.info("getSimpleSentence | sentence: {}", sentence);
+            List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
+            List<String> result = SentenceAnalysisUtil.getSimpleSentence(coreMapList.get(0));
+            return result;
+        } catch (Exception e) {
+            log.error("getSimpleSentence | error: {}", e);
+            return null;
+        }
+    }
+
+    /**
+     * 对检索内容进行重构标注
+     *
+     * @param result
+     * @param rankNum
+     * @param studentId
+     */
+    private void labelWord(List<String> result, int rankNum, long studentId) {
+        Set<String> difficultRankWordSet = CorpusConstant.RANK_NUM_TO_DIFFICULT_WORD_SET.get(rankNum);
+        Set<String> rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
+        Set<String> studentRankWordSet = studentRankWordService.getStudentRankWord(studentId, rankNum);
+        for (int i = 0; i < result.size(); i++) {
+            String sentence = result.get(i);
+            String labeledSentence = "";
+            for (String word : sentence.split(" ")) {
+                if (rankWordSet.contains(word) && !studentRankWordSet.contains(word)) {
+                    word = CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + word + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL;
+                } else if (difficultRankWordSet.contains(word) && !studentRankWordSet.contains(word)) {
+                    word = CorpusConstant.DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL + word + CorpusConstant.DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL;
+                }
+                labeledSentence = labeledSentence + " " + word;
+            }
+            result.set(i, labeledSentence);
         }
     }
 }

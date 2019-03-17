@@ -9,7 +9,7 @@ import com.hugailei.graduation.corpus.dto.TopicDto;
 import com.hugailei.graduation.corpus.enums.SentencePatternType;
 import com.hugailei.graduation.corpus.service.StudentRankWordService;
 import com.hugailei.graduation.corpus.service.StudentTextService;
-import com.hugailei.graduation.corpus.util.SentencePatternUtil;
+import com.hugailei.graduation.corpus.util.SentenceAnalysisUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import com.hugailei.graduation.corpus.util.TopicClassifyUtil;
 import edu.stanford.nlp.util.CoreMap;
@@ -89,14 +89,14 @@ public class StudentTextServiceImpl implements StudentTextService {
             Map<Integer, SentencePatternDto> type2SentencePatternDto = new HashMap<>();
             List<CoreMap> sentences = StanfordParserUtil.parse(text);
             for (CoreMap sentence : sentences) {
-                List<SentencePattern> tempList = SentencePatternUtil.matchSubjectClause(sentence);
+                List<SentencePattern> tempList = SentenceAnalysisUtil.matchSubjectClause(sentence);
                 if (tempList != null) {
                     int type = SentencePatternType.SUBJECT_CLAUSE.getType();
                     String typeName = SentencePatternType.SUBJECT_CLAUSE.getTypeName();
                     updateSentecePatternDto(type2SentencePatternDto, type, typeName, tempList.size(), sentence.toString());
                 }
 
-                tempList = SentencePatternUtil.matchObjectClauseOrPredicativeClause(sentence);
+                tempList = SentenceAnalysisUtil.matchObjectClauseOrPredicativeClause(sentence);
                 if (tempList != null) {
                     for (SentencePattern sentencePattern : tempList) {
                         int type = sentencePattern.getType();
@@ -120,53 +120,53 @@ public class StudentTextServiceImpl implements StudentTextService {
                     }
                 }
 
-                tempList = SentencePatternUtil.matchAppositiveClauseOrAttributiveClause(sentence);
+                tempList = SentenceAnalysisUtil.matchAppositiveClauseOrAttributiveClause(sentence);
                 if (tempList != null) {
                     int type = SentencePatternType.ATTRIBUTIVE_CLAUSE_OR_APPOSITIVE_CLAUSE.getType();
                     String typeName = SentencePatternType.ATTRIBUTIVE_CLAUSE_OR_APPOSITIVE_CLAUSE.getTypeName();
                     updateSentecePatternDto(type2SentencePatternDto, type, typeName, tempList.size(), sentence.toString());
                 }
 
-                tempList = SentencePatternUtil.matchAdverbialClause(sentence);
+                tempList = SentenceAnalysisUtil.matchAdverbialClause(sentence);
                 if (tempList != null) {
                     int type = SentencePatternType.ADVERBIAL_CLAUSE.getType();
                     String typeName = SentencePatternType.ADVERBIAL_CLAUSE.getTypeName();
                     updateSentecePatternDto(type2SentencePatternDto, type, typeName, tempList.size(), sentence.toString());
                 }
 
-                tempList = SentencePatternUtil.matchDoubleObject(sentence);
+                tempList = SentenceAnalysisUtil.matchDoubleObject(sentence);
                 if (tempList != null) {
                     int type = SentencePatternType.DOUBLE_OBJECT.getType();
                     String typeName = SentencePatternType.DOUBLE_OBJECT.getTypeName();
                     updateSentecePatternDto(type2SentencePatternDto, type, typeName, tempList.size(), sentence.toString());
                 }
 
-                tempList = SentencePatternUtil.matchPassiveVoice(sentence);
+                tempList = SentenceAnalysisUtil.matchPassiveVoice(sentence);
                 if (tempList != null) {
                     int type = SentencePatternType.PASSIVE_VOICE.getType();
                     String typeName = SentencePatternType.PASSIVE_VOICE.getTypeName();
                     updateSentecePatternDto(type2SentencePatternDto, type, typeName, tempList.size(), sentence.toString());
                 }
 
-                if (SentencePatternUtil.hasSoThat(sentence)) {
+                if (SentenceAnalysisUtil.hasSoThat(sentence)) {
                     int type = SentencePatternType.S_THAT.getType();
                     String typeName = SentencePatternType.S_THAT.getTypeName();
                     updateSentecePatternDto(type2SentencePatternDto, type, typeName, 1, sentence.toString());
                 }
 
-                if (SentencePatternUtil.hasTooTo(sentence)) {
+                if (SentenceAnalysisUtil.hasTooTo(sentence)) {
                     int type = SentencePatternType.TOO_TO.getType();
                     String typeName = SentencePatternType.TOO_TO.getTypeName();
                     updateSentecePatternDto(type2SentencePatternDto, type, typeName, 1, sentence.toString());
                 }
 
-                if (SentencePatternUtil.hasInvertedStructure(sentence)) {
+                if (SentenceAnalysisUtil.hasInvertedStructure(sentence)) {
                     int type = SentencePatternType.INVERTED_STRUCTURE.getType();
                     String typeName = SentencePatternType.INVERTED_STRUCTURE.getTypeName();
                     updateSentecePatternDto(type2SentencePatternDto, type, typeName, 1, sentence.toString());
                 }
 
-                if (SentencePatternUtil.hasEmphaticStructure(sentence)) {
+                if (SentenceAnalysisUtil.hasEmphaticStructure(sentence)) {
                     int type = SentencePatternType.EMPHATIC_STRUCTURE.getType();
                     String typeName = SentencePatternType.EMPHATIC_STRUCTURE.getTypeName();
                     updateSentecePatternDto(type2SentencePatternDto, type, typeName, 1, sentence.toString());

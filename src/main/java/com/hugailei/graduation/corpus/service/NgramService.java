@@ -2,6 +2,7 @@ package com.hugailei.graduation.corpus.service;
 
 import com.hugailei.graduation.corpus.dto.NgramDto;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -20,7 +21,8 @@ public interface NgramService {
      * @param nValue
      * @param topic
      * @param rankNum
+     * @param request
      * @return
      */
-    List<NgramDto> ngramList(String corpus, int nValue, int topic, Integer rankNum);
+    List<NgramDto> ngramList(String corpus, int nValue, Integer topic, Integer rankNum, HttpServletRequest request);
 }

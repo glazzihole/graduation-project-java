@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -103,6 +105,20 @@ public class StudentRankWordServiceImpl implements StudentRankWordService {
             return studentWordSet;
         } catch (Exception e) {
             log.error("getStudentRankWord | error: {}", e);
+            return null;
+        }
+    }
+
+    @Override
+    public Set<String> saveStudentRankWordInSession(long studentId, int rankNum, HttpServletRequest request) {
+        try {
+            log.info("saveStudentRankWordInSession | student id: {}, rank num: {}", studentId, rankNum);
+            Set<String> studentRankWordSet = getStudentRankWord(studentId, rankNum);
+            HttpSession session = request.getSession();
+            session.setAttribute("" + studentId, studentRankWordSet);
+            return studentRankWordSet;
+        } catch (Exception e) {
+            log.error("saveStudentRankWordInSession | error: {}", e);
             return null;
         }
     }

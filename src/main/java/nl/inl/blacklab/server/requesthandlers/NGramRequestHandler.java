@@ -85,7 +85,7 @@ public class NGramRequestHandler extends RequestHandler {
                 rankNum = Integer.valueOf(request.getParameter("rank_num"));
 
                 // 获取当前级别及当前级别之上的所有词汇
-                rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
+                rankWordSet = CorpusConstant.RANK_NUM_TO_DIFFICULT_WORD_SET.get(rankNum);
             }
             int i = 1;
             for (NgramDto ngram : ngramInfo) {
@@ -98,7 +98,7 @@ public class NGramRequestHandler extends RequestHandler {
                         String newNgramString = "";
                         for (String word : ngram.getNgramStr().split(" ")) {
                             if (rankWordSet.contains(word)) {
-                                word = CorpusConstant.STRENGTHEN_OPEN_LABEL + word + CorpusConstant.STRENGTHEN_CLOSE_LABEL;
+                                word = CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + word + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL;
                                 newNgramString = newNgramString + word + " ";
                             }
                         }

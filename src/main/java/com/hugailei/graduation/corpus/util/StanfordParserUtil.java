@@ -4,6 +4,7 @@ import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import edu.stanford.nlp.ie.util.RelationTriple;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
@@ -24,7 +25,7 @@ import java.util.*;
 public class StanfordParserUtil {
 
     private static Properties props;
-    private static StanfordCoreNLP  pipeline;
+    private static StanfordCoreNLP pipeline;
     private static StanfordCoreNLP relationPipeline;
     static {
         props = new Properties();
@@ -124,7 +125,10 @@ public class StanfordParserUtil {
 
 
     public static void main(String[] args) {
-        String[] textArray = {"He wouldn't have enough sense of self-preservation to come in out of the rain."};
+        String[] textArray = {" They consider that fresh water can be got from the rain , " +
+                "the river , " +
+                "the will , etc. and these resources of fresh water will never dry up , " +
+                "so they can use fresh water freely as they want ."};
         int i = 0;
         for (String text : textArray) {
             List<CoreMap> result = StanfordParserUtil.parse(text);
@@ -156,45 +160,45 @@ public class StanfordParserUtil {
                 }
 
                 // 关系提取
-//                result = relationParse(sentence.toString());
-//                for (CoreMap s : result) {
-//                    List<RelationTriple> realtions = new ArrayList<>(s.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class));
-//                    sortRelationTripleList(realtions);
-//                    double confidence = 0;
-//                    // 最短的句子长度
-//                    int shortest = s.toString().length();
-//                    // 最长的句子长度
-//                    int longest = 0;
-//                    for (RelationTriple relation : realtions) {
-//                        String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
-//                        System.out.println(temp);
-//                        // 找出“可信度”最高的一批
-//                        if (relation.confidence >= confidence) {
-//                            confidence = relation.confidence;
-//                            if (temp.split(" ").length >= longest) {
-//                                longest = temp.split(" ").length;
-//                            }
-//                            if (temp.split(" ").length <= shortest) {
-//                                shortest =temp.split(" ").length;
-//                            }
-//                        }
-//                    }
-//                    System.out.println("__________");
-//                    for (RelationTriple relation : realtions) {
-//                        String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
-//                        if (relation.confidence >= confidence) {
-//                            System.out.println(temp);
-////                            if (temp.split(" ").length == longest) {
-////                                System.out.println(temp);
-////                            }
-////                            if (temp.split(" ").length == shortest) {
-////                                System.out.println(temp);
-////                            }
-//                        } else {
-//                            break;
-//                        }
-//                    }
-//                }
+                result = relationParse(sentence.toString());
+                for (CoreMap s : result) {
+                    List<RelationTriple> realtions = new ArrayList<>(s.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class));
+                    sortRelationTripleList(realtions);
+                    double confidence = 0;
+                    // 最短的句子长度
+                    int shortest = s.toString().length();
+                    // 最长的句子长度
+                    int longest = 0;
+                    for (RelationTriple relation : realtions) {
+                        String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
+                        System.out.println(temp);
+                        // 找出“可信度”最高的一批
+                        if (relation.confidence >= confidence) {
+                            confidence = relation.confidence;
+                            if (temp.split(" ").length >= longest) {
+                                longest = temp.split(" ").length;
+                            }
+                            if (temp.split(" ").length <= shortest) {
+                                shortest = temp.split(" ").length;
+                            }
+                        }
+                    }
+                    System.out.println("__________");
+                    for (RelationTriple relation : realtions) {
+                        String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
+                        if (relation.confidence >= confidence) {
+                            System.out.println(temp);
+                            if (temp.split(" ").length == longest) {
+                                System.out.println(temp);
+                            }
+                            if (temp.split(" ").length == shortest) {
+                                System.out.println(temp);
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                }
             }
         }
 

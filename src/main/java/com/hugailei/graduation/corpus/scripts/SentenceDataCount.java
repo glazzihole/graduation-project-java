@@ -31,9 +31,9 @@ import java.util.Set;
  * </p>
  **/
 public class SentenceDataCount {
-    private static final String ARTICLE_FILE_PATH = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\训练集\\6.txt";
-    private static final String OUTPUT_FILE_PATH = "E:\\毕业论文相关\\作文\\阅读\\结果统计\\6.txt";
-    private static final int LEVEL =6;
+    private static final String ARTICLE_FILE_PATH = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\测试集\\6.txt";
+    private static final String OUTPUT_FILE_PATH = "E:\\毕业论文相关\\作文\\阅读\\阅读理解\\测试集\\测试结果\\svm_6.txt";
+    private static final int LEVEL = 6;
     private static final String DB_HOST = "192.168.99.100";
     private static final String DB_PORT = "3307";
     private static final String DB_NAME="corpus";
@@ -48,6 +48,44 @@ public class SentenceDataCount {
         Connection con = DriverManager.getConnection(url,USER_NAME,USER_PASSWORD);
         if (!con.isClosed()) {
             System.out.println("成功连接至数据库!");
+        }
+
+        // 读取数据库，存储各级词汇
+        Set<String> rank1WordSet = new HashSet<>();
+        Set<String> rank2WordSet = new HashSet<>();
+        Set<String> rank3WordSet = new HashSet<>();
+        Set<String> rank4WordSet = new HashSet<>();
+        Set<String> rank5WordSet = new HashSet<>();
+        Set<String> rank6WordSet = new HashSet<>();
+        PreparedStatement ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 1");
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            rank1WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 2");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank2WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 3");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank3WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 4");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank4WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 5");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank5WordSet.add(rs.getString("word"));
+        }
+        ps = con.prepareStatement("SELECT * FROM tb_rank_word where rank_num = 6");
+        rs = ps.executeQuery();
+        while (rs.next()) {
+            rank6WordSet.add(rs.getString("word"));
         }
 
         FileWriter fileWriter = new FileWriter(new File(OUTPUT_FILE_PATH));
@@ -80,74 +118,38 @@ public class SentenceDataCount {
                         totalWordLength += word.length();
 
                         String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
-                        PreparedStatement ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                "and rank_num = ?");
-                        ps.setString(1, lemma);
-                        ps.setInt(2, 1);
-                        ResultSet rs = ps.executeQuery();
                         boolean found = false;
-                        while (rs.next()) {
+                        if (rank1WordSet.contains(lemma)) {
                             level1WordCount ++;
                             found = true;
-                            break;
                         }
                         if (!found) {
-                            ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                    "and rank_num = ?");
-                            ps.setString(1, lemma);
-                            ps.setInt(2, 2);
-                            rs = ps.executeQuery();
-                            while (rs.next()) {
+                            if (rank2WordSet.contains(lemma)) {
                                 level2WordCount ++;
                                 found = true;
-                                break;
                             }
                         }
                         if (!found) {
-                            ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                    "and rank_num = ?");
-                            ps.setString(1, lemma);
-                            ps.setInt(2, 3);
-                            rs = ps.executeQuery();
-                            while (rs.next()) {
+                            if (rank3WordSet.contains(lemma)) {
                                 level3WordCount ++;
                                 found = true;
-                                break;
                             }
                         }
                         if (!found) {
-                            ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                    "and rank_num = ?");
-                            ps.setString(1, lemma);
-                            ps.setInt(2, 4);
-                            rs = ps.executeQuery();
-                            while (rs.next()) {
+                            if (rank4WordSet.contains(lemma)) {
                                 level4WordCount ++;
                                 found = true;
-                                break;
                             }
                         }
                         if (!found) {
-                            ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                    "and rank_num = ?");
-                            ps.setString(1, lemma);
-                            ps.setInt(2, 5);
-                            rs = ps.executeQuery();
-                            while (rs.next()) {
+                            if (rank5WordSet.contains(lemma)) {
                                 level5WordCount ++;
                                 found = true;
-                                break;
                             }
                         }
                         if (!found) {
-                            ps = con.prepareStatement("SELECT * FROM tb_rank_word WHERE word = ? " +
-                                    "and rank_num = ?");
-                            ps.setString(1, lemma);
-                            ps.setInt(2, 6);
-                            rs = ps.executeQuery();
-                            while (rs.next()) {
+                            if (rank6WordSet.contains(lemma)) {
                                 level6WordCount ++;
-                                break;
                             }
                         }
 
@@ -222,37 +224,62 @@ public class SentenceDataCount {
 
                     // 计算类符/形符比
                     int typeCount = wordSet.size();
-                    double ratio = typeCount / wordCount;
+                    double ratio = Double.valueOf(String.valueOf(typeCount)) / Double.valueOf(String.valueOf(wordCount));
 
                     // 计算平均词长
                     int avgWordLength = totalWordLength / wordCount;
 
                     // 写入到文件
-                    String out = level1WordCount + "\t" +
-                                level2WordCount + "\t" +
-                                level3WordCount + "\t" +
-                                level4WordCount + "\t" +
-                                level5WordCount + "\t" +
-                                level6WordCount + "\t" +
-                                wordCount + "\t" +
-                                ratio + "\t" +
-                                avgWordLength + "\t" +
-                                clauseCount + "\t" +
-                                properNounCount + "\t" +
-                                nounCount + "\t" +
-                                verbCount + "\t" +
-                                adjCount + "\t" +
-                                advCount + "\t" +
-                                pronounCount + "\t" +
-                                prepCount + "\t" +
-                                nounPhraseCount + "\t" +
-                                verbPhraseCount + "\t" +
-                                adjPhraseCount + "\t" +
-                                advCount + "\t" +
-                                prepPhraseCount + "\t" +
-                                treeDepth + "\t" +
-                                maxClauseLength + "\t" +
-                                LEVEL;
+//                    String out = level1WordCount + "\t" +
+//                                level2WordCount + "\t" +
+//                                level3WordCount + "\t" +
+//                                level4WordCount + "\t" +
+//                                level5WordCount + "\t" +
+//                                level6WordCount + "\t" +
+//                                wordCount + "\t" +
+//                                ratio + "\t" +
+//                                avgWordLength + "\t" +
+//                                clauseCount + "\t" +
+//                                properNounCount + "\t" +
+//                                nounCount + "\t" +
+//                                verbCount + "\t" +
+//                                adjCount + "\t" +
+//                                advCount + "\t" +
+//                                pronounCount + "\t" +
+//                                prepCount + "\t" +
+//                                nounPhraseCount + "\t" +
+//                                verbPhraseCount + "\t" +
+//                                adjPhraseCount + "\t" +
+//                                advPhraseCount + "\t" +
+//                                prepPhraseCount + "\t" +
+//                                treeDepth + "\t" +
+//                                maxClauseLength + "\t" +
+//                                LEVEL;
+                    String out = LEVEL + " " +
+                            "A:" + level1WordCount + " " +
+                            "B:" + level2WordCount + " " +
+                            "C:" + level3WordCount + " " +
+                            "D:" + level4WordCount + " " +
+                            "E:" + level5WordCount + " " +
+                            "F:" + level6WordCount + " " +
+                            "G:" + wordCount + " " +
+                            "H:" + ratio + " " +
+                            "I:" + avgWordLength + " " +
+                            "J:" + clauseCount + " " +
+                            "K:" + properNounCount + " " +
+                            "L:" + nounCount + " " +
+                            "M:" + verbCount + " " +
+                            "N:" + adjCount + " " +
+                            "O:" + advCount + " " +
+                            "P:" + pronounCount + " " +
+                            "Q:" + prepCount + " " +
+                            "R:" + nounPhraseCount + " " +
+                            "S:" + verbPhraseCount + " " +
+                            "T:" + adjPhraseCount + " " +
+                            "U:" + advPhraseCount + " " +
+                            "V:" + prepPhraseCount + " " +
+                            "W:" + treeDepth + " " +
+                            "X:" + maxClauseLength;
                     System.out.println(out);
                     fileWriter.write(out + "\r\n");
                     fileWriter.flush();

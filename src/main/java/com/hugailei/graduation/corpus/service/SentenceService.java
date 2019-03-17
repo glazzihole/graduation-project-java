@@ -3,6 +3,7 @@ package com.hugailei.graduation.corpus.service;
 import com.hugailei.graduation.corpus.domain.SentencePattern;
 import com.hugailei.graduation.corpus.dto.SentenceDto;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -26,9 +27,15 @@ public interface SentenceService {
      * 按照句子ID进行查询
      *
      * @param sentenceIdList
+     * @param topic
+     * @param rankNum
+     * @param request
      * @return
      */
-    List<SentenceDto> searchSentenceById(List<Long> sentenceIdList);
+    List<String> searchSentenceById(List<Long> sentenceIdList,
+                                    Integer topic,
+                                    Integer rankNum,
+                                    HttpServletRequest request);
 
     /**
      * 句子过滤，只保留包含指定关键字的例句
@@ -55,4 +62,12 @@ public interface SentenceService {
      * @return
      */
     List<SentencePattern> getSentencePattern(String sentence);
+
+    /**
+     * 获取句子中的简单句
+     *
+     * @param sentence
+     * @return
+     */
+    List<String> getSimpleSentence(String sentence);
 }

@@ -22,4 +22,12 @@ public interface RankWordDao extends JpaRepository<RankWord, Long> {
      * @return
      */
     List<RankWord> findAllByRankNumIsGreaterThanEqual(int rankNum);
+
+    /**
+     * 查询指定等级的词汇，只选择word字段
+     *
+     * @param rankNum
+     * @return
+     */
+    List<String> findWordByRankNum(int rankNum);
 }

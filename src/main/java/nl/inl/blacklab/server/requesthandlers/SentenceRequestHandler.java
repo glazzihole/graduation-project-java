@@ -1,12 +1,9 @@
 package nl.inl.blacklab.server.requesthandlers;
 
-import com.bfsuolframework.core.utils.StringUtils;
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.hugailei.graduation.corpus.dao.RankWordDao;
-import com.hugailei.graduation.corpus.dao.StudentRankWordDao;
-import com.hugailei.graduation.corpus.domain.StudentRankWord;
 import com.hugailei.graduation.corpus.service.RankWordService;
 import com.hugailei.graduation.corpus.service.StudentRankWordService;
+import com.hugailei.graduation.corpus.util.SentenceRankUtil;
 import lombok.extern.slf4j.Slf4j;
 import nl.inl.blacklab.search.*;
 import nl.inl.blacklab.search.grouping.HitGroup;
@@ -18,14 +15,12 @@ import nl.inl.blacklab.server.datastream.DataStream;
 import nl.inl.blacklab.server.exceptions.BlsException;
 import nl.inl.blacklab.server.jobs.*;
 import nl.inl.blacklab.server.search.BlsConfig;
-import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -36,21 +31,16 @@ import java.util.stream.Collectors;
 @Component
 public class SentenceRequestHandler extends RequestHandler {
 
+    @Autowired
     private StudentRankWordService studentRankWordService;
 
-    private RankWordService rankWordService;
-
     public SentenceRequestHandler(BlackLabServer servlet,
-                                  StudentRankWordService studentRankWordService,
-                                  RankWordService rankWordService,
                                   HttpServletRequest request,
                                   User user,
                                   String indexName,
                                   String urlResource,
                                   String urlPathPart) {
         super(servlet, request, user, indexName, urlResource, urlPathPart);
-        this.studentRankWordService = studentRankWordService;
-        this.rankWordService = rankWordService;
     }
 
     @Override
@@ -179,64 +169,65 @@ public class SentenceRequestHandler extends RequestHandler {
             ds.entry("totalElements", totalHits);
 
             ds.startEntry("page").startList();
-            Map<Integer, String> pids = new HashMap<>();
-            Set<String> rankWordSet = null;
+            Set<String> difficultWordSet = new HashSet<>();
+            Set<String> rankWordSet = new HashSet<>();
+            Set<String> studentRankWordSet = new HashSet<>();
             // 获取等级
             int rankNum = 0;
             if (request.getParameter("rank_num") != null) {
                 // 获取等级
                 rankNum = Integer.valueOf(request.getParameter("rank_num"));
-
-                // 获取当前级别及当前级别之上的所有词汇
+                // 获取高难度词汇
+                difficultWordSet = CorpusConstant.RANK_NUM_TO_DIFFICULT_WORD_SET.get(rankNum);
+                // 获取当前等级下的词汇
                 rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
+                // 获取学生已掌握的等级词汇
+                Long studentId = (Long)request.getSession().getAttribute("student_id");
+                studentRankWordSet = studentRankWordService.getStudentRankWord(studentId, rankNum);
             }
 
-            for (Hit hit: window) {
-                ds.startItem("hit").startMap();
+            // 得到句子列表，对句子进行难度排序
+            List<String> sentenceList = new ArrayList<>();
+            for (Hit hit : window) {
+                sentenceList.add(hit.toString());
+                sentenceList = SentenceRankUtil.orderSentenceByRankNumAsc(sentenceList);
+            }
 
-                // Find pid
-                String pid = pids.get(hit.doc);
-                if (pid == null) {
-                    Document document = searcher.document(hit.doc);
-                    pid = getDocumentPid(searcher, hit.doc, document);
-                    pids.put(hit.doc, pid);
-                }
-
-                boolean useOrigContent = searchParam.getString("usecontent").equals("orig");
-
-                ds.entry("id", pid+hit.start+hit.end);
-                if (useOrigContent) {
-                    // Add concordance from original XML
-                    Concordance c = window.getConcordance(hit);
-                    ds.startEntry("sentence").plain(c.match()).endEntry();
-                }
-                else {
-                    String match = "";
-                    // Add KWIC info
-                    if(window!=null) {
-                        Kwic c = window.getKwic(hit);
-                        List<String> sentenceWordList = new ArrayList<>();
-                        sentenceWordList.addAll(c.getMatch( "word" ));
-                        if (request.getParameter("rank_num") != null) {
-                            List<String> sentenceLemmaList = c.getMatch("lemma");
-                            for (int i = 0; i < sentenceLemmaList.size(); i++) {
-                                if (rankWordSet.contains(sentenceLemmaList.get(i))) {
-                                    String temp = sentenceWordList.get(i);
-                                    sentenceWordList.set(i, CorpusConstant.STRENGTHEN_OPEN_LABEL + temp + CorpusConstant.STRENGTHEN_CLOSE_LABEL);
-                                }
-                            }
-                        }
-                        for (String word : sentenceWordList) {
-                            match = match + word + " ";
+            Map<String, String> sentence2LabeledSentence = new HashMap<>();
+            for (Hit hit : window) {
+                ds.entry("id", "");
+                String labeledSentence = "";
+                // Add KWIC info
+                Kwic c = window.getKwic(hit);
+                List<String> sentenceWordList = new ArrayList<>();
+                sentenceWordList.addAll(c.getMatch( "word" ));
+                if (request.getParameter("rank_num") != null) {
+                    List<String> sentenceLemmaList = c.getMatch("lemma");
+                    for (int i = 0; i < sentenceLemmaList.size(); i++) {
+                        if (difficultWordSet.contains(sentenceLemmaList.get(i)) && !studentRankWordSet.contains(sentenceLemmaList.get(i))) {
+                            String temp = sentenceWordList.get(i);
+                            sentenceWordList.set(i, CorpusConstant.DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL + temp + CorpusConstant.DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL);
+                        } else if (rankWordSet.contains(sentenceLemmaList.get(i)) && !studentRankWordSet.contains(sentenceLemmaList.get(i))) {
+                            String temp = sentenceWordList.get(i);
+                            sentenceWordList.set(i, CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + temp + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL);
                         }
                     }
-                    match = match.trim();
-                    ds.entry("sentence", match);
-
                 }
-                ds.entry("corpus", searchParam.getIndexName());
-                ds.endMap().endItem();
+                for (String word : sentenceWordList) {
+                    labeledSentence = labeledSentence + word + " ";
+                }
+                labeledSentence = labeledSentence.trim();
+                sentence2LabeledSentence.put(hit.toString(), labeledSentence);
             }
+
+            int id = 0;
+            for (String sentence : sentenceList) {
+                String labeledSentence = sentence2LabeledSentence.get(sentence);
+                ds.entry("id", id ++);
+                ds.entry("sentence", labeledSentence);
+                ds.entry("corpus", searchParam.getIndexName());
+            }
+
             ds.endList().endEntry();
             ds.endDataEntry("data");
             ds.endMap().endItem();
