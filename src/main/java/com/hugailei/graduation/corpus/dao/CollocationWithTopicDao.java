@@ -25,7 +25,7 @@ public interface CollocationWithTopicDao extends JpaRepository<CollocationWithTo
      * @return
      */
     @Query("SELECT topic, sum(freq) as freq " +
-            "FROM tb_collocation_with_topic " +
+            "FROM CollocationWithTopic " +
             "WHERE word_pair = ?1 AND corpus = ?2 " +
             "GROUP BY topic")
     List<CollocationWithTopic> findByWordPairAndCorpus(String wordPair, String corpus);

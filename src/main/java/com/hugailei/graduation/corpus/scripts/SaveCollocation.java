@@ -97,7 +97,7 @@ public class SaveCollocation {
                 for (String setneceId : sentenceIdSet) {
                     sentenceIds += setneceId + ",";
                 }
-                if (freq >= 2) {
+                if (freq >= 0) {
                     if (data.length == 4) {
                         preparedStatement.setString(1, data[0]);
                         preparedStatement.setString(2, data[1].toUpperCase());
@@ -294,10 +294,10 @@ public class SaveCollocation {
                     if (temp != null) {
                         thirdWord = temp.getLemma();
                     }
+                } else {
+                    thirdWord = null;
                 }
-                if (!thirdPos.equals("PRP")) {
-                    found = true;
-                }
+                found = true;
             }
 
             if (found) {

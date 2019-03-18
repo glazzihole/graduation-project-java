@@ -18,15 +18,21 @@ import java.util.List;
 @Repository
 public interface CollocationDao extends JpaRepository<Collocation, Long> {
     /**
-     * 按照词对查询搭配，并按照频率降序排序
+     * 按照搭配词串查询搭配，并按照频率降序排序
      *
      * @param wordPair
      * @return
      */
     List<Collocation> findAllByWordPairOrderByFreqDesc(String wordPair);
 
+    /**
+     * 按照搭配词串查询，根据语料库分组
+     *
+     * @param wordPair
+     * @return
+     */
     @Query("SELECT corpus, sum(freq) as freq " +
-            "FROM tb_collocation " +
+            "FROM Collocation " +
             "WHERE word_pair = ?1 " +
             "GROUP BY corpus")
     List<CollocationWithTopic> findByWordPair(String wordPair);
