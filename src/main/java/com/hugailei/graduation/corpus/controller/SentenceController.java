@@ -2,10 +2,7 @@ package com.hugailei.graduation.corpus.controller;
 
 import com.hugailei.graduation.corpus.domain.SentencePattern;
 import com.hugailei.graduation.corpus.dto.SentenceDto;
-import com.hugailei.graduation.corpus.service.CollocationService;
-import com.hugailei.graduation.corpus.service.RankWordService;
 import com.hugailei.graduation.corpus.service.SentenceService;
-import com.hugailei.graduation.corpus.service.StudentRankWordService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;
 import com.hugailei.graduation.corpus.vo.ResponseVO;
 import lombok.extern.slf4j.Slf4j;
@@ -165,6 +162,17 @@ public class SentenceController {
     public ResponseVO simpleSentence(@RequestParam String sentence) {
         log.info("simpleSentence | request to get simple sentences");
         List<String> result = sentenceService.getSimpleSentence(sentence);
+        if (result == null) {
+            return ResponseUtil.error();
+        }
+        return ResponseUtil.success(result);
+    }
+
+    @PostMapping("/rank-num")
+    @ResponseBody
+    public ResponseVO sentenceRankNum(@RequestParam String sentence) {
+        log.info("sentenceRankNum | request to get sentence rank num");
+        Integer result = sentenceService.getSentenceRankNum(sentence);
         if (result == null) {
             return ResponseUtil.error();
         }

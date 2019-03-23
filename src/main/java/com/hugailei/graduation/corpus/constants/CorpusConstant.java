@@ -1,7 +1,9 @@
 package com.hugailei.graduation.corpus.constants;
 
 import com.hugailei.graduation.corpus.service.RankWordService;
+import org.hibernate.validator.internal.util.privilegedactions.GetResource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -28,6 +30,8 @@ public class CorpusConstant {
 
     public static final String DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL = "<font color = \"yellow\">";
     public static final String DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL = "</font>";
+
+    public static final String SVM_MODEL_PATH = GetResource.class.getClassLoader().getResource("svm_model.txt").getPath();;
 
     public static final HashSet<String> SYNTACTIC_PRIMING_STRUCTURE_SET = new HashSet<String>(){
         {

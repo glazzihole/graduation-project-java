@@ -19,9 +19,9 @@ import edu.stanford.nlp.util.CoreMap;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.collections.SetUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author HU Gailei
@@ -79,12 +79,7 @@ public class SentenceAnalysisUtil {
 
     public static List<SentencePattern> findOtherSpecialSentencePattern(CoreMap sentence) {
         List<SentencePattern> sentencePatternList = new ArrayList<>();
-        List<SentencePattern> tempList = matchSubjectClause(sentence);
-        if (tempList != null) {
-            sentencePatternList.addAll(tempList);
-        }
-
-        tempList = matchPassiveVoice(sentence);
+        List<SentencePattern> tempList = matchPassiveVoice(sentence);
         if (tempList != null) {
             sentencePatternList.addAll(tempList);
         }
@@ -133,6 +128,7 @@ public class SentenceAnalysisUtil {
      */
     public static List<SentencePattern> matchSubjectClause(CoreMap sentence) {
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+        SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
         TregexPattern pattern = TregexPattern.compile("SBAR $++ VP");
         TregexMatcher matcher = pattern.matcher(tree);
         LinkedHashSet<String> clauseSet = new LinkedHashSet<>();
@@ -143,12 +139,34 @@ public class SentenceAnalysisUtil {
             // 匹配SBAR，得出从句内容
             Tree matchTree = matcher.getMatch();
             TregexMatcher clauseMatcher = TregexPattern.compile("SBAR").matcher(matchTree);
-            if (clauseMatcher.findNextMatchingNode()) {
-                for (Tree children : clauseMatcher.getMatch().getLeaves()) {
-                    clauseContent.append(children.label().value()).append(" ");
-                }
-                clauseSet.add(type + "_" + clauseContent.toString());
+            clauseMatcher.findNextMatchingNode();
+            int clauseContentStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+            int tempSize = clauseMatcher.getMatch().getLeaves().size();
+            int clauseContentEndIndex = clauseMatcher.getMatch().getLeaves().get(tempSize - 1).indexLeaves(0, false) - 2;
+            for (Tree children : clauseMatcher.getMatch().getLeaves()) {
+                clauseContent.append(children.label().value()).append(" ");
             }
+
+            // 获取主语从句的动词
+            String verbReg = "VB.*";
+            Tree clauseParent = clauseMatcher.getMatch().parent(tree);
+            for (Tree leaf : clauseParent.getLeaves()) {
+                if (leaf.parent(tree).label().value().matches(verbReg)) {
+                    // 获取该名词的index，从0开始
+                    int verbIndex = leaf.indexLeaves(0, false) - 2;
+                    // 同过依存关系验证主语从句中的内容和动词是否存在依存关系
+                    for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
+                        if (edge.getRelation().toString().equals("csubj")) {
+                            if (edge.getGovernor().index() - 1 == verbIndex &&
+                                edge.getDependent().index() - 1 >= clauseContentStartIndex &&
+                                edge.getDependent().index() - -1 <= clauseContentEndIndex) {
+                                clauseSet.add(type + "_" + clauseContent.toString());
+                            }
+                        }
+                    }
+                }
+            }
+
         }
         return setToList(clauseSet);
     }
@@ -168,27 +186,27 @@ public class SentenceAnalysisUtil {
         Set<Integer> emphaticIndexSet = getEmphaticStructureIndex(sentence);
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
         SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
-        TregexPattern pattern = TregexPattern.compile("/^P.*$/ << SBAR");
+//        TregexPattern pattern = TregexPattern.compile("/^P.*$/ << SBAR");
+//        TregexMatcher matcher = pattern.matcher(tree);
+//        while (matcher.findNextMatchingNode()) {
+//            // 匹配SBAR，得出从句内容
+//            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR").matcher(matcher.getMatch());
+//            StringBuilder clauseContent = new StringBuilder();
+//            if (clauseMatcher.findNextMatchingNode()) {
+//                int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+//                if (soThatIndexSet != null && soThatIndexSet.contains(clauseStartIndex)) {
+//                    continue;
+//                } else if (emphaticIndexSet != null && emphaticIndexSet.contains(clauseStartIndex)) {
+//                    continue;
+//                }
+//                for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
+//                    clauseContent.append(leaf.label().value()).append(" ");
+//                }
+//                clauseSet.add(SentencePatternType.OBJECT_CLAUSE.getType() + "_" + clauseContent.toString());
+//            }
+//        }
+        TregexPattern pattern = TregexPattern.compile("VP < (/^VB.*$/ [$. SBAR | $. (S << SBAR) | $. S])");
         TregexMatcher matcher = pattern.matcher(tree);
-        while (matcher.findNextMatchingNode()) {
-            // 匹配SBAR，得出从句内容
-            TregexMatcher clauseMatcher = TregexPattern.compile("SBAR").matcher(matcher.getMatch());
-            StringBuilder clauseContent = new StringBuilder();
-            if (clauseMatcher.findNextMatchingNode()) {
-                int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
-                if (soThatIndexSet != null && soThatIndexSet.contains(clauseStartIndex)) {
-                    continue;
-                } else if (emphaticIndexSet != null && emphaticIndexSet.contains(clauseStartIndex)) {
-                    continue;
-                }
-                for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
-                    clauseContent.append(leaf.label().value()).append(" ");
-                }
-                clauseSet.add(SentencePatternType.OBJECT_CLAUSE.getType() + "_" + clauseContent.toString());
-            }
-        }
-        pattern = TregexPattern.compile("VP < (/^VB.*$/ [$. SBAR | $. (S << SBAR) | $. S])");
-        matcher = pattern.matcher(tree);
         while (matcher.findNextMatchingNode()) {
             Tree vp = matcher.getMatch();
             // 排除从句为so that 句型和it is that的强调句型
@@ -234,16 +252,18 @@ public class SentenceAnalysisUtil {
                                     break;
                                 }
                             }
-                        } else if (edge.getRelation().toString().startsWith("advcl")) {
-                            if(edge.getGovernor().index() - 1 == verbIndex) {
-                                if (edge.getDependent().index() - 1 > verbIndex) {
-                                    if (CorpusConstant.COPULA_LEMMA_SET.contains(lemma)) {
-                                        isPredicativeClause = true;
-                                        break;
-                                    }
-                                }
-                            }
                         }
+//                        else if (edge.getRelation().toString().startsWith("advcl")) {
+//                            if(edge.getGovernor().index() - 1 == verbIndex) {
+//                                if (edge.getDependent().index() - 1 > verbIndex) {
+//                                    found = true;
+//                                    if (CorpusConstant.COPULA_LEMMA_SET.contains(lemma)) {
+//                                        isPredicativeClause = true;
+//                                    }
+//                                    break;
+//                                }
+//                            }
+//                        }
                     }
 
                     //匹配 find it impossible that的句型,verbIndex从0开始，.index()从1开始
@@ -311,15 +331,18 @@ public class SentenceAnalysisUtil {
         Set<Integer> soThatClauseIndex = getSoThatClauseIndex(sentence);
         // 排除掉it is XX that强调句的句型
         Set<Integer> emphaticThatIndexSet = getEmphaticStructureIndex(sentence);
+        Set<String> adverbialClauseSet = matchAdverbialClause(sentence).stream().map(l -> l.getClauseContent()).collect(Collectors.toSet());
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
         SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
-        TregexPattern pattern = TregexPattern.compile("SBAR $, NP");
+        TregexPattern pattern = TregexPattern.compile("SBAR $,, NP");
         TregexMatcher clauseMatcher = pattern.matcher(tree);
         List<SentencePattern> sentencePatternList = new ArrayList<>();
         while (clauseMatcher.findNextMatchingNode()) {
             // 是否找到
             boolean found = false;
             int clauseStartIndex = clauseMatcher.getMatch().getLeaves().get(0).indexLeaves(0, false) - 2;
+            int tempSize = clauseMatcher.getMatch().getLeaves().size();
+            int clauseEndIndex = clauseMatcher.getMatch().getLeaves().get(tempSize - 1).indexLeaves(0, false) - 2;
             if (soThatClauseIndex != null && soThatClauseIndex.contains(clauseStartIndex)) {
                 continue;
             } else if (emphaticThatIndexSet != null && emphaticThatIndexSet.contains(clauseStartIndex)) {
@@ -330,33 +353,38 @@ public class SentenceAnalysisUtil {
             for (Tree leaf : clauseMatcher.getMatch().getLeaves()) {
                 clauseContent.append(leaf.label().value()).append(" ");
             }
+            if (adverbialClauseSet.contains(clauseContent.toString())) {
+                continue;
+            }
             // 获取从句所修饰的名词
-            String nounReg = "(NN.*)|(PRP)|(NP)";
+            String nounReg = "(NN.*)|(PRP)";
             Tree clauseParent = clauseMatcher.getMatch().parent(tree);
             for (Tree leaf : clauseParent.getLeaves()) {
                 if (leaf.parent(tree).label().value().matches(nounReg)) {
                     // 获取该名词的index，从0开始
                     int index = leaf.indexLeaves(0, false) - 2;
                     // 通过index获取名词的原型
-                    String lemma = sentence.get(CoreAnnotations.TokensAnnotation.class).get(index).get(CoreAnnotations.LemmaAnnotation.class);
-                    // 判断该名词是否为同位语从句的先行词
-                    if (CorpusConstant.APPOSITIVE_ANTECEDENT_SET.contains(lemma)) {
-                        found = true;
-                    } else {
+//                    String lemma = sentence.get(CoreAnnotations.TokensAnnotation.class).get(index).get(CoreAnnotations.LemmaAnnotation.class);
+//                    // 判断该名词是否为同位语从句的先行词
+//                    if (CorpusConstant.APPOSITIVE_ANTECEDENT_SET.contains(lemma)) {
+//                        found = true;
+//                    } else {
                         // 查找句法依存关系，看该名词是否有定语从句(acl)或者从句补语ccomp
                         for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
                             if (edge.getRelation().toString().equals("ccomp") ||
                                 edge.getRelation().toString().equals("dep") ||
                                 edge.getRelation().toString().startsWith("acl")) {
-                                if (edge.getGovernor().index() - 1 == index) {
-                                    if (edge.getDependent().index() - 1 > index) {
-                                        found = true;
-                                        break;
-                                    }
+                                if (edge.getGovernor().index() - 1 == index &&
+                                    edge.getDependent().index() - 1 > index &&
+                                    edge.getDependent().index() - 1 >= clauseStartIndex &&
+                                    edge.getDependent().index() - 1 <= clauseEndIndex
+                                    ) {
+                                    found = true;
+                                    break;
                                 }
                             }
                         } // for (SemanticGraphEdge edge : dependency.edgeListSorted())
-                    }
+//                    }
                     if (found) {
                         int type;
                         type = SentencePatternType.ATTRIBUTIVE_CLAUSE_OR_APPOSITIVE_CLAUSE.getType();
@@ -1188,6 +1216,9 @@ public class SentenceAnalysisUtil {
                 sentenceSet2.add(temp);
             }
         }
+        if (sentenceSet2 == null || sentenceSet2.isEmpty()) {
+            return new ArrayList<>(sentenceSet1);
+        }
         sentenceSet2.retainAll(sentenceSet1);
         return new ArrayList<>(sentenceSet2);
 
@@ -1197,7 +1228,7 @@ public class SentenceAnalysisUtil {
      * 获取真正的主语、宾语等词（因为会有a tape of, a box of等修饰名词的情况），并且识别专有名词，将其用NER表示代替
      *
      * @param index  名词的位置
-     * @param sentenceCoreMap
+     * @param sentenceCoreMap 句子的句法分析结果
      * @return
      */
     public static Edge getRealNounEdge(int index, CoreMap sentenceCoreMap) {
@@ -1366,8 +1397,7 @@ public class SentenceAnalysisUtil {
         String govAndDep = edge.getGovernor().tag() + "-" + edge.getDependent().tag();
 
         // 匹配是否包含主谓宾结构
-        if (govAndDep.matches("(VB[A-Z]{0,1})-(NN[A-Z]{0,1})") ||
-            govAndDep.matches("(VB[A-Z]{0,1})-PRP")) {
+        if (govAndDep.matches("((VB[A-Z]{0,1})|IN)-((NN[A-Z]{0,1})|PRP)")) {
             int predicateIndex = edge.getGovernor().index();
             // 查找谓语动词是否有情态动词、助动词及否定结构，有的话需要加上
             String beforePredicate = "";
@@ -1379,7 +1409,7 @@ public class SentenceAnalysisUtil {
             }
             for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
                 if (semanticGraphEdge.getRelation().toString().equals("neg") &&
-                        semanticGraphEdge.getGovernor().index() == predicateIndex) {
+                    semanticGraphEdge.getGovernor().index() == predicateIndex) {
                     beforePredicate += semanticGraphEdge.getDependent().word() + " ";
                 }
             }
@@ -1395,8 +1425,7 @@ public class SentenceAnalysisUtil {
             for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
                 if (semanticGraphEdge.getRelation().toString().equals("dobj")) {
                     String objGovAndDep = semanticGraphEdge.getGovernor().tag() + "-" + semanticGraphEdge.getDependent().tag();
-                    if (objGovAndDep.matches("(VB[A-Z]{0,1})-(NN[A-Z]{0,1})") ||
-                        objGovAndDep.matches("(VB[A-Z]{0,1})-PRP")) {
+                    if (objGovAndDep.matches("((VB[A-Z]{0,1})|IN)-((NN[A-Z]{0,1})|PRP)")) {
                         // 通过单词位置判断是否为同一个谓语
                         if (semanticGraphEdge.getGovernor().index() == predicateIndex) {
                             temp = getRealNounEdge(semanticGraphEdge.getDependent().index(), sentenceCoreMap);
@@ -1406,7 +1435,7 @@ public class SentenceAnalysisUtil {
                             // 看该谓语是否有双宾语
                             for (SemanticGraphEdge se : dependency.edgeListSorted()) {
                                 if (se.getRelation().toString().equals("iobj") &&
-                                        se.getGovernor().index() == predicateIndex) {
+                                    se.getGovernor().index() == predicateIndex) {
                                     isDoubleObject = true;
                                     break;
                                 }
@@ -1688,10 +1717,9 @@ public class SentenceAnalysisUtil {
 //        String text = "This is such an interesting book that we all enjoy reading it. ";
 //        String text = "It was yesterday that he met Li Ping.";
 //        String text = "Lucky is she who was admitted to a famous university last year.";
-        String text = "They consider that fresh water can be got from the rain , \" +\n" +
-                "                \"the river , \" +\n" +
-                "                \"the will , etc. and these resources of fresh water will never dry up , \" +\n" +
-                "                \"so they can use fresh water freely as they want .";
+        String text = "For example, one sign of this condition is the appearance of the comic  vision, " +
+                "since comedy requires sufficient detachment to view some deviations from  social norms as " +
+                "ridiculous rather than as serious threats to the welfare of the  entire group.　";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         for(CoreMap sentence : result) {
             String shorterText = abstractSentence(sentence.toString());

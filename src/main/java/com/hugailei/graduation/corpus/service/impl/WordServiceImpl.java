@@ -37,7 +37,7 @@ public class WordServiceImpl implements WordService {
     private WordWithTopicDao wordWithTopicDao;
 
     @Override
-    @Cacheable(value = "corpus", key = "#corpus + '_' + #topic + '_' + rankNum", unless = "#result eq null")
+    @Cacheable(value = "corpus", key = "#corpus + '_' + #topic + '_' + #rankNum", unless = "#result eq null")
     public List<WordDto> wordList(String corpus, int topic, Integer rankNum) {
         try {
             log.info("wordList | corpus: {}, topic: {}, rank num: {}", corpus, topic, rankNum);
@@ -70,7 +70,8 @@ public class WordServiceImpl implements WordService {
                 int i = 0;
                 for (WordDto wordDto : resultList) {
                     String form = wordDto.getForm();
-                    if (rankWordSet.contains(form)) {
+                    String lemma = wordDto.getLemma();
+                    if (rankWordSet.contains(lemma)) {
                         form = CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + form + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL;
                     }
                     wordDto.setForm(form);
@@ -131,7 +132,7 @@ public class WordServiceImpl implements WordService {
                     }
                     break;
                 case CorpusConstant.FORM:
-                    word.setForm(query);
+                    word.setLemma(query);
                     example = Example.of(word);
                     wordDao.findAll(example).forEach(w -> {
                         if (key2Freq.containsKey(w.getForm())) {

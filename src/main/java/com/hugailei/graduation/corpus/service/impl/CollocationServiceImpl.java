@@ -72,13 +72,13 @@ public class CollocationServiceImpl implements CollocationService {
             log.info("searchCollocationOfWord | collocationDto:{}", collocationDto.toString());
             Sort sort = new Sort(Sort.Direction.DESC, "freq");
             List<CollocationDto> resultList = new ArrayList<>();
-            CollocationDto temp = new CollocationDto();
             // 不带主题的查询
             if (collocationDto.getTopic() == null) {
                 Collocation collocation = new Collocation();
                 BeanUtils.copyProperties(collocationDto, collocation);
                 collocationDao.findAll(Example.of(collocation), sort)
                         .forEach(coll -> {
+                            CollocationDto temp = new CollocationDto();
                             BeanUtils.copyProperties(coll, temp);
                             resultList.add(temp);
                         });
@@ -88,6 +88,7 @@ public class CollocationServiceImpl implements CollocationService {
                 BeanUtils.copyProperties(collocationDto, collocationWithTopic);
                 List<CollocationWithTopic> collocationWithTopicList = collocationWithTopicDao.findAll(Example.of(collocationWithTopic), sort);
                 collocationWithTopicList.forEach(coll -> {
+                            CollocationDto temp = new CollocationDto();
                             BeanUtils.copyProperties(coll, temp);
                             resultList.add(temp);
                         });
@@ -633,20 +634,25 @@ public class CollocationServiceImpl implements CollocationService {
      *
      * @param wordPair
      * @param posPair
+     * @param corpus
      * @param rankNum
      * @param topic
      * @param request
      * @return
      */
-    @Cacheable(value = "corpus", key = "'collocation_syn_recommend' + #wordPair + '-' + #posPair + '-' + #rankNum", unless = "#result eq null")
+    @Cacheable(
+            value = "corpus",
+            key = "'collocation_syn_recommend' + #wordPair + '-' + #posPair + '-' + #corpus + '-' + #rankNum + '-' + #topic",
+            unless = "#result eq null")
     @Override
     public List<CollocationDto> recommendSynonym(String wordPair,
                                                  String posPair,
+                                                 String corpus,
                                                  Integer rankNum,
                                                  Integer topic,
                                                  HttpServletRequest request) {
         try {
-            log.info("recommendSynonym | words: {}, pos: {}, rank num: {}, topic: {}", wordPair, posPair, rankNum, topic);
+            log.info("recommendSynonym | words: {}, pos: {}, corpus: {}, rank num: {}, topic: {}", wordPair, posPair, corpus, rankNum, topic);
             // 仅支持二词搭配
             if (wordPair.split(",").length != 2 || (!StringUtils.isBlank(posPair) && posPair.split(",").length != 2)) {
                 throw new Exception("only two-words' collocation is supported");
@@ -686,6 +692,7 @@ public class CollocationServiceImpl implements CollocationService {
             collocationDto.setSecondPos(secondWordPos);
             collocationDto.setSecondWord(secondWord);
             collocationDto.setTopic(topic);
+            collocationDto.setCorpus(corpus);
             collocationDto.setRankNum(rankNum);
             // 形容词 + 名词、动词 + 名词、副词 + 形容词、动词 + 副词、副词 + 动词的组合，查找第一个词的同义词
             if (wordPairPos.matches("JJ-NN") ||

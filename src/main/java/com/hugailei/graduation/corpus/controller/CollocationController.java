@@ -109,6 +109,7 @@ public class CollocationController {
      *
      * @param wordPair
      * @param posPair
+     * @param corpus
      * @param rankNum
      * @param request
      * @return
@@ -117,11 +118,12 @@ public class CollocationController {
     @ResponseBody
     public ResponseVO recommendSynonym(@RequestParam("word_pair") String wordPair,
                                        @RequestParam("pos_pair") String posPair,
+                                       @RequestParam String corpus,
                                        @RequestParam(value = "rank_num", required = false) Integer rankNum,
-                                       @RequestParam("topic") Integer topic,
+                                       @RequestParam(value = "topic", required = false) Integer topic,
                                        HttpServletRequest request) {
         log.info("recommendSynonym | request to recommend synonym collocation");
-        List<CollocationDto> result = collocationService.recommendSynonym(wordPair, posPair, rankNum, topic, request);
+        List<CollocationDto> result = collocationService.recommendSynonym(wordPair, posPair, corpus, rankNum, topic, request);
         if (result == null) {
             ResponseUtil.error();
         }

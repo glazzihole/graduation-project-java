@@ -117,15 +117,16 @@ public class SearchParameters {
 		
 		{
 			// 兼容Dictool框架的分页参数
-			String pageNo = ServletUtil.getParameter(request, "page", "").trim();
+			String pageNo = ServletUtil.getParameter(request, "pageNumber", "").trim();
 			int first = 0;
 			try {
-				first = Integer.parseInt(pageNo)-1 < 0 ? 0 : Integer.parseInt(pageNo) - 1;//要-1是因为first从0开始，但pageNo是从1开始的
+				//要-1是因为first从0开始，但pageNo是从1开始的
+				first = Integer.parseInt(pageNo)-1 < 0 ? 0 : Integer.parseInt(pageNo) - 1;
 			} catch (Exception e) {
 				;
 			}
 
-			String pageSize = ServletUtil.getParameter(request, "size", "").trim();
+			String pageSize = ServletUtil.getParameter(request, "pageSize", "").trim();
 			int number = 0;
 			try {
 				number = Integer.parseInt(pageSize);

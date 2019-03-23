@@ -195,6 +195,18 @@ public class SentenceServiceImpl implements SentenceService  {
         }
     }
 
+    @Override
+    public Integer getSentenceRankNum(String sentence) {
+        try {
+            log.info("getSentenceRankNum | sentence: {}", sentence);
+            Integer result = SentenceRankUtil.sentenceRankNum(sentence);
+            return result;
+        } catch (Exception e) {
+            log.error("getSentenceRankNum | error: {}", e);
+            return null;
+        }
+    }
+
     /**
      * 对检索内容进行重构标注
      *

@@ -247,7 +247,7 @@ public class SaveCollocation {
                         found = true;
                     }
 
-                    // 当第二个词为形容词是，判断动词是否为系统词，若是，则后面的形容词也可以修饰该动词的主语
+                    // 当第二个词为形容词时，判断动词是否为系统词，若是，则后面的形容词也可以修饰该动词的主语
                     if (edge.getDependent().tag().matches("JJ[A-Z]{0,1}")) {
                         if (CorpusConstant.COPULA_LEMMA_SET.contains(edge.getGovernor().lemma())) {
                             int verbIndex = edge.getGovernor().index();
@@ -301,7 +301,7 @@ public class SaveCollocation {
             }
 
             if (found) {
-                // 查询搭配中的动词是否存在词组搭配，若存在，则需要将所有搭配中的改动次替换为词组
+                // 查询搭配中的动词是否存在词组搭配，若存在，则需要将所有搭配中的该动词替换为词组
                 if (
                     (firstPos.matches("VB.*") || secondPos.matches("VB.*"))
                         &&

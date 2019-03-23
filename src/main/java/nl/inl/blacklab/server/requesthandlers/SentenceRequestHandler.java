@@ -189,13 +189,15 @@ public class SentenceRequestHandler extends RequestHandler {
             // 得到句子列表，对句子进行难度排序
             List<String> sentenceList = new ArrayList<>();
             for (Hit hit : window) {
-                sentenceList.add(hit.toString());
-                sentenceList = SentenceRankUtil.orderSentenceByRankNumAsc(sentenceList);
+                String sentence = "";
+                for (String word : window.getKwic(hit).getMatch("word")) {
+                    sentence += word + " ";
+                }
+                sentenceList.add(sentence.trim());
             }
-
+            sentenceList = SentenceRankUtil.orderSentenceByRankNumAsc(sentenceList);
             Map<String, String> sentence2LabeledSentence = new HashMap<>();
             for (Hit hit : window) {
-                ds.entry("id", "");
                 String labeledSentence = "";
                 // Add KWIC info
                 Kwic c = window.getKwic(hit);
@@ -217,17 +219,22 @@ public class SentenceRequestHandler extends RequestHandler {
                     labeledSentence = labeledSentence + word + " ";
                 }
                 labeledSentence = labeledSentence.trim();
-                sentence2LabeledSentence.put(hit.toString(), labeledSentence);
+                String sentence = "";
+                for (String word : window.getKwic(hit).getMatch("word")) {
+                    sentence += word + " ";
+                }
+                sentence2LabeledSentence.put(sentence.trim(), labeledSentence);
             }
 
             int id = 0;
             for (String sentence : sentenceList) {
+                ds.startItem("hit").startMap();
                 String labeledSentence = sentence2LabeledSentence.get(sentence);
                 ds.entry("id", id ++);
                 ds.entry("sentence", labeledSentence);
                 ds.entry("corpus", searchParam.getIndexName());
+                ds.endMap().endItem();
             }
-
             ds.endList().endEntry();
             ds.endDataEntry("data");
             ds.endMap().endItem();

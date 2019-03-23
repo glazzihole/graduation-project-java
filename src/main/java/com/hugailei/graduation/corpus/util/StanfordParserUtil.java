@@ -125,7 +125,7 @@ public class StanfordParserUtil {
 
 
     public static void main(String[] args) {
-        String[] textArray = {" Narouz had been angry, first with the girl for playing the fool and then with the eunuch for not finding her."};
+        String[] textArray = {"For example, one sign of this condition is the appearance of the comic  vision, since comedy requires sufficient detachment to view some deviations from  social norms as ridiculous rather than as serious threats to the welfare of the  entire group.　"};
         int i = 0;
         for (String text : textArray) {
             List<CoreMap> result = StanfordParserUtil.parse(text);

@@ -15,8 +15,10 @@ import libsvm.svm_model;
 import libsvm.svm_node;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.*;
 
@@ -28,12 +30,14 @@ import java.util.*;
  * </p>
  **/
 @Slf4j
+@Component
 public class SentenceRankUtil {
-    @Autowired
-    private static String MODEL_PATH;
+    private static String MODEL_PATH = CorpusConstant.SVM_MODEL_PATH;
 
     private static svm_model SVM_MODEL;
-    static {
+
+    @PostConstruct
+    public void init(){
         try {
             SVM_MODEL = svm.svm_load_model(MODEL_PATH);
         } catch (IOException e) {
@@ -242,6 +246,7 @@ public class SentenceRankUtil {
      * @return
      */
     public static List<String> orderSentenceByRankNumAsc(List<String> sentenceList) {
+        log.info("orderSentenceByRankNumAsc | start to rank.");
         Map<String, Integer> sentence2RankNum = new TreeMap<String, Integer>();
         for (String sentence: sentenceList) {
             int rankNum = sentenceRankNum(sentence);

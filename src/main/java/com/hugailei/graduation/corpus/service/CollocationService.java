@@ -51,11 +51,12 @@ public interface CollocationService {
      *
      * @param wordPair
      * @param posPair
+     * @param corpus
      * @param rankNum
      * @param request
      * @return
      */
-    List<CollocationDto> recommendSynonym(String wordPair, String posPair, Integer rankNum, Integer topic, HttpServletRequest request);
+    List<CollocationDto> recommendSynonym(String wordPair, String posPair, String corpus, Integer rankNum, Integer topic, HttpServletRequest request);
 
     /**
      * 查找单词在搭配词典中的搭配，按照搭配词词性及搭配分类

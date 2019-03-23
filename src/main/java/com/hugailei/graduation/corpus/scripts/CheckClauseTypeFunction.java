@@ -1,6 +1,7 @@
 package com.hugailei.graduation.corpus.scripts;
 
 import com.hugailei.graduation.corpus.domain.SentencePattern;
+import com.hugailei.graduation.corpus.enums.SentencePatternType;
 import com.hugailei.graduation.corpus.util.SentenceAnalysisUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import edu.stanford.nlp.util.CoreMap;
@@ -19,60 +20,82 @@ import java.util.List;
  * </p>
  **/
 public class CheckClauseTypeFunction {
-    private static final String SENTENCE_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\句型判断\\同位语从句.txt";
-    private static final String RESULT_FILE_PATH = "C:\\Users\\GAILEI\\Desktop\\毕业论文相关\\句型判断\\同位语从句-结果.txt";
+    private static final String SENTENCE_FILE_PATH = "E:\\毕业论文相关\\从句\\长难句.txt";
+    private static final String SUBJECT_CLAUSE_FILE_PATH = "E:\\毕业论文相关\\从句\\结果\\主语从句\\";
+    private static final String OBJECT_CLAUSE_FILE_PATH = "E:\\毕业论文相关\\从句\\结果\\宾语从句\\";
+    private static final String ATTRIBUTIVE_CLAUSE_OR_APPOSITIVE_CLAUSE_FILE_PATH = "E:\\毕业论文相关\\从句\\结果\\定语同位语从句\\";
+    private static final String PREDICATIVE_CLAUSE_FILE_PATH = "E:\\毕业论文相关\\从句\\结果\\表语从句\\";
+    private static final String ADVERBIAL_CLAUSE_FILE_PATH = "E:\\毕业论文相关\\从句\\结果\\状语从句\\";
 
     public static void main(String[] args) throws Exception{
         FileReader fileReader = new FileReader(new File(SENTENCE_FILE_PATH));
         BufferedReader bufferedReader = new BufferedReader(fileReader);
 
-        FileWriter fileWriter = new FileWriter(new File(RESULT_FILE_PATH));
+        FileWriter fileWriter = null;
         String sentence;
+        int lineNum = 1;
         while((sentence = bufferedReader.readLine()) != null) {
             List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
-            List<SentencePattern> sentencePatternList = SentenceAnalysisUtil.matchAppositiveClauseOrAttributiveClause(coreMapList.get(0));
-            if (sentencePatternList != null){
-                SentencePattern sentencePattern = sentencePatternList.get(0);
-                int type = sentencePattern.getType();
-                switch (type) {
-                    case 1:
-                        fileWriter.write("主语从句\r\n");
-                        break;
-
-                    case 2:
-                        fileWriter.write("宾语从句\r\n");
-                        break;
-
-                    case 3:
-                        fileWriter.write("定语从句或同位语从句\r\n");
-                        break;
-
-                    case 4:
-                        fileWriter.write("表语从句\r\n");
-                        break;
-
-                    case 5:
-                        fileWriter.write("状语从句\r\n");
-                        break;
-
-                    case 6:
-                        fileWriter.write("被动句\r\n");
-                        break;
-
-                    case 7:
-                        fileWriter.write("双宾语句\r\n");
-                        break;
-
-                    default:
-                        fileWriter.write("其他\r\n");
-                        break;
-                }
-            } else {
-                fileWriter.write("其他\r\n");
+            if (coreMapList == null || coreMapList.isEmpty() || coreMapList.size() == 0) {
+                continue;
             }
-            fileWriter.flush();
-        }
+            List<SentencePattern> sentencePatternList = SentenceAnalysisUtil.matchSubjectClause(coreMapList.get(0));
+            if (sentencePatternList != null && !sentencePatternList.isEmpty()) {
+                fileWriter = new FileWriter(new File(SUBJECT_CLAUSE_FILE_PATH + lineNum + ".txt"));
+                for (SentencePattern sentencePattern : sentencePatternList) {
+                    fileWriter.write(sentencePattern.getClauseContent() + "\r\n");
+                    fileWriter.flush();
+                }
+            }
 
-        fileWriter.close();
+            sentencePatternList = SentenceAnalysisUtil.matchObjectClauseOrPredicativeClause(coreMapList.get(0));
+            if (sentencePatternList != null && !sentencePatternList.isEmpty()) {
+                for (SentencePattern sentencePattern : sentencePatternList) {
+                    if (sentencePattern.getType() == SentencePatternType.OBJECT_CLAUSE.getType()) {
+                        fileWriter = new FileWriter(new File(OBJECT_CLAUSE_FILE_PATH + lineNum + ".txt"));
+                        fileWriter.flush();
+                    }
+                }
+                for (SentencePattern sentencePattern : sentencePatternList) {
+                    if (sentencePattern.getType() == SentencePatternType.OBJECT_CLAUSE.getType()) {
+                        fileWriter.write(sentencePattern.getClauseContent() + "\r\n");
+                        fileWriter.flush();
+                    }
+                }
+
+                for (SentencePattern sentencePattern : sentencePatternList) {
+                    if (sentencePattern.getType() == SentencePatternType.PREDICATIVE_CLAUSE.getType()) {
+                        fileWriter = new FileWriter(new File(PREDICATIVE_CLAUSE_FILE_PATH + lineNum + ".txt"));
+                        fileWriter.flush();
+                    }
+                }
+                for (SentencePattern sentencePattern : sentencePatternList) {
+                    if (sentencePattern.getType() == SentencePatternType.PREDICATIVE_CLAUSE.getType()) {
+                        fileWriter.write(sentencePattern.getClauseContent() + "\r\n");
+                        fileWriter.flush();
+                    }
+                }
+            }
+            sentencePatternList = SentenceAnalysisUtil.matchAppositiveClauseOrAttributiveClause(coreMapList.get(0));
+            if (sentencePatternList != null && !sentencePatternList.isEmpty()) {
+                fileWriter = new FileWriter(new File(ATTRIBUTIVE_CLAUSE_OR_APPOSITIVE_CLAUSE_FILE_PATH + lineNum + ".txt"));
+                for (SentencePattern sentencePattern : sentencePatternList) {
+                    fileWriter.write(sentencePattern.getClauseContent() + "\r\n");
+                    fileWriter.flush();
+                }
+            }
+
+            sentencePatternList = SentenceAnalysisUtil.matchAdverbialClause(coreMapList.get(0));
+            if (sentencePatternList != null && !sentencePatternList.isEmpty()) {
+                fileWriter = new FileWriter(new File(ADVERBIAL_CLAUSE_FILE_PATH + lineNum + ".txt"));
+                for (SentencePattern sentencePattern : sentencePatternList) {
+                    fileWriter.write(sentencePattern.getClauseContent() + "\r\n");
+                    fileWriter.flush();
+                }
+            }
+
+            lineNum ++;
+            System.out.println(lineNum);
+        }
     }
 }

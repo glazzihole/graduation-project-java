@@ -1,7 +1,5 @@
 package com.hugailei.graduation.corpus.controller;
 
-import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.dto.WordDto;
 import com.hugailei.graduation.corpus.service.KeyWordService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;
@@ -12,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author HU Gailei

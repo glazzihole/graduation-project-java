@@ -15,6 +15,7 @@ import nl.inl.blacklab.server.jobs.*;
 import nl.inl.blacklab.server.search.BlsConfig;
 import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,6 +27,7 @@ import java.util.*;
  * @author HU Gailei
  */
 @Slf4j
+@Component
 public class RequestHandlerHits extends RequestHandler {
 
     @Autowired
@@ -196,8 +198,6 @@ public class RequestHandlerHits extends RequestHandler {
                     pids.put(hit.doc, pid);
                 }
 
-                ds.entry("id", pid + hit.start + hit.end);
-
                 String left = "", match = "", right = "";
                 // Add KWIC info
                 if(window!=null) {
@@ -230,11 +230,13 @@ public class RequestHandlerHits extends RequestHandler {
                         right = right + word + " ";
                     }
                 }
+                ds.startItem("hit").startMap();
+                ds.entry("id", pid + hit.start + hit.end);
                 ds.entry("left", left.trim());
                 ds.entry("match", match.trim());
                 ds.entry("right", right.trim());
-
                 ds.entry("corpus", searchParam.getIndexName());
+                ds.endMap().endItem();
             }
             ds.endList().endEntry();
             ds.endDataEntry("data");

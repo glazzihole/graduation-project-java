@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
  * description: KWIC
  * </p>
  **/
-@RequestMapping("/corpus/sentence")
+@RequestMapping("/corpus/kwic")
 @RestController
 @Slf4j
 public class ConcordanceController {
@@ -51,7 +51,7 @@ public class ConcordanceController {
      * http://localhost:8080/corpus/corpus/concordance?index_name=fzzw&patt=%22break%22&type=word&level1=L1&level2=L2&level3=L3&sensitive=false&pageSize=100&pageNo=5
      * </pre>
      */
-    @GetMapping("/concordance")
+    @GetMapping
     public void concordance(Pageable pageable,
                             HttpServletRequest request,
                             HttpServletResponse response,
@@ -63,7 +63,7 @@ public class ConcordanceController {
                             @RequestParam(value = "type", defaultValue = "word") String type,
                             @RequestParam(value = "rank_num", required = false) Integer rankNum) {
         String sort = "context:" + type + ":i" + ":" + level1 + ";" + level2 + ";" + level3;
-        log.info("searchSentence | request to search concordance sort by {}", sort);
+        log.info("concordance | request to search concordance sort by {}", sort);
         request.setAttribute("sort", sort);
         User user = User.loggedIn("admin", "1");
         handler.checkConfig(request, response, blackLabServer);

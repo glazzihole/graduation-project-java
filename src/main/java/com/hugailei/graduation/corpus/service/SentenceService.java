@@ -70,4 +70,12 @@ public interface SentenceService {
      * @return
      */
     List<String> getSimpleSentence(String sentence);
+
+    /**
+     * 获取句子的等级
+     *
+     * @param sentence
+     * @return
+     */
+    Integer getSentenceRankNum(String sentence);
 }
