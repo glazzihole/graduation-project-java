@@ -4,6 +4,8 @@ import com.bfsuolframework.core.utils.StringUtils;
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import com.hugailei.graduation.corpus.util.SentenceAnalysisUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
@@ -25,9 +27,9 @@ import java.util.*;
  **/
 public class SaveCollocation {
 
-    private static final String CORPUS = "chinadaily";
+    private static final String CORPUS = "bnc";
 
-    private static final String TEMP_FILE_PATH = "E:\\chinadaily-collocation-temp.txt";
+    private static final String TEMP_FILE_PATH = "E:\\bnc-collocation-temp.txt";
 
     private static final String DB_HOST = "192.168.99.100";
 
@@ -151,118 +153,167 @@ public class SaveCollocation {
             int depIndex = edge.getDependent().index();
             boolean found = false;
             String firstWord = null, secondWord = null, firstPos = null, secondPos = null, thirdWord = null, thirdPos = null;
+            int firstIndex = 0, secondIndex = 0, thirdIndex = 0;
             if (CorpusConstant.COLLOCATION_DEPENDENCY_RELATION_SET.contains(relation)) {
                 if ((relation.startsWith("nsubj") && !relation.startsWith("nsubjpass")) ||
-                    "nmod:agent".equals(relation)) {
+                        "nmod:agent".equals(relation)) {
                     String adjNounRegex = "(JJ[A-Z]{0,1})-(NN[A-Z]{0,1})";
-                    String nounverbRegex = "(NN[A-Z]{0,1})-(VB[A-Z]{0,1})";
+                    String nounverbRegex = "((NN[A-Z]{0,1})|(PRP))-(VB[A-Z]{0,1})";
                     SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                     if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(adjNounRegex)) {
-                        found = true;
                         firstWord = edge.getGovernor().lemma();
+                        firstIndex = edge.getGovernor().index();
                         secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
+                        secondIndex = (temp == null ? edge.getDependent().index() : temp.getIndex());
                         firstPos = edge.getGovernor().tag();
                         secondPos = edge.getDependent().tag();
-                    } else if ((edge.getDependent().tag() + "-" + edge.getGovernor().tag()).matches(nounverbRegex)) {
                         found = true;
+                    } else if ((edge.getDependent().tag() + "-" + edge.getGovernor().tag()).matches(nounverbRegex)) {
                         firstWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
+                        firstIndex = (temp == null ? edge.getDependent().index() : temp.getIndex());
                         secondWord = edge.getGovernor().lemma();
                         firstPos = edge.getDependent().tag();
                         secondPos = edge.getGovernor().tag();
+                        secondIndex = edge.getGovernor().index();
+                        found = true;
                     }
                 }
                 else if (relation.startsWith("dobj") || relation.startsWith("nsubjpass")) {
-                    String verbNounRegex = "(VB[A-Z]{0,1})-(NN[A-Z]{0,1})";
+                    String verbNounRegex = "(VB[A-Z]{0,1})-((NN[A-Z]{0,1})|(PRP))";
                     SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                     if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbNounRegex)) {
-                        found = true;
                         firstWord = edge.getGovernor().lemma();
+                        firstIndex = edge.getGovernor().index();
                         firstPos = edge.getGovernor().tag();
                         secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
                         secondPos = edge.getDependent().tag();
+                        secondIndex = (temp == null ? edge.getDependent().index() : temp.getIndex());
+                        found = true;
+                    }
+                    else {
+                        firstWord = edge.getGovernor().lemma();
+                        firstPos = edge.getGovernor().tag();
+                        firstIndex = edge.getGovernor().index();
+                        secondWord = edge.getDependent().lemma();
+                        secondPos = edge.getDependent().tag();
+                        secondIndex = edge.getDependent().index();
+                        found = true;
                     }
                 }
                 else if (relation.startsWith("csubj")) {
-                    String verbNounRegex = "(VB[A-Z]{0,1})-(NN[A-Z]{0,1})";
+                    String verbNounRegex = "(VB[A-Z]{0,1})-((NN[A-Z]{0,1})|(PRP))";
                     SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getGovernor().index(), sentence);
                     if ((edge.getDependent().tag() + "-" + edge.getGovernor().tag()).matches(verbNounRegex)) {
-                        found = true;
                         firstWord = edge.getDependent().lemma();
+                        firstIndex = edge.getDependent().index();
                         secondWord = (temp == null ? edge.getGovernor().lemma() : temp.getLemma());
                         firstPos = edge.getDependent().tag();
                         secondPos = edge.getGovernor().tag();
+                        secondIndex = (temp == null ? edge.getGovernor().index() : temp.getIndex());
+                        found = true;
                     }
                 }
                 else if (relation.startsWith("amod")) {
                     String adjNounRegex = "(JJ[A-Z]{0,1})-(NN[A-Z]{0,1})";
                     SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getGovernor().index(), sentence);
                     if ((edge.getDependent().tag() + "-" + edge.getGovernor().tag()).matches(adjNounRegex)) {
-                        found = true;
                         firstWord = edge.getDependent().lemma();
+                        firstIndex = edge.getDependent().index();
                         firstPos = edge.getDependent().tag();
                         secondWord = (temp == null ? edge.getGovernor().lemma() : temp.getLemma());
                         secondPos = edge.getGovernor().tag();
+                        secondIndex = (temp == null ? edge.getGovernor().index() : temp.getIndex());
+                        found = true;
                     }
                 }
                 else if (relation.startsWith("advmod")) {
                     String verbAdvRegex = "(VB[A-Z]{0,1})-(RB[A-Z]{0,1})";
                     String adjAdvRegex = "(JJ[A-Z]{0,1})-(RB[A-Z]{0,1})";
                     if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbAdvRegex) ||
-                        (edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(adjAdvRegex)) {
-                        found = true;
+                            (edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(adjAdvRegex)) {
                         // 根据单词在句子中的位置调整在搭配中的先后顺序
                         if (govIndex < depIndex) {
                             firstWord = edge.getGovernor().lemma();
                             firstPos = edge.getGovernor().tag();
+                            firstIndex = edge.getGovernor().index();
                             secondWord = edge.getDependent().lemma();
                             secondPos = edge.getDependent().tag();
+                            secondIndex = edge.getDependent().index();
                         } else {
                             firstWord = edge.getDependent().lemma();
+                            firstIndex = edge.getDependent().index();
                             secondWord = edge.getGovernor().lemma();
                             firstPos = edge.getDependent().tag();
                             secondPos = edge.getGovernor().tag();
+                            secondIndex = edge.getGovernor().index();
                         }
+                        found = true;
                     }
                 }
                 else if ("compound:prt".equals(relation) || "nmod".equals(relation)) {
-                    found = true;
                     firstWord = edge.getGovernor().lemma();
+                    firstIndex = edge.getGovernor().index();
                     firstPos = edge.getGovernor().tag();
                     secondWord = edge.getDependent().lemma();
                     secondPos = edge.getDependent().tag();
+                    secondIndex = edge.getDependent().index();
+                    found = true;
+                }
+                else if ("compound".equals(relation)) {
+                    if (edge.getDependent().tag().matches("NN.*") && edge.getGovernor().tag().matches("NN.*")) {
+                        int governorIndex = edge.getGovernor().index();
+                        int dependentIndex = edge.getDependent().index();
+                        CoreLabel governorToken = sentence.get(CoreAnnotations.TokensAnnotation.class).get(governorIndex - 1);
+                        String governorNer = governorToken.get(CoreAnnotations.NamedEntityTagAnnotation.class);
+                        CoreLabel dependentToken = sentence.get(CoreAnnotations.TokensAnnotation.class).get(dependentIndex - 1);
+                        String dependetNer = dependentToken.get(CoreAnnotations.NamedEntityTagAnnotation.class);
+
+                        if (!(CorpusConstant.PROPER_NOUN_SET.contains(governorNer) && CorpusConstant.PROPER_NOUN_SET.contains(dependetNer))) {
+                            found = true;
+                            firstWord = edge.getDependent().lemma();
+                            firstPos = "NN";
+                            firstIndex = edge.getDependent().index();
+                            secondWord = edge.getGovernor().lemma();
+                            secondPos = "NN";
+                            secondIndex = edge.getGovernor().index();
+                        }
+                    }
                 }
                 else if (relation.startsWith("xcomp")) {
                     String verbAdjRegex = "(VB[A-Z]{0,1})-(JJ[A-Z]{0,1})";
-                    String verbNounRegex = "(VB[A-Z]{0,1})-(NN[A-Z]{0,1})";
+                    String verbNounRegex = "(VB[A-Z]{0,1})-((NN[A-Z]{0,1})|(PRP))";
                     if ((edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbAdjRegex) ||
-                        (edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbNounRegex)) {
+                            (edge.getGovernor().tag() + "-" + edge.getDependent().tag()).matches(verbNounRegex)) {
                         SentenceAnalysisUtil.Edge temp = null;
                         if (edge.getDependent().tag().startsWith("NN")) {
                             temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                         }
                         firstWord = edge.getGovernor().lemma();
+                        firstIndex = edge.getGovernor().index();
                         secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
                         secondPos = edge.getDependent().tag();
                         firstPos = edge.getGovernor().tag();
+                        secondIndex = (temp == null ? edge.getDependent().index() : temp.getIndex());
                         found = true;
                     }
 
-                    // 当第二个词为形容词时，判断动词是否为系统词，若是，则后面的形容词也可以修饰该动词的主语
+                    // 当第二个词为形容词是，判断动词是否为系统词，若是，则后面的形容词也可以修饰该动词的主语
                     if (edge.getDependent().tag().matches("JJ[A-Z]{0,1}")) {
                         if (CorpusConstant.COPULA_LEMMA_SET.contains(edge.getGovernor().lemma())) {
                             int verbIndex = edge.getGovernor().index();
                             for (SemanticGraphEdge semanticGraphEdge : dependency.edgeListSorted()) {
                                 if (semanticGraphEdge.getRelation().toString().startsWith("nsubj") &&
-                                    !semanticGraphEdge.getRelation().toString().startsWith("nsubjpass") &&
-                                    semanticGraphEdge.getDependent().tag().matches("NN[A-Z]{0,1}") &&
-                                    semanticGraphEdge.getGovernor().index() == verbIndex) {
+                                        !semanticGraphEdge.getRelation().toString().startsWith("nsubjpass") &&
+                                        semanticGraphEdge.getGovernor().index() == verbIndex) {
+                                    firstIndex = edge.getDependent().index();
                                     firstWord = edge.getDependent().lemma();
                                     firstPos = "JJ";
-
+                                    firstIndex = edge.getDependent().index();
                                     int subjectIndex = semanticGraphEdge.getDependent().index();
                                     SentenceAnalysisUtil.Edge subjectTemp = SentenceAnalysisUtil.getRealNounEdge(subjectIndex, sentence);
                                     secondWord = (subjectTemp == null ? semanticGraphEdge.getDependent().lemma() : subjectTemp.getLemma());
                                     secondPos = "NN";
+                                    secondIndex = (subjectTemp == null ? semanticGraphEdge.getDependent().index() : subjectTemp.getIndex());
                                     found = true;
                                 }
                             }
@@ -271,54 +322,76 @@ public class SaveCollocation {
                 }
                 else if ("dep".equals(relation)) {
                     if (edge.getGovernor().tag().matches("VB[A-Z]{0,1}")) {
-                        found = true;
                         firstWord = edge.getGovernor().lemma();
                         firstPos = edge.getGovernor().tag();
+                        firstIndex = edge.getGovernor().index();
                         secondWord = edge.getDependent().lemma();
                         secondPos = edge.getDependent().tag();
+                        secondIndex = edge.getDependent().index();
                         if (edge.getDependent().tag().startsWith("NN")) {
                             SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                             secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
+                            secondIndex = (temp == null ? edge.getDependent().index() : temp.getIndex());
                         }
+                        found = true;
                     }
+                }
+                else if ("mwe".equals(relation)) {
+                    found = true;
+                    firstWord = edge.getGovernor().lemma();
+                    firstPos = edge.getGovernor().tag();
+                    firstIndex = edge.getGovernor().index();
+                    secondWord = edge.getDependent().lemma();
+                    secondPos = edge.getDependent().tag();
+                    secondIndex = edge.getDependent().index();
                 }
             } else if (CorpusConstant.COLLOCATION_NOMD_RELATION_SET.contains(relation)) {
                 firstWord = edge.getGovernor().lemma();
                 firstPos = edge.getGovernor().tag();
+                firstIndex = edge.getGovernor().index();
                 secondWord = relation.split(":")[1];
                 secondPos = "IN";
                 thirdWord = edge.getDependent().lemma();
                 thirdPos = edge.getDependent().tag();
+                thirdIndex = edge.getDependent().index();
                 if (thirdPos.startsWith("NN")) {
                     SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                     if (temp != null) {
                         thirdWord = temp.getLemma();
                     }
-                } else {
-                    thirdWord = null;
                 }
                 found = true;
             }
 
             if (found) {
                 // 查询搭配中的动词是否存在词组搭配，若存在，则需要将所有搭配中的该动词替换为词组
-                if (
-                    (firstPos.matches("VB.*") || secondPos.matches("VB.*"))
-                        &&
-                    (!relation.equals("compound:prt"))
-                ){
-                    int verbIndex = edge.getGovernor().index();
+//                        if (
+//                                (firstPos.matches("VB.*") || secondPos.matches("VB.*"))
+//                                        &&
+//                                        (!relation.equals("compound:prt"))
+//                        ) {
+                if (!relation.equals("compound:prt")) {
                     for (SemanticGraphEdge e : dependency.edgeListSorted()) {
-                        if (e.getGovernor().index() == verbIndex && e.getRelation().toString().equals("compound:prt")) {
-                            String verbPhrase = e.getGovernor().lemma() + " " + e.getDependent().lemma();
-                            if (firstPos.matches("VB.*")) {
-                                firstWord = verbPhrase;
-                                firstPos = "PHRASE";
-                            }
-                            else {
-                                secondWord = verbPhrase;
-                                secondPos = "PHRASE";
-                            }
+                        if (e.getGovernor().index() == firstIndex && e.getRelation().toString().equals("compound:prt")) {
+                            String phrase = e.getGovernor().lemma() + " " + e.getDependent().lemma();
+                            firstWord = phrase;
+                            firstPos = "PHRASE";
+                        }
+                    }
+
+                    for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                        if (e.getGovernor().index() == secondIndex && e.getRelation().toString().equals("compound:prt")) {
+                            String phrase = e.getGovernor().lemma() + " " + e.getDependent().lemma();
+                            secondWord = phrase;
+                            secondPos = "PHRASE";
+                        }
+                    }
+
+                    for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                        if (e.getGovernor().index() == thirdIndex && e.getRelation().toString().equals("compound:prt")) {
+                            String phrase = e.getGovernor().lemma() + " " + e.getDependent().lemma();
+                            thirdWord = phrase;
+                            thirdPos = "PHRASE";
                         }
                     }
                 }

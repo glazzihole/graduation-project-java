@@ -153,6 +153,7 @@ public class CorpusConstant {
             add("information");
             add("suggestion");
             add("question");
+            add("problem");
             add("thought");
             add("belief");
             add("conclusion");
@@ -361,11 +362,25 @@ public class CorpusConstant {
             add("xcomp");
             add("nmod");
             add("dep");
+            add("compound");
+            add("mwe");
         }
     };
 
     /**
-     * 搭配的依赖关系组合
+     * 专有名词标识
+     */
+    public static final Set<String> PROPER_NOUN_SET = new HashSet<String>() {
+        {
+            add("PERSON");
+            add("ORGANIZATION");
+            add("LOCATION");
+            add("COUNTRY");
+        }
+    };
+
+    /**
+     * NOMD:介词关系组合
      */
     public static final Set<String> COLLOCATION_NOMD_RELATION_SET = new HashSet<String>() {
         {

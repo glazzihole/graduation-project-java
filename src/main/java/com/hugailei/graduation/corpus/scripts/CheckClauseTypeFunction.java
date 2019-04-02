@@ -20,7 +20,7 @@ import java.util.List;
  * </p>
  **/
 public class CheckClauseTypeFunction {
-    private static final String SENTENCE_FILE_PATH = "E:\\毕业论文相关\\从句\\长难句.txt";
+    private static final String SENTENCE_FILE_PATH = "E:\\毕业论文相关\\从句\\状语从句.txt";
     private static final String SUBJECT_CLAUSE_FILE_PATH = "E:\\毕业论文相关\\从句\\结果\\主语从句\\";
     private static final String OBJECT_CLAUSE_FILE_PATH = "E:\\毕业论文相关\\从句\\结果\\宾语从句\\";
     private static final String ATTRIBUTIVE_CLAUSE_OR_APPOSITIVE_CLAUSE_FILE_PATH = "E:\\毕业论文相关\\从句\\结果\\定语同位语从句\\";
@@ -40,7 +40,7 @@ public class CheckClauseTypeFunction {
                 continue;
             }
             List<SentencePattern> sentencePatternList = SentenceAnalysisUtil.matchSubjectClause(coreMapList.get(0));
-            if (sentencePatternList != null && !sentencePatternList.isEmpty()) {
+            if (!sentencePatternList.isEmpty()) {
                 fileWriter = new FileWriter(new File(SUBJECT_CLAUSE_FILE_PATH + lineNum + ".txt"));
                 for (SentencePattern sentencePattern : sentencePatternList) {
                     fileWriter.write(sentencePattern.getClauseContent() + "\r\n");
@@ -49,7 +49,7 @@ public class CheckClauseTypeFunction {
             }
 
             sentencePatternList = SentenceAnalysisUtil.matchObjectClauseOrPredicativeClause(coreMapList.get(0));
-            if (sentencePatternList != null && !sentencePatternList.isEmpty()) {
+            if (!sentencePatternList.isEmpty()) {
                 for (SentencePattern sentencePattern : sentencePatternList) {
                     if (sentencePattern.getType() == SentencePatternType.OBJECT_CLAUSE.getType()) {
                         fileWriter = new FileWriter(new File(OBJECT_CLAUSE_FILE_PATH + lineNum + ".txt"));
@@ -76,8 +76,9 @@ public class CheckClauseTypeFunction {
                     }
                 }
             }
+            
             sentencePatternList = SentenceAnalysisUtil.matchAppositiveClauseOrAttributiveClause(coreMapList.get(0));
-            if (sentencePatternList != null && !sentencePatternList.isEmpty()) {
+            if (!sentencePatternList.isEmpty()) {
                 fileWriter = new FileWriter(new File(ATTRIBUTIVE_CLAUSE_OR_APPOSITIVE_CLAUSE_FILE_PATH + lineNum + ".txt"));
                 for (SentencePattern sentencePattern : sentencePatternList) {
                     fileWriter.write(sentencePattern.getClauseContent() + "\r\n");
@@ -86,7 +87,7 @@ public class CheckClauseTypeFunction {
             }
 
             sentencePatternList = SentenceAnalysisUtil.matchAdverbialClause(coreMapList.get(0));
-            if (sentencePatternList != null && !sentencePatternList.isEmpty()) {
+            if (!sentencePatternList.isEmpty()) {
                 fileWriter = new FileWriter(new File(ADVERBIAL_CLAUSE_FILE_PATH + lineNum + ".txt"));
                 for (SentencePattern sentencePattern : sentencePatternList) {
                     fileWriter.write(sentencePattern.getClauseContent() + "\r\n");

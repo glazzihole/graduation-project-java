@@ -4,7 +4,6 @@ import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import edu.stanford.nlp.ie.util.RelationTriple;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
@@ -125,7 +124,7 @@ public class StanfordParserUtil {
 
 
     public static void main(String[] args) {
-        String[] textArray = {"For example, one sign of this condition is the appearance of the comic  vision, since comedy requires sufficient detachment to view some deviations from  social norms as ridiculous rather than as serious threats to the welfare of the  entire group.　"};
+        String[] textArray = {"People should have more cereal and grain, that's very helpful"};
         int i = 0;
         for (String text : textArray) {
             List<CoreMap> result = StanfordParserUtil.parse(text);

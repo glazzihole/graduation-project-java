@@ -16,6 +16,7 @@ import com.hugailei.graduation.corpus.service.StudentRankWordService;
 import com.hugailei.graduation.corpus.util.SentenceAnalysisUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
 import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
@@ -310,8 +311,11 @@ public class CollocationServiceImpl implements CollocationService {
             log.info("getCollocationInText | text: {}", text);
             Map<String, Integer> lemmaCollocationKey2Freq = new HashMap<>();
             Map<String, Integer> posCollocationKey2Freq = new HashMap<>();
+            Set<String> posKeyWithIndexSet = new HashSet<>();
             List<CoreMap> sentences = StanfordParserUtil.parse(text);
+            int sentenceNum = 0;
             for (CoreMap sentence : sentences) {
+                sentenceNum ++;
                 SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
                 Set<String> keyWithIndexSet = new HashSet<>();
                 for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
@@ -321,7 +325,7 @@ public class CollocationServiceImpl implements CollocationService {
                     boolean found = false;
                     String firstWord = null, secondWord = null, firstPos = null, secondPos = null, thirdWord = null, thirdPos = null;
                     // firstIndex用于标记两个搭配是否为同一个单词的搭配，避免重复
-                    int firstIndex = 0;
+                    int firstIndex = 0, secondIndex = 0, thirdIndex = 0;
                     if (CorpusConstant.COLLOCATION_DEPENDENCY_RELATION_SET.contains(relation)) {
                         if ((relation.startsWith("nsubj") && !relation.startsWith("nsubjpass")) ||
                                 "nmod:agent".equals(relation)) {
@@ -332,6 +336,7 @@ public class CollocationServiceImpl implements CollocationService {
                                 firstWord = edge.getGovernor().lemma();
                                 firstIndex = edge.getGovernor().index();
                                 secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
+                                secondIndex = (temp == null ? edge.getDependent().index() : temp.getIndex());
                                 firstPos = edge.getGovernor().tag();
                                 secondPos = edge.getDependent().tag();
                                 found = true;
@@ -341,6 +346,7 @@ public class CollocationServiceImpl implements CollocationService {
                                 secondWord = edge.getGovernor().lemma();
                                 firstPos = edge.getDependent().tag();
                                 secondPos = edge.getGovernor().tag();
+                                secondIndex = edge.getGovernor().index();
                                 found = true;
                             }
                         }
@@ -353,6 +359,16 @@ public class CollocationServiceImpl implements CollocationService {
                                 firstPos = edge.getGovernor().tag();
                                 secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
                                 secondPos = edge.getDependent().tag();
+                                secondIndex = (temp == null ? edge.getDependent().index() : temp.getIndex());
+                                found = true;
+                            }
+                            else {
+                                firstWord = edge.getGovernor().lemma();
+                                firstPos = edge.getGovernor().tag();
+                                firstIndex = edge.getGovernor().index();
+                                secondWord = edge.getDependent().lemma();
+                                secondPos = edge.getDependent().tag();
+                                secondIndex = edge.getDependent().index();
                                 found = true;
                             }
                         }
@@ -365,6 +381,7 @@ public class CollocationServiceImpl implements CollocationService {
                                 secondWord = (temp == null ? edge.getGovernor().lemma() : temp.getLemma());
                                 firstPos = edge.getDependent().tag();
                                 secondPos = edge.getGovernor().tag();
+                                secondIndex = (temp == null ? edge.getGovernor().index() : temp.getIndex());
                                 found = true;
                             }
                         }
@@ -377,6 +394,7 @@ public class CollocationServiceImpl implements CollocationService {
                                 firstPos = edge.getDependent().tag();
                                 secondWord = (temp == null ? edge.getGovernor().lemma() : temp.getLemma());
                                 secondPos = edge.getGovernor().tag();
+                                secondIndex = (temp == null ? edge.getGovernor().index() : temp.getIndex());
                                 found = true;
                             }
                         }
@@ -392,12 +410,14 @@ public class CollocationServiceImpl implements CollocationService {
                                     firstIndex = edge.getGovernor().index();
                                     secondWord = edge.getDependent().lemma();
                                     secondPos = edge.getDependent().tag();
+                                    secondIndex = edge.getDependent().index();
                                 } else {
                                     firstWord = edge.getDependent().lemma();
                                     firstIndex = edge.getDependent().index();
                                     secondWord = edge.getGovernor().lemma();
                                     firstPos = edge.getDependent().tag();
                                     secondPos = edge.getGovernor().tag();
+                                    secondIndex = edge.getGovernor().index();
                                 }
                                 found = true;
                             }
@@ -408,7 +428,28 @@ public class CollocationServiceImpl implements CollocationService {
                             firstPos = edge.getGovernor().tag();
                             secondWord = edge.getDependent().lemma();
                             secondPos = edge.getDependent().tag();
+                            secondIndex = edge.getDependent().index();
                             found = true;
+                        }
+                        else if ("compound".equals(relation)) {
+                            if (edge.getDependent().tag().matches("NN.*") && edge.getGovernor().tag().matches("NN.*")) {
+                                int governorIndex = edge.getGovernor().index();
+                                int dependentIndex = edge.getDependent().index();
+                                CoreLabel governorToken = sentence.get(CoreAnnotations.TokensAnnotation.class).get(governorIndex - 1);
+                                String governorNer = governorToken.get(CoreAnnotations.NamedEntityTagAnnotation.class);
+                                CoreLabel dependentToken = sentence.get(CoreAnnotations.TokensAnnotation.class).get(dependentIndex - 1);
+                                String dependetNer = dependentToken.get(CoreAnnotations.NamedEntityTagAnnotation.class);
+
+                                if (!(CorpusConstant.PROPER_NOUN_SET.contains(governorNer) && CorpusConstant.PROPER_NOUN_SET.contains(dependetNer))) {
+                                    found = true;
+                                    firstWord = edge.getDependent().lemma();
+                                    firstPos = "NN";
+                                    firstIndex = edge.getDependent().index();
+                                    secondWord = edge.getGovernor().lemma();
+                                    secondPos = "NN";
+                                    secondIndex = edge.getGovernor().index();
+                                }
+                            }
                         }
                         else if (relation.startsWith("xcomp")) {
                             String verbAdjRegex = "(VB[A-Z]{0,1})-(JJ[A-Z]{0,1})";
@@ -424,6 +465,7 @@ public class CollocationServiceImpl implements CollocationService {
                                 secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
                                 secondPos = edge.getDependent().tag();
                                 firstPos = edge.getGovernor().tag();
+                                secondIndex = (temp == null ? edge.getDependent().index() : temp.getIndex());
                                 found = true;
                             }
 
@@ -438,11 +480,12 @@ public class CollocationServiceImpl implements CollocationService {
                                             firstIndex = edge.getDependent().index();
                                             firstWord = edge.getDependent().lemma();
                                             firstPos = "JJ";
-
+                                            firstIndex = edge.getDependent().index();
                                             int subjectIndex = semanticGraphEdge.getDependent().index();
                                             SentenceAnalysisUtil.Edge subjectTemp = SentenceAnalysisUtil.getRealNounEdge(subjectIndex, sentence);
                                             secondWord = (subjectTemp == null ? semanticGraphEdge.getDependent().lemma() : subjectTemp.getLemma());
                                             secondPos = "NN";
+                                            secondIndex = (subjectTemp == null ? semanticGraphEdge.getDependent().index() : subjectTemp.getIndex());
                                             found = true;
                                         }
                                     }
@@ -456,12 +499,23 @@ public class CollocationServiceImpl implements CollocationService {
                                 firstIndex = edge.getGovernor().index();
                                 secondWord = edge.getDependent().lemma();
                                 secondPos = edge.getDependent().tag();
+                                secondIndex = edge.getDependent().index();
                                 if (edge.getDependent().tag().startsWith("NN")) {
                                     SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                                     secondWord = (temp == null ? edge.getDependent().lemma() : temp.getLemma());
+                                    secondIndex = (temp == null ? edge.getDependent().index() : temp.getIndex());
                                 }
                                 found = true;
                             }
+                        }
+                        else if ("mwe".equals(relation)) {
+                            found = true;
+                            firstWord = edge.getGovernor().lemma();
+                            firstPos = edge.getGovernor().tag();
+                            firstIndex = edge.getGovernor().index();
+                            secondWord = edge.getDependent().lemma();
+                            secondPos = edge.getDependent().tag();
+                            secondIndex = edge.getDependent().index();
                         }
                     } else if (CorpusConstant.COLLOCATION_NOMD_RELATION_SET.contains(relation)) {
                         firstWord = edge.getGovernor().lemma();
@@ -471,6 +525,7 @@ public class CollocationServiceImpl implements CollocationService {
                         secondPos = "IN";
                         thirdWord = edge.getDependent().lemma();
                         thirdPos = edge.getDependent().tag();
+                        thirdIndex = edge.getDependent().index();
                         if (thirdPos.startsWith("NN")) {
                             SentenceAnalysisUtil.Edge temp = SentenceAnalysisUtil.getRealNounEdge(edge.getDependent().index(), sentence);
                             if (temp != null) {
@@ -481,25 +536,34 @@ public class CollocationServiceImpl implements CollocationService {
                     }
 
                     if (found) {
-                        // 查询搭配中的动词是否存在词组搭配，若存在，则需要将所有搭配中的改动次替换为词组
-                        if (
-                            (firstPos.matches("VB.*") || secondPos.matches("VB.*"))
-                                &&
-                            (!relation.equals("compound:prt"))
-                        ){
-                            int verbIndex = edge.getGovernor().index();
+                        // 查询搭配中的动词是否存在词组搭配，若存在，则需要将所有搭配中的该动词替换为词组
+//                        if (
+//                                (firstPos.matches("VB.*") || secondPos.matches("VB.*"))
+//                                        &&
+//                                        (!relation.equals("compound:prt"))
+//                        ) {
+                        if (!relation.equals("compound:prt")) {
                             for (SemanticGraphEdge e : dependency.edgeListSorted()) {
-                                if (e.getGovernor().index() == verbIndex && e.getRelation().toString().equals("compound:prt")) {
-                                    String verbPhrase = e.getGovernor().lemma() + " " + e.getDependent().lemma();
-                                    if (firstPos.matches("VB.*")) {
-                                        firstWord = verbPhrase;
-                                        firstPos = "PHRASE";
-                                    }
-                                    else {
-                                        secondWord = verbPhrase;
-                                        secondPos = "PHRASE";
-                                    }
-                                    break;
+                                if (e.getGovernor().index() == firstIndex && e.getRelation().toString().equals("compound:prt")) {
+                                    String phrase = e.getGovernor().lemma() + " " + e.getDependent().lemma();
+                                    firstWord = phrase;
+                                    firstPos = "PHRASE";
+                                }
+                            }
+
+                            for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                                if (e.getGovernor().index() == secondIndex && e.getRelation().toString().equals("compound:prt")) {
+                                    String phrase = e.getGovernor().lemma() + " " + e.getDependent().lemma();
+                                    secondWord = phrase;
+                                    secondPos = "PHRASE";
+                                }
+                            }
+
+                            for (SemanticGraphEdge e : dependency.edgeListSorted()) {
+                                if (e.getGovernor().index() == thirdIndex && e.getRelation().toString().equals("compound:prt")) {
+                                    String phrase = e.getGovernor().lemma() + " " + e.getDependent().lemma();
+                                    thirdWord = phrase;
+                                    thirdPos = "PHRASE";
                                 }
                             }
                         }
@@ -507,29 +571,30 @@ public class CollocationServiceImpl implements CollocationService {
                         // 词性同一存储为该词性下原型的词性
                         firstPos = StanfordParserUtil.getBasePos(firstPos);
                         secondPos = StanfordParserUtil.getBasePos(secondPos);
-                        String keyWithIndex = (firstWord + "_" + firstPos + "_" + firstIndex + "_" + secondWord + "_" + secondPos).toLowerCase();
+                        String keyWithIndex = (firstWord + "_" + firstPos + "_" + firstIndex + "_" +
+                                secondWord + "_" + secondPos + "_" + secondIndex).toLowerCase();
                         String key = (firstWord + "_" + firstPos + "_" + secondWord + "_" + secondPos).toLowerCase();
                         // 去重辅助集合
                         if (!keyWithIndexSet.contains(keyWithIndex)) {
                             keyWithIndexSet.add(keyWithIndex);
                             // 原型搭配情况统计
                             fillLemmaCollocationKey2Freq(key, lemmaCollocationKey2Freq);
-                            fillPosCollocationKey2Freq(key, posCollocationKey2Freq);
+                            fillPosCollocationKey2Freq(keyWithIndex, sentenceNum, posCollocationKey2Freq, posKeyWithIndexSet);
                         }
 
                         // 统计三词搭配
                         if (!StringUtils.isBlank(thirdWord)) {
                             thirdPos = StanfordParserUtil.getBasePos(thirdPos);
                             keyWithIndex = (firstWord + "_" + firstPos + "_" + firstIndex + "_" +
-                                    secondWord + "_" + secondPos + "_" +
-                                    thirdWord + "_" + thirdPos).toLowerCase();
+                                    secondWord + "_" + secondPos + "_" + secondIndex + "_" +
+                                    thirdWord + "_" + thirdPos + "_" + thirdIndex).toLowerCase();
                             key = (firstWord + "_" + firstPos + "_" +
                                     secondWord + "_" + secondPos + "_" +
                                     thirdWord + "_" + thirdPos).toLowerCase();
                             if (!keyWithIndexSet.contains(keyWithIndex)) {
                                 keyWithIndexSet.add(keyWithIndex);
                                 fillLemmaCollocationKey2Freq(key, lemmaCollocationKey2Freq);
-                                fillPosCollocationKey2Freq(key, posCollocationKey2Freq);
+                                fillPosCollocationKey2Freq(keyWithIndex, sentenceNum, posCollocationKey2Freq, posKeyWithIndexSet);
                             }
                         }
                     }
@@ -654,11 +719,11 @@ public class CollocationServiceImpl implements CollocationService {
         try {
             log.info("recommendSynonym | words: {}, pos: {}, corpus: {}, rank num: {}, topic: {}", wordPair, posPair, corpus, rankNum, topic);
             // 仅支持二词搭配
-            if (wordPair.split(",").length != 2 || (!StringUtils.isBlank(posPair) && posPair.split(",").length != 2)) {
+            if (wordPair.split(" +").length != 2 || (!StringUtils.isBlank(posPair) && posPair.split(" +").length != 2)) {
                 throw new Exception("only two-words' collocation is supported");
             }
             // 获取搭配中各词的原型和词性
-            List<CoreMap> coreMapList = StanfordParserUtil.parse(wordPair.replace(",", " "));
+            List<CoreMap> coreMapList = StanfordParserUtil.parse(wordPair);
             String firstWord = coreMapList
                     .get(0)
                     .get(CoreAnnotations.TokensAnnotation.class)
@@ -680,8 +745,8 @@ public class CollocationServiceImpl implements CollocationService {
                     .get(1)
                     .get(CoreAnnotations.PartOfSpeechAnnotation.class);
             if (!StringUtils.isBlank(posPair)) {
-                firstWordPos = posPair.split(",")[0];
-                secondWordPos = posPair.split(",")[1];
+                firstWordPos = posPair.split(" ")[0];
+                secondWordPos = posPair.split(" ")[1];
             }
             String wordPairPos = firstWordPos + "-" + secondWordPos;
             // 根据词性组合情况获取同义搭配
@@ -710,7 +775,25 @@ public class CollocationServiceImpl implements CollocationService {
                     wordPairPos.matches("RB-VB")) {
                 collocationDto.setPosition(2);
             }
-            resultList.addAll(searchSynonymousCollocation(collocationDto, request));
+            else if (wordPairPos.matches("VB-JJ") ||
+                    wordPairPos.matches("NN-NN")) {
+                collocationDto.setPosition(1);
+                List<CollocationDto> temp = searchSynonymousCollocation(collocationDto, request);
+                if (temp != null) {
+                    resultList.addAll(temp);
+                }
+                collocationDto.setPosition(2);
+                temp = searchSynonymousCollocation(collocationDto, request);
+                if (temp != null) {
+                    resultList.addAll(temp);
+                }
+                sortCollocationDtoList(resultList);
+                return resultList;
+            }
+            List<CollocationDto> temp = searchSynonymousCollocation(collocationDto, request);
+            if (temp != null) {
+                resultList.addAll(temp);
+            }
             return resultList;
         } catch (Exception e) {
             log.error("recommendSynonym | error: {}", e);
@@ -887,36 +970,55 @@ public class CollocationServiceImpl implements CollocationService {
      * 如动名词的搭配中，可以忽略名词具体是哪个单词，只关注这个动词和名词词性搭配了多少次
      *
      * @param key
+     * @param sentenceNum   记录当前搭配所在的句子标号
      * @param posCollocationKey2Freq
+     * @param keyWithIndexSet    记录主导词的位置，避免同一个词修饰了不同词被识别为重复搭配的情况
      */
     private void fillPosCollocationKey2Freq (String key,
-                                             Map<String, Integer> posCollocationKey2Freq) {
+                                             int sentenceNum,
+                                             Map<String, Integer> posCollocationKey2Freq,
+                                             Set<String> keyWithIndexSet) {
         int freq = 1;
         String[] temp = key.split("_");
         String firstWord,  firstPos, secondWord, secondPos, thirdPos;
+        int firstWordIndex = 0, secondWordIndex = 0;
         firstWord = temp[0];
         firstPos = temp[1].toUpperCase();
-        secondWord = temp[2];
-        secondPos = temp[3].toUpperCase();
-        String posCollocationKey;
-        if (temp.length == 6) {
-            thirdPos = temp[5].toUpperCase();
+        firstWordIndex = Integer.valueOf(temp[2]);
+        secondWord = temp[3];
+        secondPos = temp[4].toUpperCase();
+        secondWordIndex = Integer.valueOf(temp[5]);
+
+        String posCollocationKey, lemmaWithIndex;
+        if (temp.length == 9) {
+            thirdPos = temp[7].toUpperCase();
             freq = 1;
             posCollocationKey = (firstWord + "_" + firstPos + "_" + secondWord + "_" + secondPos + "_" + NOT_IMPORTANT + "_" + thirdPos).toLowerCase();
-            if (posCollocationKey2Freq.containsKey(posCollocationKey)) {
-                freq = posCollocationKey2Freq.get(posCollocationKey) + 1;
+            lemmaWithIndex = (firstWord + "_" + firstPos + "_" + sentenceNum + "." + firstWordIndex + "_" +
+                    secondWord + "_" + secondPos + "_" + sentenceNum + "." + secondWordIndex + "_" +
+                    NOT_IMPORTANT + "_" + thirdPos).toLowerCase();
+            if (!keyWithIndexSet.contains(lemmaWithIndex)) {
+                if (posCollocationKey2Freq.containsKey(posCollocationKey)) {
+                    freq = posCollocationKey2Freq.get(posCollocationKey) + 1;
+                }
+                posCollocationKey2Freq.put(posCollocationKey, freq);
+                keyWithIndexSet.add(lemmaWithIndex);
             }
-            posCollocationKey2Freq.put(posCollocationKey, freq);
         } else {
             // 将所有的代词词性视为名词词性
             String posPair = firstPos + "-" + secondPos.replace("PRP", "NN");
             switch (posPair) {
                 case "NN-VB":
+                case "PRP-VB":
                     posCollocationKey = (NOT_IMPORTANT + "_" + firstPos + "_" + secondWord + "_" + secondPos).toLowerCase();
-                    if (posCollocationKey2Freq.containsKey(posCollocationKey)) {
-                        freq = posCollocationKey2Freq.get(posCollocationKey) + 1;
+                    lemmaWithIndex = (NOT_IMPORTANT + "_" + firstPos + "_" + secondWord + "_" + secondPos + "_" + sentenceNum + "." + secondWordIndex).toLowerCase();
+                    if (!keyWithIndexSet.contains(lemmaWithIndex)) {
+                        if (posCollocationKey2Freq.containsKey(posCollocationKey)) {
+                            freq = posCollocationKey2Freq.get(posCollocationKey) + 1;
+                        }
+                        posCollocationKey2Freq.put(posCollocationKey, freq);
+                        keyWithIndexSet.add(lemmaWithIndex);
                     }
-                    posCollocationKey2Freq.put(posCollocationKey, freq);
                     break;
 
                 case "VB-NN":
@@ -926,10 +1028,14 @@ public class CollocationServiceImpl implements CollocationService {
                 case "NN-IN":
                 case "JJ-IN":
                     posCollocationKey = (firstWord + "_" + firstPos + "_" + NOT_IMPORTANT + "_" + secondPos).toLowerCase();
-                    if (posCollocationKey2Freq.containsKey(posCollocationKey)) {
-                        freq = posCollocationKey2Freq.get(posCollocationKey) + 1;
+                    lemmaWithIndex = (firstWord + "_" + firstPos + "_" + sentenceNum + "." + firstWordIndex + "_" + NOT_IMPORTANT + "_" + secondPos).toLowerCase();
+                    if (!keyWithIndexSet.contains(lemmaWithIndex)) {
+                        if (posCollocationKey2Freq.containsKey(posCollocationKey)) {
+                            freq = posCollocationKey2Freq.get(posCollocationKey) + 1;
+                        }
+                        posCollocationKey2Freq.put(posCollocationKey, freq);
+                        keyWithIndexSet.add(lemmaWithIndex);
                     }
-                    posCollocationKey2Freq.put(posCollocationKey, freq);
                     break;
 
                 case "VB-RB":
@@ -938,16 +1044,24 @@ public class CollocationServiceImpl implements CollocationService {
                 case "RB-JJ":
                 case "VB-JJ":
                     posCollocationKey = (firstWord + "_" + firstPos + "_" + NOT_IMPORTANT + "_" + secondPos).toLowerCase();
-                    if (posCollocationKey2Freq.containsKey(posCollocationKey)) {
-                        freq = posCollocationKey2Freq.get(posCollocationKey) + 1;
+                    lemmaWithIndex = (firstWord + "_" + firstPos + "_" + sentenceNum + "." + firstWordIndex + "_" + NOT_IMPORTANT + "_" + secondPos).toLowerCase();
+                    if (!keyWithIndexSet.contains(lemmaWithIndex)) {
+                        if (posCollocationKey2Freq.containsKey(posCollocationKey)) {
+                            freq = posCollocationKey2Freq.get(posCollocationKey) + 1;
+                        }
+                        posCollocationKey2Freq.put(posCollocationKey, freq);
+                        keyWithIndexSet.add(lemmaWithIndex);
                     }
-                    posCollocationKey2Freq.put(posCollocationKey, freq);
 
                     posCollocationKey = (NOT_IMPORTANT + "_" + firstPos + "_" + secondWord + "_" + secondPos).toLowerCase();
-                    if (posCollocationKey2Freq.containsKey(posCollocationKey)) {
-                        freq = posCollocationKey2Freq.get(posCollocationKey) + 1;
+                    lemmaWithIndex = (NOT_IMPORTANT + "_" + firstPos + "_" + secondWord + "_" + secondPos + "_" + sentenceNum + "." + secondWordIndex).toLowerCase();
+                    if (!keyWithIndexSet.contains(lemmaWithIndex)) {
+                        if (posCollocationKey2Freq.containsKey(posCollocationKey)) {
+                            freq = posCollocationKey2Freq.get(posCollocationKey) + 1;
+                        }
+                        posCollocationKey2Freq.put(posCollocationKey, freq);
+                        keyWithIndexSet.add(lemmaWithIndex);
                     }
-                    posCollocationKey2Freq.put(posCollocationKey, freq);
                     break;
 
                 default:
