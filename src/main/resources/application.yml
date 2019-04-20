@@ -49,4 +49,5 @@ vendor:
     # 应用秘钥
     app-secret: DDPPEdDZ0yY7Jk8GABDWBeR54bVl6pkJ
     open-api-url: http://openapi.youdao.com/api
-
+hystrix:
+  timeout-millions: 5000

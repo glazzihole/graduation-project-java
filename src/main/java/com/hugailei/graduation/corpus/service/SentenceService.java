@@ -2,8 +2,13 @@ package com.hugailei.graduation.corpus.service;
 
 import com.hugailei.graduation.corpus.domain.SentencePattern;
 import com.hugailei.graduation.corpus.dto.SentenceDto;
+import nl.inl.blacklab.server.BlackLabServer;
+import nl.inl.blacklab.server.requesthandlers.RequestHandler;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**

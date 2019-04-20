@@ -29,6 +29,7 @@ public class StanfordParserUtil {
     private static Properties props;
     private static StanfordCoreNLP pipeline;
     private static StanfordCoreNLP relationPipeline;
+    private static StanfordCoreNLP simplePipeline;
     static {
         log.info("start to load parse model");
         props = new Properties();
@@ -36,8 +37,26 @@ public class StanfordParserUtil {
         props.put("annotators", "tokenize, ssplit, parse, pos, lemma, ner");
         pipeline = new StanfordCoreNLP(props);
         log.info("model loading finished");
-        SentenceRankUtil s = new SentenceRankUtil();
+    }
 
+    /**
+     * 简单的句法标注
+     *
+     * @param text
+     * @return
+     */
+    public static List<CoreMap> simpleParse(String text) {
+        if (simplePipeline == null) {
+            props.put("annotators", "tokenize, ssplit, pos, lemma");
+            simplePipeline = new StanfordCoreNLP( props );
+        }
+        List<CoreMap> result = new ArrayList<>();
+        if( !StringUtils.isEmpty(text.trim())) {
+            Annotation document = new Annotation(text);
+            pipeline.annotate(document);
+            result = document.get(CoreAnnotations.SentencesAnnotation.class);
+        }
+        return result;
     }
 
     /**

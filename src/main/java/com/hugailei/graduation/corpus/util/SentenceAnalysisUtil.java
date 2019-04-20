@@ -1434,6 +1434,45 @@ public class SentenceAnalysisUtil {
     }
 
     /**
+     * 仅通过依存关系分析提取句子主干
+     *
+     * @param sentence 句法分析结果
+     */
+    public static List<String> getSimpleSentenceOnlyByParser(CoreMap sentence) {
+        SemanticGraph dependency = sentence.get(SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation.class);
+        List<String> resultList = new ArrayList<>();
+        for (SemanticGraphEdge edge : dependency.edgeListSorted()) {
+            String relation = edge.getRelation().toString();
+            if (relation.startsWith("nsubj") && !relation.startsWith("nsubjpass")) {
+                dealNsubj(edge, sentence, resultList);
+            }
+            else if (relation.startsWith("cop")) {
+                dealCop(edge, sentence, resultList);
+            }
+            else if (relation.startsWith("xcomp")) {
+                dealXcomp(edge, sentence, resultList);
+            }
+            else if (relation.startsWith("iobj")) {
+                dealIobj(edge, sentence, resultList);
+            }
+            else if (relation.startsWith("nsubjpass")) {
+                dealNsubjpass(edge, sentence, resultList);
+            }
+        }
+        if (resultList.isEmpty()) {
+            return null;
+        }
+
+        // 结果去重
+        Set<String> sentenceSet = new LinkedHashSet<>();
+        for (String result : resultList) {
+            result = result.replaceAll(" +", " ").toLowerCase();
+            sentenceSet.add(result);
+        }
+        return new ArrayList<>(sentenceSet);
+    }
+
+    /**
      * 获取真正的主语、宾语等词（因为会有a tape of, a box of等修饰名词的情况），并且识别专有名词，将其用NER表示代替
      *
      * @param index  名词的位置

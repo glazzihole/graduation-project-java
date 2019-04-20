@@ -12,6 +12,11 @@ import com.hugailei.graduation.corpus.service.StudentRankWordService;
 import com.hugailei.graduation.corpus.util.SentenceAnalysisUtil;
 import com.hugailei.graduation.corpus.util.SentenceRankUtil;
 import com.hugailei.graduation.corpus.util.StanfordParserUtil;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
+import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -169,6 +174,7 @@ public class SentenceServiceImpl implements SentenceService  {
 
     @Override
     @Transactional(readOnly = true, rollbackFor = Exception.class)
+    @Cacheable(value = "corpus", key = "'sentence_pattern_'+#sentence", unless = "#result eq null")
     public List<SentencePattern> getSentencePattern(String sentence) {
         try {
             log.info("getSentencePattern | sentence: {}", sentence);
@@ -183,10 +189,20 @@ public class SentenceServiceImpl implements SentenceService  {
 
     @Override
     @Transactional(readOnly = true, rollbackFor = Exception.class)
+    @Cacheable(value = "corpus", key = "'simple_sentence'+#sentence", unless = "#result eq null")
+    @HystrixCommand(
+            fallbackMethod = "getSimpleSentenceFallBack",
+            commandProperties = {
+                    @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value ="5000"),
+            }
+    )
     public List<String> getSimpleSentence(String sentence) {
         try {
             log.info("getSimpleSentence | sentence: {}", sentence);
-            List<CoreMap> coreMapList = StanfordParserUtil.parse(sentence);
+            if (StringUtils.isBlank(sentence)) {
+                return null;
+            }
+            List<CoreMap> coreMapList = StanfordParserUtil.simpleParse(sentence);
             List<String> result = SentenceAnalysisUtil.getSimpleSentence(coreMapList.get(0));
             return result;
         } catch (Exception e) {
@@ -195,7 +211,24 @@ public class SentenceServiceImpl implements SentenceService  {
         }
     }
 
+    public List<String> getSimpleSentenceFallBack(String sentence) {
+        try {
+            log.info("getSimpleSentenceFallBack | sentence: {}", sentence);
+            if (StringUtils.isBlank(sentence)) {
+                return null;
+            }
+            List<CoreMap> coreMapList = StanfordParserUtil.simpleParse(sentence);
+            List<String> result = SentenceAnalysisUtil.getSimpleSentenceOnlyByParser(coreMapList.get(0));
+            return result;
+        } catch (Exception e) {
+            log.error("getSimpleSentenceFallBack | error: {}", e);
+            return null;
+        }
+    }
+
     @Override
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    @Cacheable(value = "corpus", key = "'sentence_rank_num'+#sentence", unless = "#result eq null")
     public Integer getSentenceRankNum(String sentence) {
         try {
             log.info("getSentenceRankNum | sentence: {}", sentence);

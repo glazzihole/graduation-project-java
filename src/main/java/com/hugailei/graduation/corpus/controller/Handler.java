@@ -40,7 +40,7 @@ public class Handler {
      * @param response
      * @param requestHandler
      */
-    void checkAndHandler (Pageable pageable,
+    public void checkAndHandler (Pageable pageable,
                           String corpus,
                           BlackLabServer blackLabServer,
                           HttpServletRequest request,
@@ -97,7 +97,7 @@ public class Handler {
 
     }
 
-    boolean checkConfig(HttpServletRequest request,
+    public boolean checkConfig(HttpServletRequest request,
                         HttpServletResponse responseObject,
                         BlackLabServer blackLabServer) {
         if (!blackLabServer.isConfigRead()) {

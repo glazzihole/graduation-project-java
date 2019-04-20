@@ -13,9 +13,7 @@ import libsvm.svm;
 import libsvm.svm_model;
 import libsvm.svm_node;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.*;
 
@@ -30,6 +28,10 @@ import java.util.*;
 public class SentenceRankUtil {
 
     private static svm_model SVM_MODEL;
+
+    private static final int LONG_SENTENCE_LENGTH = 25;
+
+    private static final int SHORT_SENTENCE_LENGTH = 10;
 
     static {
         try {
@@ -220,6 +222,12 @@ public class SentenceRankUtil {
         if (StringUtils.isBlank(sentence)) {
             return 0;
         }
+        if (sentence.split(" ").length > LONG_SENTENCE_LENGTH) {
+            return 6;
+        }
+        if (sentence.split(" ").length < SHORT_SENTENCE_LENGTH) {
+            return 1;
+        }
 
         String featureValueString = featureValue(sentence);
         StringTokenizer st = new StringTokenizer(featureValueString," \t\n\r\f:");
@@ -243,18 +251,61 @@ public class SentenceRankUtil {
      */
     public static List<String> orderSentenceByRankNumAsc(List<String> sentenceList) {
         log.info("orderSentenceByRankNumAsc | start to rank.");
-        Map<String, Integer> sentence2RankNum = new TreeMap<String, Integer>();
+        HashMap<String, Integer> sentence2RankNum1 = new HashMap<>(10);
+        HashMap<String, Integer> sentence2RankNum2 = new HashMap<>(10);
+        HashMap<String, Integer> sentence2RankNum3 = new HashMap<>(10);
+        HashMap<String, Integer> sentence2RankNum4 = new HashMap<>(10);
+        HashMap<String, Integer> sentence2RankNum5 = new HashMap<>(10);
+        HashMap<String, Integer> sentence2RankNum6 = new HashMap<>(10);
+
         for (String sentence: sentenceList) {
             int rankNum = sentenceRankNum(sentence);
-            sentence2RankNum.put(sentence, rankNum);
+            int sentenceLength = sentence.split(" ").length;
+            switch (rankNum) {
+                case 1 :
+                    sentence2RankNum1.put(sentence, sentenceLength);
+                    break;
+                case 2 :
+                    sentence2RankNum2.put(sentence, sentenceLength);
+                    break;
+                case 3 :
+                    sentence2RankNum3.put(sentence, sentenceLength);
+                    break;
+                case 4 :
+                    sentence2RankNum4.put(sentence, sentenceLength);
+                    break;
+                case 5 :
+                    sentence2RankNum5.put(sentence, sentenceLength);
+                    break;
+                case 6 :
+                    sentence2RankNum6.put(sentence, sentenceLength);
+                    break;
+                default:
+                    break;
+            }
         }
 
-        //这里将map.entrySet()转换成list
-        List<Map.Entry<String, Integer>> mapEntryList = new ArrayList<Map.Entry<String, Integer>>(
-                sentence2RankNum.entrySet()
+        // 将map.entrySet()转换成list
+        List<Map.Entry<String, Integer>> ranknum1MapEntryList = new ArrayList<Map.Entry<String, Integer>>(
+                sentence2RankNum1.entrySet()
+        );
+        List<Map.Entry<String, Integer>> ranknum2MapEntryList = new ArrayList<Map.Entry<String, Integer>>(
+                sentence2RankNum2.entrySet()
+        );
+        List<Map.Entry<String, Integer>> ranknum3MapEntryList = new ArrayList<Map.Entry<String, Integer>>(
+                sentence2RankNum3.entrySet()
+        );
+        List<Map.Entry<String, Integer>> ranknum4MapEntryList = new ArrayList<Map.Entry<String, Integer>>(
+                sentence2RankNum4.entrySet()
+        );
+        List<Map.Entry<String, Integer>> ranknum5MapEntryList = new ArrayList<Map.Entry<String, Integer>>(
+                sentence2RankNum5.entrySet()
+        );
+        List<Map.Entry<String, Integer>> ranknum6MapEntryList = new ArrayList<Map.Entry<String, Integer>>(
+                sentence2RankNum6.entrySet()
         );
         //然后通过比较器来实现排序
-        Collections.sort(mapEntryList, new Comparator<Map.Entry<String, Integer>>() {
+        Collections.sort(ranknum1MapEntryList, new Comparator<Map.Entry<String, Integer>>() {
             //升序排序
             @Override
             public int compare(Map.Entry<String, Integer> o1,
@@ -262,8 +313,68 @@ public class SentenceRankUtil {
                 return o1.getValue().compareTo(o2.getValue());
             }
         });
-        List<String> resultList = new ArrayList<>();
-        for (Map.Entry entry : mapEntryList) {
+        Collections.sort(ranknum2MapEntryList, new Comparator<Map.Entry<String, Integer>>() {
+            //升序排序
+            @Override
+            public int compare(Map.Entry<String, Integer> o1,
+                               Map.Entry<String, Integer> o2) {
+                return o1.getValue().compareTo(o2.getValue());
+            }
+        });
+        Collections.sort(ranknum3MapEntryList, new Comparator<Map.Entry<String, Integer>>() {
+            //升序排序
+            @Override
+            public int compare(Map.Entry<String, Integer> o1,
+                               Map.Entry<String, Integer> o2) {
+                return o1.getValue().compareTo(o2.getValue());
+            }
+        });
+        Collections.sort(ranknum4MapEntryList, new Comparator<Map.Entry<String, Integer>>() {
+            //升序排序
+            @Override
+            public int compare(Map.Entry<String, Integer> o1,
+                               Map.Entry<String, Integer> o2) {
+                return o1.getValue().compareTo(o2.getValue());
+            }
+        });
+        Collections.sort(ranknum5MapEntryList, new Comparator<Map.Entry<String, Integer>>() {
+            //升序排序
+            @Override
+            public int compare(Map.Entry<String, Integer> o1,
+                               Map.Entry<String, Integer> o2) {
+                return o1.getValue().compareTo(o2.getValue());
+            }
+        });
+        Collections.sort(ranknum6MapEntryList, new Comparator<Map.Entry<String, Integer>>() {
+            //升序排序
+            @Override
+            public int compare(Map.Entry<String, Integer> o1,
+                               Map.Entry<String, Integer> o2) {
+                return o1.getValue().compareTo(o2.getValue());
+            }
+        });
+        List<String> resultList = new ArrayList<>(50);
+        for (Map.Entry entry : ranknum1MapEntryList) {
+            String s = (String)entry.getKey();
+            resultList.add(s);
+        }
+        for (Map.Entry entry : ranknum2MapEntryList) {
+            String s = (String)entry.getKey();
+            resultList.add(s);
+        }
+        for (Map.Entry entry : ranknum3MapEntryList) {
+            String s = (String)entry.getKey();
+            resultList.add(s);
+        }
+        for (Map.Entry entry : ranknum4MapEntryList) {
+            String s = (String)entry.getKey();
+            resultList.add(s);
+        }
+        for (Map.Entry entry : ranknum5MapEntryList) {
+            String s = (String)entry.getKey();
+            resultList.add(s);
+        }
+        for (Map.Entry entry : ranknum6MapEntryList) {
             String s = (String)entry.getKey();
             resultList.add(s);
         }
