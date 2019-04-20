@@ -159,7 +159,9 @@ public class svm_predict {
 		{
 			BufferedReader input = new BufferedReader(new FileReader(argv[i]));
 			DataOutputStream output = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(argv[i+2])));
+			System.out.println("start to load model");
 			svm_model model = svm.svm_load_model(argv[i+1]);
+			System.out.println("load model finished");
 			if (model == null)
 			{
 				System.err.print("can't open model file "+argv[i+1]+"\n");

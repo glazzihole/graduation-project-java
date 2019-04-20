@@ -1,7 +1,6 @@
 package nl.inl.blacklab.server.requesthandlers;
 
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.hugailei.graduation.corpus.service.RankWordService;
 import com.hugailei.graduation.corpus.service.StudentRankWordService;
 import com.hugailei.graduation.corpus.util.SentenceRankUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -23,10 +22,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
 /**
- *
- *
  * @author HU Gailei
- */
+ * @date 2018/10/1
+ * <p>
+ * description: 对语料库中的句子进行查询
+ * </p>
+ **/
 @Slf4j
 @Component
 public class SentenceRequestHandler extends RequestHandler {

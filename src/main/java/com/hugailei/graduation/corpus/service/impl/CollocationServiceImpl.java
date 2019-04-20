@@ -759,24 +759,24 @@ public class CollocationServiceImpl implements CollocationService {
             collocationDto.setTopic(topic);
             collocationDto.setCorpus(corpus);
             collocationDto.setRankNum(rankNum);
-            // 形容词 + 名词、动词 + 名词、副词 + 形容词、动词 + 副词、副词 + 动词的组合，查找第一个词的同义词
+            // 查找第一个词的同义词
             if (wordPairPos.matches("JJ-NN") ||
                 wordPairPos.matches("VB-NN") ||
-                wordPairPos.matches("RB-JJ") ||
-                wordPairPos.matches("VB-RB") ||
-                wordPairPos.matches("RB-VB") ||
                 wordPairPos.matches("JJ-IN")) {
                 collocationDto.setPosition(1);
             }
-            // 名词 + 动词、副词 + 形容词、动词 + 副词、副词 + 动词的组合，查找第二个词的同义词
-            else if (wordPairPos.matches("NN-VB")||
-                    wordPairPos.matches("RB-JJ") ||
-                    wordPairPos.matches("VB-RB") ||
-                    wordPairPos.matches("RB-VB")) {
+            // 查找第二个词的同义词
+            else if (wordPairPos.matches("NN-VB")) {
                 collocationDto.setPosition(2);
             }
+            // 第一个词和第二个词的同义词均查找
             else if (wordPairPos.matches("VB-JJ") ||
-                    wordPairPos.matches("NN-NN")) {
+                    wordPairPos.matches("NN-NN") ||
+                    wordPairPos.matches("VB-RB") ||
+                    wordPairPos.matches("RB-VB") ||
+                    wordPairPos.matches("RB-JJ") ||
+                    wordPairPos.matches("JJ-RB")
+            ) {
                 collocationDto.setPosition(1);
                 List<CollocationDto> temp = searchSynonymousCollocation(collocationDto, request);
                 if (temp != null) {
@@ -992,7 +992,6 @@ public class CollocationServiceImpl implements CollocationService {
         String posCollocationKey, lemmaWithIndex;
         if (temp.length == 9) {
             thirdPos = temp[7].toUpperCase();
-            freq = 1;
             posCollocationKey = (firstWord + "_" + firstPos + "_" + secondWord + "_" + secondPos + "_" + NOT_IMPORTANT + "_" + thirdPos).toLowerCase();
             lemmaWithIndex = (firstWord + "_" + firstPos + "_" + sentenceNum + "." + firstWordIndex + "_" +
                     secondWord + "_" + secondPos + "_" + sentenceNum + "." + secondWordIndex + "_" +
@@ -1053,6 +1052,7 @@ public class CollocationServiceImpl implements CollocationService {
                         keyWithIndexSet.add(lemmaWithIndex);
                     }
 
+                    freq = 1;
                     posCollocationKey = (NOT_IMPORTANT + "_" + firstPos + "_" + secondWord + "_" + secondPos).toLowerCase();
                     lemmaWithIndex = (NOT_IMPORTANT + "_" + firstPos + "_" + secondWord + "_" + secondPos + "_" + sentenceNum + "." + secondWordIndex).toLowerCase();
                     if (!keyWithIndexSet.contains(lemmaWithIndex)) {

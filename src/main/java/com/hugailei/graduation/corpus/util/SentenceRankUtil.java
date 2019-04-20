@@ -2,7 +2,6 @@ package com.hugailei.graduation.corpus.util;
 
 import com.bfsuolframework.core.utils.StringUtils;
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.hugailei.graduation.corpus.dao.RankWordDao;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.trees.Tree;
@@ -14,8 +13,6 @@ import libsvm.svm;
 import libsvm.svm_model;
 import libsvm.svm_node;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -30,18 +27,17 @@ import java.util.*;
  * </p>
  **/
 @Slf4j
-@Component
 public class SentenceRankUtil {
-    private static String MODEL_PATH = CorpusConstant.SVM_MODEL_PATH;
 
     private static svm_model SVM_MODEL;
 
-    @PostConstruct
-    public void init(){
+    static {
         try {
-            SVM_MODEL = svm.svm_load_model(MODEL_PATH);
+            log.info("start to load svm model");
+            SVM_MODEL = svm.svm_load_model(CorpusConstant.SVM_MODEL_PATH);
+            log.info("model loading finished");
         } catch (IOException e) {
-            log.error("static block | error: {}", e);
+            log.error("model loading error: {}", e);
         }
     }
 

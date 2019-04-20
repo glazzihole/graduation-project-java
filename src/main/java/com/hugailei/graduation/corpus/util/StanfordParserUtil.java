@@ -4,12 +4,14 @@ import com.hugailei.graduation.corpus.constants.CorpusConstant;
 import edu.stanford.nlp.ie.util.RelationTriple;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
@@ -21,16 +23,21 @@ import java.util.*;
  *     description: 句法分析工具
  * </p>
  **/
+@Slf4j
 public class StanfordParserUtil {
 
     private static Properties props;
     private static StanfordCoreNLP pipeline;
     private static StanfordCoreNLP relationPipeline;
     static {
+        log.info("start to load parse model");
         props = new Properties();
         // 总共可以有tokenize, ssplit, pos, lemma, parse, ner, dcoref七中属性
         props.put("annotators", "tokenize, ssplit, parse, pos, lemma, ner");
         pipeline = new StanfordCoreNLP(props);
+        log.info("model loading finished");
+        SentenceRankUtil s = new SentenceRankUtil();
+
     }
 
     /**
@@ -124,7 +131,7 @@ public class StanfordParserUtil {
 
 
     public static void main(String[] args) {
-        String[] textArray = {"People should have more cereal and grain, that's very helpful"};
+        String[] textArray = {"he pretends to be doing homework."};
         int i = 0;
         for (String text : textArray) {
             List<CoreMap> result = StanfordParserUtil.parse(text);
@@ -156,45 +163,45 @@ public class StanfordParserUtil {
                 }
 
                 // 关系提取
-//                result = relationParse(sentence.toString());
-//                for (CoreMap s : result) {
-//                    List<RelationTriple> realtions = new ArrayList<>(s.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class));
-//                    sortRelationTripleList(realtions);
-//                    double confidence = 0;
-//                    // 最短的句子长度
-//                    int shortest = s.toString().length();
-//                    // 最长的句子长度
-//                    int longest = 0;
-//                    for (RelationTriple relation : realtions) {
-//                        String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
-//                        System.out.println(temp);
-//                        // 找出“可信度”最高的一批
-//                        if (relation.confidence >= confidence) {
-//                            confidence = relation.confidence;
-//                            if (temp.split(" ").length >= longest) {
-//                                longest = temp.split(" ").length;
-//                            }
-//                            if (temp.split(" ").length <= shortest) {
-//                                shortest = temp.split(" ").length;
-//                            }
-//                        }
-//                    }
-//                    System.out.println("__________");
-//                    for (RelationTriple relation : realtions) {
-//                        String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
-//                        if (relation.confidence >= confidence) {
-//                            System.out.println(temp);
-//                            if (temp.split(" ").length == longest) {
-//                                System.out.println(temp);
-//                            }
-//                            if (temp.split(" ").length == shortest) {
-//                                System.out.println(temp);
-//                            }
-//                        } else {
-//                            break;
-//                        }
-//                    }
-//                }
+                result = relationParse(sentence.toString());
+                for (CoreMap s : result) {
+                    List<RelationTriple> realtions = new ArrayList<>(s.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class));
+                    sortRelationTripleList(realtions);
+                    double confidence = 0;
+                    // 最短的句子长度
+                    int shortest = s.toString().length();
+                    // 最长的句子长度
+                    int longest = 0;
+                    for (RelationTriple relation : realtions) {
+                        String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
+                        System.out.println(temp);
+                        // 找出“可信度”最高的一批
+                        if (relation.confidence >= confidence) {
+                            confidence = relation.confidence;
+                            if (temp.split(" ").length >= longest) {
+                                longest = temp.split(" ").length;
+                            }
+                            if (temp.split(" ").length <= shortest) {
+                                shortest = temp.split(" ").length;
+                            }
+                        }
+                    }
+                    System.out.println("__________");
+                    for (RelationTriple relation : realtions) {
+                        String temp = relation.subjectGloss() + " " + relation.relationGloss() + " " + relation.objectGloss();
+                        if (relation.confidence >= confidence) {
+                            System.out.println(temp);
+                            if (temp.split(" ").length == longest) {
+                                System.out.println(temp);
+                            }
+                            if (temp.split(" ").length == shortest) {
+                                System.out.println(temp);
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                }
             }
         }
 

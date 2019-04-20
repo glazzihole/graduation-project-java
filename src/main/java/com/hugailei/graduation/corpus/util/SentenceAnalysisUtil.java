@@ -1926,7 +1926,7 @@ public class SentenceAnalysisUtil {
 //        String text = "This is such an interesting book that we all enjoy reading it. ";
 //        String text = "It was yesterday that he met Li Ping.";
 //        String text = "Lucky is she who was admitted to a famous university last year.";
-        String text = "";
+        String text = "he pretends to be doing homework.";
         List<CoreMap> result = StanfordParserUtil.parse(text);
         for(CoreMap sentence : result) {
             String shorterText = abstractSentence(sentence.toString());
