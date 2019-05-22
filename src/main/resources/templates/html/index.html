@@ -1,0 +1,122 @@
+<!doctype html>
+<html class="no-js" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <title>语料库-智能查询</title>
+    <meta name="description" content="这是一个 index 页面"/>
+    <meta name="keywords" content="index"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+    <meta name="renderer" content="webkit"/>
+    <meta http-equiv="Cache-Control" content="no-siteapp"/>
+    <link rel="icon" type="image/png" th:href="@{../assets/i/favicon.png}"/>
+    <link rel="apple-touch-icon-precomposed" th:href="@{../assets/i/app-icon72x72@2x.png}"/>
+    <meta name="apple-mobile-web-app-title" content="Amaze UI"/>
+    <link rel="stylesheet" th:href="@{../assets/css/amazeui.min.css}"/>
+    <link rel="stylesheet" th:href="@{../css/home.css}"/>
+</head>
+
+<body>
+<div class="admin-content">
+    <div class="am-cf am-padding">
+    </div>
+
+    <div id = "search-row">
+        <div class="am-g">
+            <div class="am-u-sm-12 am-u-md-3">
+                <div class="am-u-sm-12 am-u-md-3">
+                    <div class="am-form-group">
+                        <select data-am-selected="{btnSize: 'sm'}" id="corpus-option">
+                            <option th:value="bnc" th:text="BNC语料库"></option>
+                            <option th:value="chinadaily" th:text="ChinaDaily语料库"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="am-u-sm-12 am-u-md-3">
+                <div class="am-form-group">
+                    <select data-am-selected="{btnSize: 'sm'}" id="funciton-option" onchange="changePlaceholder()">
+                        <option th:value="1" th:text="例句查询"></option>
+                        <option th:value="2" th:text="搭配查询"></option>
+                        <option th:value="3" th:text="同义搭配查询"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="am-input-group am-input-group-sm">
+                <input type="text" class="am-form-field" id="search-content" placeholder="请输入查询内容">
+                <span class="am-input-group-btn">
+                <button class="am-btn am-btn-default" type="button" id="search-button" onclick="search(1)">搜索</button>
+            </span>
+            </div>
+        </div>
+    </div>
+
+    <div id = "sentence-result">
+        <div class="am-g">
+            <div class="am-u-sm-12">
+                <form class="am-form">
+                    <table class="am-table am-table-striped am-table-hover table-main">
+                        <thead>
+                        <tr>
+                            <th id="sentence-column">例句</th>
+                            <th id="button-column"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id = "collocation-result">
+        <div class="am-g">
+            <div class="am-u-sm-12">
+                <form class="am-form">
+                    <table class="am-table am-table-striped am-table-hover table-main">
+                        <thead>
+                        <tr>
+                            <th class="collocation-column">搭配</th>
+                            <th class="freq-column">频次</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="pagebar" style="text-align: center">
+
+    </div>
+
+    <!-- 动画遮罩层 -->
+    <div class="waiting-background">
+        <img th:src="@{../assets/i/waiting.gif}"  id="waitingGif" alt="" />
+        <p id = "waitingText">查询中，请稍候...</p>
+    </div>
+    <!-- 动画遮罩层 end -->
+
+</div>
+
+<script src="http://libs.baidu.com/jquery/1.11.1/jquery.min.js"></script>
+<script src="http://cdn.staticfile.org/modernizr/2.8.3/modernizr.js"></script>
+<![endif]-->
+
+<!--[if (gte IE 9)|!(IE)]><!-->
+<script th:src="@{../js/jquery.min.js}"></script>
+<script th:src="@{../assets/js/amazeui.min.js}"></script>
+<!--<![endif]-->
+<script th:src="@{../js/layer.js}"></script>
+<script th:src="@{../js/laypage.js}"></script>
+<script type="text/javascript" th:src="@{../js/home/index.js}"></script>
+
+</body>
+</html>

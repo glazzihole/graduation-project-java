@@ -1,6 +1,10 @@
 server:
   port: 8080
 spring:
+  thymeleaf:
+    prefix: classpath:/templates/html/
+    suffix: .html
+    mode: LEGACYHTML5
   datasource:
     name: corpus
     url: jdbc:mysql://192.168.99.100:3307/corpus?autoReconnect=true&useSSL=false&useUnicode=true&characterEncoding=UTF-8

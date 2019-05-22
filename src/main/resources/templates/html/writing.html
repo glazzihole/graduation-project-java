@@ -1,0 +1,97 @@
+<!doctype html>
+<html class="no-js" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <title>语料库-辅助写作</title>
+    <meta name="description" content="这是一个 index 页面"/>
+    <meta name="keywords" content="index"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+    <meta name="renderer" content="webkit"/>
+    <meta http-equiv="Cache-Control" content="no-siteapp"/>
+    <link rel="icon" type="image/png" th:href="@{../assets/i/favicon.png}"/>
+    <link rel="apple-touch-icon-precomposed" th:href="@{../assets/i/app-icon72x72@2x.png}"/>
+    <meta name="apple-mobile-web-app-title" content="Amaze UI"/>
+    <link rel="stylesheet" th:href="@{../assets/css/amazeui.min.css}"/>
+    <link rel="stylesheet" th:href="@{../css/writing.css}"/>
+</head>
+
+<body>
+<div class="admin-content">
+    <div class="am-cf am-padding">
+    </div>
+
+    <div class="writing-column">
+
+       <textarea class="writing-window" id="article" placeholder="在此输入作文">
+
+       </textarea>
+        <div class="analysis-button">
+            <button id="assist-reading" class="am-btn am-btn-default am-btn-xs am-text-secondary" onclick="analysisText()">
+                作文分析
+            </button>
+        </div>
+    </div>
+
+    <div class="result-column">
+        <b>分析结果</b>
+        <hr style="margin-top: 2px; margin-bottom: 5px; color: grey"/>
+        <div class="result-window1" id = "result-window1">
+
+        </div>
+
+        <div class="am-g">
+            <div class="result-window2" id = "result-window2">
+                <form class="am-form">
+                    <table class="am-table am-table-striped am-table-hover table-main" style = "width: 60%; display: inline; float: left">
+                        <thead class="thead" id = "thead1">
+                        <tr>
+                            <th style = "text-align: center; width: 50%;">词汇搭配</th>
+                            <th style = "text-align: center; width: 15%;">频次</th>
+                            <th style = "text-align: center; width: 35%">是否为正确搭配</th>
+                        </tr>
+                        </thead>
+                        <tbody id = "word-collocation-result">
+
+                        </tbody>
+                    </table>
+                    <table class="am-table am-table-striped am-table-hover table-main" style="width: 39%; display: inline; float: left">
+                        <thead class="thead" id = "thead2">
+                        <tr>
+                            <th style = "text-align: center; width: 60%">搭配抽象形式</th>
+                            <th style = "text-align: center; width: 40%">频次</th>
+                        </tr>
+                        </thead>
+                        <tbody id = "pos-collocation-result">
+
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 动画遮罩层 -->
+    <div class="waiting-background">
+        <img th:src="@{../assets/i/waiting.gif}"  id="waitingGif" alt="" />
+        <p id = "waitingText">作文分析中，请稍候...</p>
+    </div>
+    <!-- 动画遮罩层 end -->
+
+</div>
+
+<script src="http://libs.baidu.com/jquery/1.11.1/jquery.min.js"></script>
+<script src="http://cdn.staticfile.org/modernizr/2.8.3/modernizr.js"></script>
+<![endif]-->
+
+<!--[if (gte IE 9)|!(IE)]><!-->
+<script th:src="@{../js/jquery.min.js}"></script>
+<script th:src="@{../assets/js/amazeui.min.js}"></script>
+<!--<![endif]-->
+<script th:src="@{../js/layer.js}"></script>
+<script th:src="@{../js/laypage.js}"></script>
+<script type="text/javascript" th:src="@{../js/writing/index.js}"></script>
+
+</body>
+</html>

@@ -232,7 +232,11 @@ public class SentenceRequestHandler extends RequestHandler {
                 ds.startItem("hit").startMap();
                 String labeledSentence = sentence2LabeledSentence.get(sentence);
                 ds.entry("id", id ++);
-                ds.entry("sentence", labeledSentence);
+                String finalSentence = labeledSentence.replaceAll("''","\"")
+                        .replaceAll("``", "\"")
+                        .replaceAll("-LLB-", "[")
+                        .replaceAll("-LRB-", "]");
+                ds.entry("sentence", finalSentence);
                 ds.entry("corpus", searchParam.getIndexName());
                 ds.endMap().endItem();
             }

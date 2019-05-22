@@ -203,7 +203,7 @@ public class SentenceServiceImpl implements SentenceService  {
                 return null;
             }
             List<CoreMap> coreMapList = StanfordParserUtil.simpleParse(sentence);
-            List<String> result = SentenceAnalysisUtil.getSimpleSentence(coreMapList.get(0));
+            List<String> result = SentenceAnalysisUtil.getSimpleSentenceOnlyByParser(coreMapList.get(0));
             return result;
         } catch (Exception e) {
             log.error("getSimpleSentence | error: {}", e);

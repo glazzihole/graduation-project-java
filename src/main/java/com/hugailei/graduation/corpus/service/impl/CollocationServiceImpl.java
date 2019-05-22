@@ -631,7 +631,10 @@ public class CollocationServiceImpl implements CollocationService {
         try {
             log.info("checkCollocation | word pair: {}", wordPair);
             // 去除收尾及多余空格
-            wordPair = wordPair.trim().replaceAll(" +", " ");
+            wordPair = wordPair
+                    .trim()
+                    .replaceAll(" +", " ")
+                    .replaceAll(" ,", ",");
             // 先查找搭配词典
             CollocationFromDict dictCollocation = collocationFromDictDao.findFirstByCollocation(wordPair);
             if (dictCollocation != null) {
@@ -666,7 +669,10 @@ public class CollocationServiceImpl implements CollocationService {
         try {
             log.info("checkCollocationList | word pair list: {}", wordPairList);
             // 去除收尾及多余空格
-            wordPairList = wordPairList.trim().replaceAll(" +", " ");
+            wordPairList = wordPairList
+                    .trim()
+                    .replaceAll(" +", " ")
+                    .replaceAll(" ,", ",");
             List<Boolean> resultList = new ArrayList<>();
             for (String wordPair : wordPairList.split(",")) {
                 // 先查找搭配词典
@@ -679,7 +685,7 @@ public class CollocationServiceImpl implements CollocationService {
                         int maxFreq = collocationList.get(0).getFreq();
                         if (maxFreq >= 3) {
                             resultList.add(true);
-                            break;
+                            continue;
                         }
                     }
                     resultList.add(false);
