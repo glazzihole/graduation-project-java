@@ -294,25 +294,51 @@ function assistReading(sentence, id) {
                                             $("#div_" + id).append(content + ", ");
                                         });
                                         $("#div_" + id).append("<br/>");
-                                        // 请求句子级别结果
+                                        // 请求句中的搭配结果
                                         $.ajax({
-                                            url: "/corpus/sentence/rank-num",
+                                            url: "/corpus/collocation/text-analysis",
                                             type: "POST",
                                             data: {
-                                                sentence : sentence,
+                                                text : sentence,
                                             },
                                             // contentType: 'application/json;charset=UTF-8',
                                             // dataType: "json",
                                             success: function (result4) {
                                                 if (result4["code"] != 200) {
-                                                    layer.msg("句子等级分析失败，请稍后再试");
+                                                    layer.msg("搭配抽取失败，请稍后再试");
                                                 } else {
-                                                    // 显示句子等级结果
-                                                    $("#div_" + id).append("句子等级为：" + transToZh(result4["data"]));
+                                                    // 显示句子搭配结果
+                                                    var collocationInfo = '';
+                                                    $.each(result4['data']['word_collocation_list'], function (index, content) {
+                                                        collocationInfo += assemble(content['first_word'], content['second_word'], content['third_word']) + ',';
+                                                    });
+                                                    $("#div_" + id).append("句中包含的搭配：" + collocationInfo);
+                                                    // 请求句子级别结果
+                                                    $("#div_" + id).append("<br/>");
+                                                    $.ajax({
+                                                        url: "/corpus/sentence/rank-num",
+                                                        type: "POST",
+                                                        data: {
+                                                            sentence : sentence,
+                                                        },
+                                                        // contentType: 'application/json;charset=UTF-8',
+                                                        // dataType: "json",
+                                                        success: function (result5) {
+                                                            if (result5["code"] != 200) {
+                                                                layer.msg("句子等级分析失败，请稍后再试");
+                                                            } else {
+                                                                // 显示句子等级结果
+                                                                $("#div_" + id).append("句子等级为：" + transToZh(result5["data"]));
+                                                            }
+                                                        },
+                                                        error: function () {
+                                                            layer.msg("句子等级分析失败，请稍后再试");
+                                                        }
+                                                    });
                                                 }
                                             },
                                             error: function () {
-                                                layer.msg("句子等级分析失败，请稍后再试");
+                                                layer.msg("搭配抽取失败，请稍后再试");
                                             }
                                         });
                                     }
@@ -339,6 +365,28 @@ function assistReading(sentence, id) {
 function assistReadingClose(id) {
     $("#div_" + id).css("display", "none");
     $("#assist-reading-close_" + id).css("display", "none");
+}
+
+/**
+ * 将单词拼接成搭配
+ *
+ * @param firstWord
+ * @param secondWord
+ * @param thirdWord
+ * @returns {string}
+ */
+function assemble(firstWord, secondWord, thirdWord) {
+    if (firstWord == null || firstWord == "null") {
+        firstWord = "";
+    }
+    if (secondWord == null || secondWord == "null") {
+        secondWord = "";
+    }
+    if (thirdWord == null || thirdWord == "null") {
+        thirdWord = "";
+    }
+    var result = firstWord + " " + secondWord + " " + thirdWord;
+    return result.trim();
 }
 
 /**
