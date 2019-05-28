@@ -15,7 +15,7 @@ function changePlaceholder(){
             $("#search-content").attr("placeholder", "单词A,单词A词性,单词B,单词B词性,单词C,单词C词性(用逗号隔开，若无内容则输入空格)");
             break;
         case "3":
-            $("#search-content").attr("placeholder", "搭配,搭配中的词性(如：open door, VB NN)");
+            $("#search-content").attr("placeholder", "搭配,搭配中的词性(如：beautiful girl,JJ NN)");
             break;
     }
 }
@@ -28,23 +28,42 @@ function search(currentPage) {
     var searchContent = $("#search-content").val();
     var functionValue = $("#funciton-option option:selected").val();
     var corpus = $("#corpus-option option:selected").val();
+    var topic = $("#topic-option option:selected").val();
+    var rankNum = $("#rank-option option:selected").val();
     var url;
     var type;
     var data;
+    var patt = '<s/> containing "' + searchContent + '"';
+    if (topic != 0) {
+        patt = '<s topic = "' + topic + '"/> containing "' + searchContent + '"';
+        //corpus = "topic-" + corpus;
+    } else {
+        topic = null;
+    }
     switch (functionValue) {
         case "1":
             type = "GET";
             url = "/corpus/sentence";
-            data = {
-                patt: "<s/> containing \"" + searchContent + "\"",
-                corpus: corpus,
-                pageNumber:currentPage,
-                pageSize:10
-            };
+            if (rankNum == 0) {
+                data = {
+                    patt: patt,
+                    corpus: "topic-" + corpus,
+                    pageNumber:currentPage,
+                    pageSize:10
+                };
+            } else {
+                data = {
+                    patt: patt,
+                    rank_num: rankNum,
+                    corpus: "topic-" + corpus,
+                    pageNumber:currentPage,
+                    pageSize:10
+                };
+            }
             break;
         case "2":
             type = "POST";
-            url = "/corpus/collocation";
+            url = "/corpus/collocation?page="+currentPage+"&size=10";
             var contentArray = searchContent.split(",");
             if (contentArray.length == 4) {
                 var firstWord = check(contentArray[0]);
@@ -57,8 +76,7 @@ function search(currentPage) {
                     "second_word": secondWord,
                     "second_pos": secondPos,
                     "corpus": corpus,
-                    "pageNumber":1,
-                    "pageSize":10
+                    "topic" : topic,
                 });
             } else if (contentArray.length == 6) {
                 var firstWord = check(contentArray[0]);
@@ -75,8 +93,7 @@ function search(currentPage) {
                     "third_word": thirdWord,
                     "third_pos": thirdPos,
                     "corpus": corpus,
-                    "pageNumber":1,
-                    "pageSize":10
+                    "topic":topic
                 });
             }
             break;
@@ -186,6 +203,7 @@ function search(currentPage) {
             }
         },
         error: function () {
+            $(".waiting-background").css("display","none");
             layer.msg("查询失败，请检查参数输入或稍后再试");
         }
     });
@@ -222,6 +240,7 @@ function handleQuote(sentence) {
  */
 function assistReading(sentence, id) {
     sentence = decodeURI(sentence);
+    sentence = sentence.replace(/<\/?.+?>/g,"");
     $("#div_" + id).css("display", "block");
     $("#div_" + id).empty();
     $.ajax({
@@ -310,7 +329,7 @@ function assistReading(sentence, id) {
                                                     // 显示句子搭配结果
                                                     var collocationInfo = '';
                                                     $.each(result4['data']['word_collocation_list'], function (index, content) {
-                                                        collocationInfo += assemble(content['first_word'], content['second_word'], content['third_word']) + ',';
+                                                        collocationInfo += assemble(content['first_word'], content['second_word'], content['third_word']) + ', ';
                                                     });
                                                     $("#div_" + id).append("句中包含的搭配：" + collocationInfo);
                                                     // 请求句子级别结果

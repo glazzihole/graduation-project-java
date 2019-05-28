@@ -21,16 +21,25 @@
     <div class="am-cf am-padding">
     </div>
 
-    <div id = "search-row">
+    <div id="search-row">
         <div class="am-g">
+            <div class="am-u-sm-12">
+                <div class="am-input-group am-input-group-sm">
+                    <input type="text" class="am-form-field" id="search-content" placeholder="请输入查询内容">
+                    <span class="am-input-group-btn">
+                        <button class="am-btn am-btn-default" type="button" id="search-button" onclick="search(1)">搜索</button>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="am-g" style="margin-top: 10px">
             <div class="am-u-sm-12 am-u-md-3">
-                <div class="am-u-sm-12 am-u-md-3">
-                    <div class="am-form-group">
-                        <select data-am-selected="{btnSize: 'sm'}" id="corpus-option">
-                            <option th:value="bnc" th:text="BNC语料库"></option>
-                            <option th:value="chinadaily" th:text="ChinaDaily语料库"></option>
-                        </select>
-                    </div>
+                <div class="am-form-group">
+                    <select data-am-selected="{btnSize: 'sm'}" id="corpus-option">
+                        <option th:value="chinadaily" th:text="ChinaDaily语料库"></option>
+                        <option th:value="bnc" th:text="BNC语料库"></option>
+                    </select>
                 </div>
             </div>
 
@@ -44,16 +53,36 @@
                 </div>
             </div>
 
-            <div class="am-input-group am-input-group-sm">
-                <input type="text" class="am-form-field" id="search-content" placeholder="请输入查询内容">
-                <span class="am-input-group-btn">
-                <button class="am-btn am-btn-default" type="button" id="search-button" onclick="search(1)">搜索</button>
-            </span>
+            <div class="am-u-sm-12 am-u-md-3">
+                <div class="am-form-group">
+                    <select data-am-selected="{btnSize: 'sm'}" id="topic-option">
+                        <option th:value="0" th:text="全部主题"></option>
+                        <option th:value="1" th:text="国际"></option>
+                        <option th:value="2" th:text="体育"></option>
+                        <option th:value="3" th:text="商业"></option>
+                        <option th:value="4" th:text="技术"></option>
+                    </select>
+                </div>
             </div>
+
+            <div class="am-u-sm-12 am-u-md-3">
+                <div class="am-form-group">
+                    <select data-am-selected="{btnSize: 'sm'}" id="rank-option">
+                        <option th:value="0" th:text="不区分阅读等级"></option>
+                        <option th:value="1" th:text="大学英语四级"></option>
+                        <option th:value="2" th:text="大学英语六级"></option>
+                        <option th:value="3" th:text="专业英语四级"></option>
+                        <option th:value="4" th:text="托福或雅思"></option>
+                        <option th:value="5" th:text="专业英语八级"></option>
+                        <option th:value="6" th:text="GRE或GMAT"></option>
+                    </select>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <div id = "sentence-result">
+    <div id="sentence-result">
         <div class="am-g">
             <div class="am-u-sm-12">
                 <form class="am-form">
@@ -73,7 +102,7 @@
         </div>
     </div>
 
-    <div id = "collocation-result">
+    <div id="collocation-result">
         <div class="am-g">
             <div class="am-u-sm-12">
                 <form class="am-form">
@@ -99,8 +128,8 @@
 
     <!-- 动画遮罩层 -->
     <div class="waiting-background">
-        <img th:src="@{../assets/i/waiting.gif}"  id="waitingGif" alt="" />
-        <p id = "waitingText">查询中，请稍候...</p>
+        <img th:src="@{../assets/i/waiting.gif}" id="waitingGif" alt=""/>
+        <p id="waitingText">查询中，请稍候...</p>
     </div>
     <!-- 动画遮罩层 end -->
 
@@ -114,7 +143,7 @@
 <script th:src="@{../js/jquery.min.js}"></script>
 <script th:src="@{../assets/js/amazeui.min.js}"></script>
 <!--<![endif]-->
-<script th:src="@{../js/layer.js}"></script>
+<script th:src="@{../assets/layer/layer.js}"></script>
 <script th:src="@{../js/laypage.js}"></script>
 <script type="text/javascript" th:src="@{../js/home/index.js}"></script>
 

@@ -18,7 +18,8 @@ public class ScheduledTask {
     /**
      * 每隔三分钟清空缓存
      */
-    @Scheduled(cron = "0 0/5 * * * ?")
+//    @Scheduled(cron = "0 0/5 * * * ?")
+    @Scheduled(cron = "0 0 * * * ?")
     @CacheEvict(value = {"corpus", "student"}, allEntries=true)
     public void removeAllCache(){
         log.info("removeAllCache | delete all cache..");

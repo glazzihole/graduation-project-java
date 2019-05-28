@@ -183,8 +183,8 @@ public class SentenceRequestHandler extends RequestHandler {
                 // 获取当前等级下的词汇
                 rankWordSet = CorpusConstant.RANK_NUM_TO_WORD_SET.get(rankNum);
                 // 获取学生已掌握的等级词汇
-                Long studentId = (Long)request.getSession().getAttribute("student_id");
-                studentRankWordSet = studentRankWordService.getStudentRankWord(studentId, rankNum);
+//                Long studentId = (Long)request.getSession().getAttribute("student_id");
+//                studentRankWordSet = studentRankWordService.getStudentRankWord(studentId, rankNum);
             }
 
             // 得到句子列表，对句子进行难度排序
@@ -207,12 +207,12 @@ public class SentenceRequestHandler extends RequestHandler {
                 if (request.getParameter("rank_num") != null) {
                     List<String> sentenceLemmaList = c.getMatch("lemma");
                     for (int i = 0; i < sentenceLemmaList.size(); i++) {
-                        if (difficultWordSet.contains(sentenceLemmaList.get(i)) && !studentRankWordSet.contains(sentenceLemmaList.get(i))) {
-                            String temp = sentenceWordList.get(i);
-                            sentenceWordList.set(i, CorpusConstant.DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL + temp + CorpusConstant.DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL);
-                        } else if (rankWordSet.contains(sentenceLemmaList.get(i)) && !studentRankWordSet.contains(sentenceLemmaList.get(i))) {
+                        if (rankWordSet.contains(sentenceLemmaList.get(i)) && !studentRankWordSet.contains(sentenceLemmaList.get(i))) {
                             String temp = sentenceWordList.get(i);
                             sentenceWordList.set(i, CorpusConstant.RANK_WORD_STRENGTHEN_OPEN_LABEL + temp + CorpusConstant.RANK_WORD_STRENGTHEN_CLOSE_LABEL);
+                        } else if (difficultWordSet.contains(sentenceLemmaList.get(i)) && !studentRankWordSet.contains(sentenceLemmaList.get(i))) {
+                            String temp = sentenceWordList.get(i);
+                            sentenceWordList.set(i, CorpusConstant.DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL + temp + CorpusConstant.DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL);
                         }
                     }
                 }

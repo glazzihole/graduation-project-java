@@ -665,6 +665,10 @@ public class CollocationServiceImpl implements CollocationService {
      * @return
      */
     @Override
+    @Cacheable(
+            value = "corpus",
+            key = "'check_collocation_list' + #wordPairList",
+            unless = "#result eq null")
     public List<Boolean> checkCollocationList(String wordPairList) {
         try {
             log.info("checkCollocationList | word pair list: {}", wordPairList);

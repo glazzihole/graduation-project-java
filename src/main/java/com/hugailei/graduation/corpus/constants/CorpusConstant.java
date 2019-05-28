@@ -25,10 +25,10 @@ public class CorpusConstant {
     public static final int SUCCESS_CODE = 200;
     public static final int FAILED_CODE = 999999;
 
-    public static final String RANK_WORD_STRENGTHEN_OPEN_LABEL = "<font color = \"green\">";
+    public static final String RANK_WORD_STRENGTHEN_OPEN_LABEL = "<font color = \"#548C00\">";
     public static final String RANK_WORD_STRENGTHEN_CLOSE_LABEL = "</font>";
 
-    public static final String DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL = "<font color = \"yellow\">";
+    public static final String DIFFICULT_WORD_STRENGTHEN_OPEN_LABEL = "<font color = \"#FF8000\">";
     public static final String DIFFICULT_WORD_STRENGTHEN_CLOSE_LABEL = "</font>";
 
     public static final String SVM_MODEL_PATH = GetResource.class.getClassLoader().getResource("svm_model.txt").getPath();;
@@ -482,5 +482,6 @@ public class CorpusConstant {
         RANK_NUM_TO_DIFFICULT_WORD_SET.put(3, level3DifficultWordSet);
         RANK_NUM_TO_DIFFICULT_WORD_SET.put(4, level4DifficultWordSet);
         RANK_NUM_TO_DIFFICULT_WORD_SET.put(5, level5DifficultWordSet);
+        RANK_NUM_TO_DIFFICULT_WORD_SET.put(6, new HashSet<>());
     }
 }
