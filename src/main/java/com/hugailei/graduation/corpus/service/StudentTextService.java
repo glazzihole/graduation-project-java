@@ -1,6 +1,5 @@
 package com.hugailei.graduation.corpus.service;
 
-import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.dto.SentencePatternDto;
 import com.hugailei.graduation.corpus.dto.StudentTextDto;
 import com.hugailei.graduation.corpus.dto.TopicDto;

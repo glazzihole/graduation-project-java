@@ -1,8 +1,6 @@
 package com.hugailei.graduation.corpus.scripts;
 
 import com.hugailei.graduation.corpus.util.svm.svm_predict;
-import com.hugailei.graduation.corpus.util.svm.svm_train;
-import libsvm.svm;
 
 /**
  * @author HU Gailei

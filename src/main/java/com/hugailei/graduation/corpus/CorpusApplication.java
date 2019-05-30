@@ -6,7 +6,6 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.netflix.hystrix.EnableHystrix;
-import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -21,7 +20,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableConfigurationProperties
 @EntityScan({"com.hugailei.graduation.corpus.domain"})
 @EnableJpaRepositories(basePackages = {"com.hugailei.graduation.corpus.dao"})
-@EnableElasticsearchRepositories(basePackages = {"com.hugailei.graduation.corpus.elasticsearch"})
 @EnableScheduling
 @EnableCaching
 @EnableHystrix

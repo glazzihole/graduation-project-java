@@ -274,17 +274,6 @@
             <version>1.2.46</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-elasticsearch</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.elasticsearch</groupId>
-            <artifactId>elasticsearch</artifactId>
-            <version>5.6.10</version>
-        </dependency>
-
         <!-- fast text引用 -->
         <dependency>
             <groupId>com.mayabot</groupId>

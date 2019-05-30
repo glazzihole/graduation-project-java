@@ -3,7 +3,6 @@ package com.hugailei.graduation.corpus.service.impl;
 import com.bfsuolframework.core.utils.StringUtils;
 import com.hugailei.graduation.corpus.dao.RankWordDao;
 import com.hugailei.graduation.corpus.dao.StudentRankWordDao;
-import com.hugailei.graduation.corpus.domain.RankWord;
 import com.hugailei.graduation.corpus.domain.StudentRankWord;
 import com.hugailei.graduation.corpus.dto.StudentTextDto;
 import com.hugailei.graduation.corpus.service.StudentRankWordService;

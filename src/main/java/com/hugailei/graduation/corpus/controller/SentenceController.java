@@ -1,7 +1,6 @@
 package com.hugailei.graduation.corpus.controller;
 
 import com.hugailei.graduation.corpus.domain.SentencePattern;
-import com.hugailei.graduation.corpus.dto.SentenceDto;
 import com.hugailei.graduation.corpus.service.SentenceService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;
 import com.hugailei.graduation.corpus.vo.ResponseVO;
@@ -92,46 +91,6 @@ public class SentenceController {
             return ResponseUtil.error();
         }
         return ResponseUtil.createPageResponse(result, pageable);
-    }
-
-    /**
-     * 句子过滤，只保留包含指定关键字的例句
-     *
-     * @param keyword       关键字
-     * @param sentenceIds   例句集合
-     * @param corpus        语料库名称
-     * @param pageable
-     * @return
-     */
-    @PostMapping("/filter")
-    @ResponseBody
-    public ResponseVO filterSentence(@RequestParam String keyword,
-                                     @RequestParam("sentence_ids") String sentenceIds,
-                                     @RequestParam String corpus,
-                                     Pageable pageable) {
-        log.info("filterSentence | request to filter sentences");
-        List<Long> sentenceIdList = Arrays.asList(sentenceIds.split(",")).stream().map(i -> Long.valueOf(i)).collect(Collectors.toList());
-        List<SentenceDto> result = sentenceService.filterSentence(keyword, sentenceIdList, corpus);
-        if (result == null) {
-            return ResponseUtil.error();
-        }
-        return ResponseUtil.createPageResponse(result, pageable);
-    }
-
-    /**
-     * 建立/更新句子的es索引信息
-     *
-     * @return
-     */
-    @PostMapping("/elasticsearch")
-    @ResponseBody
-    public ResponseVO updateSentenceElasticSearch(@RequestParam(required = false) String corpus) {
-        log.info("updateSentenceElasticSearch | request to update sentence es index");
-        boolean result = sentenceService.updateSentenceElasticSearch(corpus);
-        if (!result) {
-            return ResponseUtil.error();
-        }
-        return ResponseUtil.success();
     }
 
     /**

@@ -1,10 +1,8 @@
 package com.hugailei.graduation.corpus.controller;
 
-import com.hugailei.graduation.corpus.dto.CollocationDto;
 import com.hugailei.graduation.corpus.dto.SentencePatternDto;
 import com.hugailei.graduation.corpus.dto.StudentTextDto;
 import com.hugailei.graduation.corpus.dto.TopicDto;
-import com.hugailei.graduation.corpus.service.CollocationService;
 import com.hugailei.graduation.corpus.service.StudentTextService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;
 import com.hugailei.graduation.corpus.vo.ResponseVO;

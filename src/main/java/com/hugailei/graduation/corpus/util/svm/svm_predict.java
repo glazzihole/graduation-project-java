@@ -1,8 +1,9 @@
 package com.hugailei.graduation.corpus.util.svm;
 
 import libsvm.*;
+
 import java.io.*;
-import java.util.*;
+import java.util.StringTokenizer;
 
 public class svm_predict {
 	private static svm_print_interface svm_print_null = new svm_print_interface()

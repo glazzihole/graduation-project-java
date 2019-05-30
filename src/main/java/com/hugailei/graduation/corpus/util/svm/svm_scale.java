@@ -1,9 +1,8 @@
 package com.hugailei.graduation.corpus.util.svm;
 
-import libsvm.*;
 import java.io.*;
-import java.util.*;
-import java.text.DecimalFormat;
+import java.util.Formatter;
+import java.util.StringTokenizer;
 
 class svm_scale
 {

@@ -2,15 +2,11 @@ package com.hugailei.graduation.corpus.util;
 
 
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.hugailei.graduation.corpus.service.RankWordService;
 import com.hugailei.graduation.corpus.vo.ResponseVO;
-import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author HU Gailei

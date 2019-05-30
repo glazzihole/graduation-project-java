@@ -1,7 +1,6 @@
 package com.hugailei.graduation.corpus.service.impl;
 
 import com.hugailei.graduation.corpus.dao.RankWordDao;
-import com.hugailei.graduation.corpus.domain.Collocation;
 import com.hugailei.graduation.corpus.domain.RankWord;
 import com.hugailei.graduation.corpus.service.RankWordService;
 import lombok.extern.slf4j.Slf4j;

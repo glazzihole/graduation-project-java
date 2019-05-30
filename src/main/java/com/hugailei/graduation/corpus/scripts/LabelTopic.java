@@ -1,7 +1,6 @@
 package com.hugailei.graduation.corpus.scripts;
 
 import com.hugailei.graduation.corpus.domain.Ngram;
-import com.hugailei.graduation.corpus.domain.Sentence;
 import com.hugailei.graduation.corpus.domain.Text;
 import com.hugailei.graduation.corpus.domain.WordWithTopic;
 import com.hugailei.graduation.corpus.dto.TopicDto;

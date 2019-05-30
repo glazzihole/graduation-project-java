@@ -1,6 +1,8 @@
 package com.hugailei.graduation.corpus.scripts;
 
-import com.mayabot.mynlp.fasttext.*;
+import com.mayabot.mynlp.fasttext.FastText;
+import com.mayabot.mynlp.fasttext.FloatStringPair;
+import com.mayabot.mynlp.fasttext.ModelName;
 
 import java.io.*;
 import java.util.Arrays;

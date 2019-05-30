@@ -1,7 +1,6 @@
 package com.hugailei.graduation.corpus.controller;
 
 import com.hugailei.graduation.corpus.constants.CorpusConstant;
-import com.hugailei.graduation.corpus.dto.NgramDto;
 import com.hugailei.graduation.corpus.dto.WordDto;
 import com.hugailei.graduation.corpus.service.WordService;
 import com.hugailei.graduation.corpus.util.ResponseUtil;

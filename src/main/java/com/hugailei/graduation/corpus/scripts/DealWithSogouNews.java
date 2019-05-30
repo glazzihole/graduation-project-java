@@ -2,9 +2,7 @@ package com.hugailei.graduation.corpus.scripts;
 
 import com.bfsuolframework.core.utils.StringUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hugailei.graduation.corpus.vendor.response.YoudaoOpenApiResponse;
 import com.hugailei.graduation.corpus.vo.ResponseVO;
-import org.apache.http.ParseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
@@ -13,7 +11,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 
 import java.io.*;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 

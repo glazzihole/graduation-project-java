@@ -1,6 +1,5 @@
 package com.hugailei.graduation.corpus.dao;
 
-import com.hugailei.graduation.corpus.domain.Collocation;
 import com.hugailei.graduation.corpus.domain.CollocationWithTopic;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
